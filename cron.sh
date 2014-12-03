@@ -14,5 +14,5 @@ echo '</pre>' >> ../index.html
 
 cd ..
 
-git commit -am 'Automatic update'
+git commit --author='BitRust Bot'  -am 'Automatic update'
 git push origin gh-pages
