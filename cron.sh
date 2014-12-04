@@ -6,7 +6,7 @@ cd $(dirname $0)
 
 git pull origin gh-pages
 
-git submodule update --remote --merge
+git submodule update --init --remote --merge
 
 cd rust
 
@@ -17,5 +17,5 @@ echo '</pre>' >> ../index.html
 
 cd ..
 
-git commit --author='BitRust Bot'  -am 'Automatic update'
+git commit --author='BitRust Bot <bitrustbot@octarineparrot.com>'  -am 'Automatic update'
 git push origin gh-pages
