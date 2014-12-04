@@ -1,17 +1,18 @@
+<!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
-<pre>
+</head><body><pre>
 commit 6d965cc2c99787a949d38abf225412fe502d3ed8
 Merge: 53e8bd6 5cfac94
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Thu Dec 4 12:02:56 2014 +0000
 
     auto merge of #19167 : japaric/rust/rhs-cmp, r=aturon
     
     Comparison traits have gained an `Rhs` input parameter that defaults to `Self`. And now the comparison operators can be overloaded to work between different types. In particular, this PR allows the following operations (and their commutative versions):
     
-    - `&str` == `String` == `CowString`
-    - `&[A]` == `&mut [B]` == `Vec<C>` == `CowVec<D>` == `[E, ..N]` (for `N` up to 32)
-    - `&mut A` == `&B` (for `Sized` `A` and `B`)
+    - `&amp;str` == `String` == `CowString`
+    - `&amp;[A]` == `&amp;mut [B]` == `Vec&lt;C&gt;` == `CowVec&lt;D&gt;` == `[E, ..N]` (for `N` up to 32)
+    - `&amp;mut A` == `&amp;B` (for `Sized` `A` and `B`)
     
     Where `A`, `B`, `C`, `D`, `E` may be different types that implement `PartialEq`. For example, these comparisons are now valid: `string == "foo"`, and `vec_of_strings == ["Hello", "world"]`.
     
@@ -19,8 +20,8 @@ Date:   Thu Dec 4 12:02:56 2014 +0000
     
     Since the `==` may now work on different types, operations that relied on the old "same type restriction" to drive type inference, will need to be type annotated. These are the most common fallout cases:
     
-    - `some_vec == some_iter.collect()`: `collect` needs to be type annotated: `collect::<Vec<_>>()`
-    - `slice == &[a, b, c]`: RHS doesn't get coerced to an slice, use an array instead `[a, b, c]`
+    - `some_vec == some_iter.collect()`: `collect` needs to be type annotated: `collect::&lt;Vec&lt;_&gt;&gt;()`
+    - `slice == &amp;[a, b, c]`: RHS doesn't get coerced to an slice, use an array instead `[a, b, c]`
     - `lhs == []`: Change expression to `lhs.is_empty()`
     - `lhs == some_generic_function()`: Type annotate the RHS as necessary
     
@@ -29,7 +30,7 @@ Date:   Thu Dec 4 12:02:56 2014 +0000
     r? @aturon
 
 commit b82624bf205e83555d7764d9f849fbfd30df0083
-Author: Piotr Czarnecki <pioczarn@gmail.com>
+Author: Piotr Czarnecki &lt;pioczarn@gmail.com&gt;
 Date:   Sat Nov 8 17:26:52 2014 +0100
 
     std: Change the behavior of `reserve` for HashMap.
@@ -40,7 +41,7 @@ Date:   Sat Nov 8 17:26:52 2014 +0100
     [breaking-change]
 
 commit 63553a10adc8b507edee1fce43f868d93628ce34
-Author: P1start <rewi-github@whanau.org>
+Author: P1start &lt;rewi-github@whanau.org&gt;
 Date:   Sun Nov 30 21:33:04 2014 +1300
 
     Fix the ordering of `unsafe` and `extern` in methods
@@ -71,7 +72,7 @@ Date:   Sun Nov 30 21:33:04 2014 +1300
 
 commit dfaad04b7a14012ac282269eacfb51b4e97673c1
 Merge: 8d8f41b 1919b12
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Sun Nov 30 06:56:41 2014 +0000
 
     auto merge of #19365 : frewsxcv/rust/getopts-cleanup, r=alexcrichton
@@ -87,7 +88,7 @@ Date:   Sun Nov 30 06:56:41 2014 +0000
     [breaking-change]
 
 commit 1919b12775ca45e8f5bb4b7540ebfa3d100f5bf6
-Author: Corey Farwell <coreyf@rwell.org>
+Author: Corey Farwell &lt;coreyf@rwell.org&gt;
 Date:   Thu Nov 27 14:39:50 2014 -0500
 
     getopts: cleanup, renames, remove reexports
@@ -104,7 +105,7 @@ Date:   Thu Nov 27 14:39:50 2014 -0500
 
 commit f4a775639ca846f29abeed16a7b4e8e1c8819626
 Merge: 702127f 21d5d13
-Author: Alex Crichton <alex@alexcrichton.com>
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
 Date:   Wed Nov 26 09:44:43 2014 -0800
 
     rollup merge of #19298: nikomatsakis/unboxed-closure-parse-the-plus
@@ -113,13 +114,13 @@ Date:   Wed Nov 26 09:44:43 2014 -0800
     
     Fixes #19092.
     
-    This is a [breaking-change]: change types like `&Foo+Send` or `&'a mut Foo+'a` to `&(Foo+Send)` and `&'a mut (Foo+'a)`, respectively.
+    This is a [breaking-change]: change types like `&amp;Foo+Send` or `&amp;'a mut Foo+'a` to `&amp;(Foo+Send)` and `&amp;'a mut (Foo+'a)`, respectively.
     
     r? @brson
 
 commit 34b98b306ad23ab895f701de1d009ff026a1d2b1
 Merge: 60299d7 36372b9
-Author: Alex Crichton <alex@alexcrichton.com>
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
 Date:   Wed Nov 26 09:44:30 2014 -0800
 
     rollup merge of #19287: alexcrichton/issue-19272
@@ -134,7 +135,7 @@ Date:   Wed Nov 26 09:44:30 2014 -0800
 
 commit 1a44875af985de43d514192d43ef260a24e83d26
 Merge: 930f877 b299c2b
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Wed Nov 26 17:42:07 2014 +0000
 
     auto merge of #19176 : aturon/rust/stab-iter, r=alexcrichton
@@ -185,7 +186,7 @@ Date:   Wed Nov 26 17:42:07 2014 +0000
     [breaking-change]
 
 commit ce238d752b1e04d4aea21c0fadf420a270ed6ff9
-Author: Corey Farwell <coreyf@rwell.org>
+Author: Corey Farwell &lt;coreyf@rwell.org&gt;
 Date:   Sat Nov 22 13:48:01 2014 -0500
 
     Unpublicize reexports, unprefix JSON type aliases
@@ -195,8 +196,8 @@ Date:   Sat Nov 22 13:48:01 2014 -0500
     json::String and json::Object respectively. Now that enum namespacing
     has landed, this 'json' prefix is redundant and can be removed:
     
-    json::JsonArray -> json::Array
-    json::JsonObject -> json::Object
+    json::JsonArray -&gt; json::Array
+    json::JsonObject -&gt; json::Object
     
     In addition, this commit also unpublicizes all of the re-exports in this
     JSON module, as a part of #19253
@@ -205,21 +206,21 @@ Date:   Sat Nov 22 13:48:01 2014 -0500
 
 commit 8fb027e398ef756b7b02a270ef0304be92e70f4d
 Merge: 61af402 3293ab1
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Wed Nov 26 12:02:16 2014 +0000
 
     auto merge of #19252 : japaric/rust/cow, r=aturon
     
     - Add `IntoCow` trait, and put it in the prelude
     - Add `is_owned`/`is_borrowed` methods to `Cow`
-    - Add `CowString`/`CowVec` type aliases (to `Cow<'_, String, str>`/`Cow<'_, Vec, [T]>` respectively)
+    - Add `CowString`/`CowVec` type aliases (to `Cow&lt;'_, String, str&gt;`/`Cow&lt;'_, Vec, [T]&gt;` respectively)
     - `Cow` implements: `Show`, `Hash`, `[Partial]{Eq,Ord}`
-    - `impl BorrowFrom<Cow<'a, T, B>> for B`
+    - `impl BorrowFrom&lt;Cow&lt;'a, T, B&gt;&gt; for B`
     
     [breaking-change]s:
     
     - `IntoMaybeOwned` has been removed from the prelude
-    - libcollections: `SendStr` is now an alias to `CowString<'static>` (it was aliased to `MaybeOwned<'static>`)
+    - libcollections: `SendStr` is now an alias to `CowString&lt;'static&gt;` (it was aliased to `MaybeOwned&lt;'static&gt;`)
     - libgraphviz:
       - `LabelText` variants now wrap `CowString` instead of `MaybeOwned`
       - `Nodes` and `Edges` are now type aliases to `CowVec` (they were aliased to `MaybeOwnedVec`)
@@ -233,7 +234,7 @@ Date:   Wed Nov 26 12:02:16 2014 +0000
     r? @aturon
 
 commit a86f72d9a2adc6d65f2ba0990caca35c1a3f622d
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Thu Nov 6 09:32:32 2014 -0800
 
     libs: stabilize iter module
@@ -285,7 +286,7 @@ Date:   Thu Nov 6 09:32:32 2014 -0800
 
 commit 689ef2dabfa3b2b379c953e5fb68ce2c805c2231
 Merge: 0e06f71 985acfd
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Tue Nov 25 20:32:20 2014 +0000
 
     auto merge of #19255 : aturon/rust/merge-sync, r=alexcrichton,alexcrichton
@@ -305,7 +306,7 @@ Date:   Tue Nov 25 20:32:20 2014 +0000
 
 commit f6cb58caeedf509cc80dd376bbb2541a0446046b
 Merge: 0c1d853 f1f6c12
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Tue Nov 25 09:21:45 2014 +0000
 
     auto merge of #19149 : alexcrichton/rust/issue-19091, r=aturon
@@ -321,7 +322,7 @@ Date:   Tue Nov 25 09:21:45 2014 +0000
     cc #19091
 
 commit 36372b929e9d44c7421827b160505854ceeb9a83
-Author: Alex Crichton <alex@alexcrichton.com>
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
 Date:   Mon Nov 24 15:54:14 2014 -0800
 
     std: Export BinarySearchResult
@@ -335,7 +336,7 @@ Date:   Mon Nov 24 15:54:14 2014 -0800
     Closes #19272
 
 commit 3b9dfd6af04ca008a4c2ef13b7fd2e8433dc473f
-Author: Ben S <ogham@bsago.me>
+Author: Ben S &lt;ogham@bsago.me&gt;
 Date:   Mon Nov 24 19:04:54 2014 +0000
 
     Clean up FileType enum following enum namespacing
@@ -347,7 +348,7 @@ Date:   Mon Nov 24 19:04:54 2014 +0000
     [breaking-change]
 
 commit 985acfdb67d550d0259fcdcfbeed0a86ec3da9d0
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Sun Nov 23 12:52:37 2014 -0800
 
     Merge libsync into libstd
@@ -365,7 +366,7 @@ Date:   Sun Nov 23 12:52:37 2014 -0800
 
 commit bad1062caaaefe0963d7b8513786c8283e74f1e7
 Merge: f5b92b4 a9c1152
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Mon Nov 24 09:56:34 2014 +0000
 
     auto merge of #19094 : alexcrichton/rust/rm-std-local-data, r=aturon
@@ -384,16 +385,16 @@ Date:   Mon Nov 24 09:56:34 2014 +0000
     This is a breaking change due to the removal of the `std::local_data` module.
     All users can migrate to the new tls system like so:
     
-        thread_local!(static FOO: Rc<RefCell<Option<T>>> = Rc::new(RefCell::new(None)))
+        thread_local!(static FOO: Rc&lt;RefCell&lt;Option&lt;T&gt;&gt;&gt; = Rc::new(RefCell::new(None)))
     
-    The old `local_data` module inherently contained the `Rc<RefCell<Option<T>>>` as
+    The old `local_data` module inherently contained the `Rc&lt;RefCell&lt;Option&lt;T&gt;&gt;&gt;` as
     an implementation detail which must now be explicitly stated by users.
     
     [rfc]: https://github.com/rust-lang/rfcs/pull/461
     [breaking-change]
 
 commit a9c1152c4bf72132806cb76045b3464d59db07da
-Author: Alex Crichton <alex@alexcrichton.com>
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
 Date:   Fri Nov 14 14:20:57 2014 -0800
 
     std: Add a new top-level thread_local module
@@ -413,16 +414,16 @@ Date:   Fri Nov 14 14:20:57 2014 -0800
     This is a breaking change due to the removal of the `std::local_data` module.
     All users can migrate to the new thread local system like so:
     
-        thread_local!(static FOO: Rc<RefCell<Option<T>>> = Rc::new(RefCell::new(None)))
+        thread_local!(static FOO: Rc&lt;RefCell&lt;Option&lt;T&gt;&gt;&gt; = Rc::new(RefCell::new(None)))
     
-    The old `local_data` module inherently contained the `Rc<RefCell<Option<T>>>` as
+    The old `local_data` module inherently contained the `Rc&lt;RefCell&lt;Option&lt;T&gt;&gt;&gt;` as
     an implementation detail which must now be explicitly stated by users.
     
     [rfc]: https://github.com/rust-lang/rfcs/pull/461
     [breaking-change]
 
 commit f1f6c1286f24f6f762a9b195ac678b55d20c9a9b
-Author: Alex Crichton <alex@alexcrichton.com>
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
 Date:   Thu Nov 20 09:23:43 2014 -0800
 
     Rename unwrap functions to into_inner
@@ -440,7 +441,7 @@ Date:   Thu Nov 20 09:23:43 2014 -0800
 
 commit 3594c588bb735117621f6a168116d9e1d086654a
 Merge: 5ad1512 40e1f8f
-Author: Jakub Bukaj <jakub@jakub.cc>
+Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
 Date:   Sun Nov 23 14:11:56 2014 -0500
 
     rollup merge of #19211: aochagavia/tuple-index
@@ -449,7 +450,7 @@ Date:   Sun Nov 23 14:11:56 2014 -0500
     
     ```
     let t = (42i, 42i);
-    ... t.0::<int> ...;
+    ... t.0::&lt;int&gt; ...;
     ```
     
     Change this code to not contain an unused type parameter. For example:
@@ -467,7 +468,7 @@ Date:   Sun Nov 23 14:11:56 2014 -0500
 
 commit b21b48062f114317025c986fe35af21b15c675d9
 Merge: 77d1f0b 6733d8b
-Author: Jakub Bukaj <jakub@jakub.cc>
+Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
 Date:   Sun Nov 23 14:11:51 2014 -0500
 
     rollup merge of #19194: aturon/stab-ascii
@@ -484,7 +485,7 @@ Date:   Sun Nov 23 14:11:51 2014 -0500
     [breaking-change]
 
 commit 9a857b4472142b6d0bf65e9185c4c2619e722fb0
-Author: Adolfo Ochagavía <aochagavia92@gmail.com>
+Author: Adolfo Ochagavía &lt;aochagavia92@gmail.com&gt;
 Date:   Sat Nov 22 16:02:49 2014 +0100
 
     libsyntax: Forbid type parameters in tuple indices
@@ -493,7 +494,7 @@ Date:   Sat Nov 22 16:02:49 2014 +0100
     
     ```
     let t = (42i, 42i);
-    ... t.0::<int> ...;
+    ... t.0::&lt;int&gt; ...;
     ```
     
     Change this code to not contain an unused type parameter. For example:
@@ -509,7 +510,7 @@ Date:   Sat Nov 22 16:02:49 2014 +0100
 
 commit 641e2a110de4bb1b2c2b596ef1168ae7865aa529
 Merge: 529f8bc 8ca27a6
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Sun Nov 23 05:46:52 2014 +0000
 
     auto merge of #19152 : alexcrichton/rust/issue-17863, r=aturon
@@ -519,19 +520,19 @@ Date:   Sun Nov 23 05:46:52 2014 +0000
     `slice::raw`, and `str::raw` in favor of associated functions, methods, and
     other free functions. The detailed renaming is:
     
-    * slice::raw::buf_as_slice => slice::from_raw_buf
-    * slice::raw::mut_buf_as_slice => slice::from_raw_mut_buf
-    * slice::shift_ptr => deprecated with no replacement
-    * slice::pop_ptr => deprecated with no replacement
-    * str::raw::from_utf8 => str::from_utf8_unchecked
-    * str::raw::c_str_to_static_slice => str::from_c_str
-    * str::raw::slice_bytes => deprecated for slice_unchecked (slight semantic diff)
-    * str::raw::slice_unchecked => str.slice_unchecked
-    * string::raw::from_parts => String::from_raw_parts
-    * string::raw::from_buf_len => String::from_raw_buf_len
-    * string::raw::from_buf => String::from_raw_buf
-    * string::raw::from_utf8 => String::from_utf8_unchecked
-    * vec::raw::from_buf => Vec::from_raw_buf
+    * slice::raw::buf_as_slice =&gt; slice::from_raw_buf
+    * slice::raw::mut_buf_as_slice =&gt; slice::from_raw_mut_buf
+    * slice::shift_ptr =&gt; deprecated with no replacement
+    * slice::pop_ptr =&gt; deprecated with no replacement
+    * str::raw::from_utf8 =&gt; str::from_utf8_unchecked
+    * str::raw::c_str_to_static_slice =&gt; str::from_c_str
+    * str::raw::slice_bytes =&gt; deprecated for slice_unchecked (slight semantic diff)
+    * str::raw::slice_unchecked =&gt; str.slice_unchecked
+    * string::raw::from_parts =&gt; String::from_raw_parts
+    * string::raw::from_buf_len =&gt; String::from_raw_buf_len
+    * string::raw::from_buf =&gt; String::from_raw_buf
+    * string::raw::from_utf8 =&gt; String::from_utf8_unchecked
+    * vec::raw::from_buf =&gt; Vec::from_raw_buf
     
     All previous functions exist in their `#[deprecated]` form, and the deprecation
     messages indicate how to migrate to the newer variants.
@@ -542,7 +543,7 @@ Date:   Sun Nov 23 05:46:52 2014 +0000
     Closes #17863
 
 commit 8ca27a633ed393438a12bbf074b4f2e6063baa6f
-Author: Alex Crichton <alex@alexcrichton.com>
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
 Date:   Thu Nov 20 10:11:15 2014 -0800
 
     std: Align `raw` modules with unsafe conventions
@@ -552,19 +553,19 @@ Date:   Thu Nov 20 10:11:15 2014 -0800
     `slice::raw`, and `str::raw` in favor of associated functions, methods, and
     other free functions. The detailed renaming is:
     
-    * slice::raw::buf_as_slice => slice::with_raw_buf
-    * slice::raw::mut_buf_as_slice => slice::with_raw_mut_buf
-    * slice::shift_ptr => deprecated with no replacement
-    * slice::pop_ptr => deprecated with no replacement
-    * str::raw::from_utf8 => str::from_utf8_unchecked
-    * str::raw::c_str_to_static_slice => str::from_c_str
-    * str::raw::slice_bytes => deprecated for slice_unchecked (slight semantic diff)
-    * str::raw::slice_unchecked => str.slice_unchecked
-    * string::raw::from_parts => String::from_raw_parts
-    * string::raw::from_buf_len => String::from_raw_buf_len
-    * string::raw::from_buf => String::from_raw_buf
-    * string::raw::from_utf8 => String::from_utf8_unchecked
-    * vec::raw::from_buf => Vec::from_raw_buf
+    * slice::raw::buf_as_slice =&gt; slice::with_raw_buf
+    * slice::raw::mut_buf_as_slice =&gt; slice::with_raw_mut_buf
+    * slice::shift_ptr =&gt; deprecated with no replacement
+    * slice::pop_ptr =&gt; deprecated with no replacement
+    * str::raw::from_utf8 =&gt; str::from_utf8_unchecked
+    * str::raw::c_str_to_static_slice =&gt; str::from_c_str
+    * str::raw::slice_bytes =&gt; deprecated for slice_unchecked (slight semantic diff)
+    * str::raw::slice_unchecked =&gt; str.slice_unchecked
+    * string::raw::from_parts =&gt; String::from_raw_parts
+    * string::raw::from_buf_len =&gt; String::from_raw_buf_len
+    * string::raw::from_buf =&gt; String::from_raw_buf
+    * string::raw::from_utf8 =&gt; String::from_utf8_unchecked
+    * vec::raw::from_buf =&gt; Vec::from_raw_buf
     
     All previous functions exist in their `#[deprecated]` form, and the deprecation
     messages indicate how to migrate to the newer variants.
@@ -575,7 +576,7 @@ Date:   Thu Nov 20 10:11:15 2014 -0800
     Closes #17863
 
 commit 7ce2d9c3fa3d36ae79b9790e3646e5e746e64cf4
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Fri Nov 21 12:00:05 2014 -0800
 
     libs: stabilize ascii module
@@ -592,7 +593,7 @@ Date:   Fri Nov 21 12:00:05 2014 -0800
     [breaking-change]
 
 commit d6ee804b632ee03679d6de682841fc7785ef4fbb
-Author: Brian Anderson <banderson@mozilla.com>
+Author: Brian Anderson &lt;banderson@mozilla.com&gt;
 Date:   Mon Nov 3 10:26:22 2014 -0800
 
     unicode: Convert UnicodeChar methods to by-value
@@ -602,7 +603,7 @@ Date:   Mon Nov 3 10:26:22 2014 -0800
     [breaking-change]
 
 commit aad246160451aacc2f7a707c028bdf44e77ad38d
-Author: Brian Anderson <banderson@mozilla.com>
+Author: Brian Anderson &lt;banderson@mozilla.com&gt;
 Date:   Fri Oct 31 16:20:41 2014 -0700
 
     core: Convert Char::escape_default, escape_unicode to iterators
@@ -610,7 +611,7 @@ Date:   Fri Oct 31 16:20:41 2014 -0700
     [breaking-change]
 
 commit ca1820b1fce5aa803ccc757e79dd659f599d1516
-Author: Brian Anderson <banderson@mozilla.com>
+Author: Brian Anderson &lt;banderson@mozilla.com&gt;
 Date:   Tue Oct 14 13:08:54 2014 -0700
 
     core: Convert Char methods to by-val self
@@ -620,7 +621,7 @@ Date:   Tue Oct 14 13:08:54 2014 -0700
     [breaking-change]
 
 commit c2aff692fa88235d356725f98184a5ea5b52eb88
-Author: Brian Anderson <banderson@mozilla.com>
+Author: Brian Anderson &lt;banderson@mozilla.com&gt;
 Date:   Wed Oct 8 17:15:27 2014 -0700
 
     unicode: Rename UnicodeChar::is_digit to is_numeric
@@ -637,7 +638,7 @@ Date:   Wed Oct 8 17:15:27 2014 -0700
 
 commit c9f6d696420107f82304b992cf623b806995fe18
 Merge: 9830051 32c3d02
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Fri Nov 21 03:41:45 2014 +0000
 
     auto merge of #18967 : aturon/rust/remove-runtime, r=alexcrichton
@@ -666,7 +667,7 @@ Date:   Fri Nov 21 03:41:45 2014 +0000
     r? @alexcrichton
 
 commit 6987ad22e46f55b12d8749be7522f4578d227c62
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Fri Nov 14 16:30:16 2014 -0800
 
     Make most of std::rt private
@@ -679,7 +680,7 @@ Date:   Fri Nov 14 16:30:16 2014 -0800
     [breaking-change]
 
 commit 91a2c0d51241677d71b8c0abc80535e580fe3939
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Fri Nov 14 13:56:15 2014 -0800
 
     Remove libgreen
@@ -690,7 +691,7 @@ Date:   Fri Nov 14 13:56:15 2014 -0800
     [breaking-change]
 
 commit 3ee916e50bd86768cb2a9141f9b2c52d2601b412
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Fri Nov 14 13:55:57 2014 -0800
 
     Remove libnative
@@ -703,7 +704,7 @@ Date:   Fri Nov 14 13:55:57 2014 -0800
     [breaking-change]
 
 commit ad022b1a1bcdb8d2e6d1f200f5824f16de2c2193
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Fri Nov 14 13:40:34 2014 -0800
 
     Remove Runtime trait
@@ -718,22 +719,22 @@ Date:   Fri Nov 14 13:40:34 2014 -0800
 
 commit b825b3496aff1ed784f7a7ca935245208b95aabb
 Merge: dd5ce5a c287afb
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Thu Nov 20 10:01:42 2014 +0000
 
     auto merge of #18638 : aturon/rust/as_slice_dst, r=japaric
     
     This PR changes `AsSlice` to work on unsized types, and changes the
-    `impl` for `&[T]` to `[T]`. Aside from making the trait more general,
+    `impl` for `&amp;[T]` to `[T]`. Aside from making the trait more general,
     this also helps some ongoing work with method resolution changes.
     
     This is a breaking change: code that uses generics bounded by `AsSlice`
     will have to change. In particular, such code previously often took
-    arguments of type `V` where `V: AsSlice<T>` by value. These should now
+    arguments of type `V` where `V: AsSlice&lt;T&gt;` by value. These should now
     be taken by reference:
     
     ```rust
-    fn foo<Sized? V: AsSlice<T>>(v: &V) { .. }
+    fn foo&lt;Sized? V: AsSlice&lt;T&gt;&gt;(v: &amp;V) { .. }
     ```
     
     A few std lib functions have been changed accordingly.
@@ -747,7 +748,7 @@ Date:   Thu Nov 20 10:01:42 2014 +0000
     cc @japaric
 
 commit 3f3b2d6b7ef68d3a3817804fa4dba849a74e6878
-Author: Huon Wilson <dbau.pp+github@gmail.com>
+Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
 Date:   Tue Nov 18 23:03:58 2014 +1100
 
     Rename `col!` to `column!`.
@@ -760,22 +761,22 @@ Date:   Tue Nov 18 23:03:58 2014 +1100
     [breaking-change]
 
 commit 004db80afe08b28d79741c486ceb8398e6725829
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Tue Nov 4 15:31:46 2014 -0800
 
     libcore: DST-ify AsSlice
     
     This commit changes `AsSlice` to work on unsized types, and changes the
-    `impl` for `&[T]` to `[T]`. Aside from making the trait more general,
+    `impl` for `&amp;[T]` to `[T]`. Aside from making the trait more general,
     this also helps some ongoing work with method resolution changes.
     
     This is a breaking change: code that uses generics bounded by `AsSlice`
     will have to change. In particular, such code previously often took
-    arguments of type `V` where `V: AsSlice<T>` by value. These should now
+    arguments of type `V` where `V: AsSlice&lt;T&gt;` by value. These should now
     be taken by reference:
     
     ```rust
-    fn foo<Sized? V: AsSlice<T>>(v: &V) { .. }
+    fn foo&lt;Sized? V: AsSlice&lt;T&gt;&gt;(v: &amp;V) { .. }
     ```
     
     A few std lib functions have been changed accordingly.
@@ -784,7 +785,7 @@ Date:   Tue Nov 4 15:31:46 2014 -0800
 
 commit 793624261a221aa4592381fa8067e1f597b90c22
 Merge: 399ff25 e7fab22
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Thu Nov 20 02:31:31 2014 +0000
 
     auto merge of #18999 : aturon/rust/stab-floats, r=alexcrichton,alexcrichton
@@ -804,7 +805,7 @@ Date:   Thu Nov 20 02:31:31 2014 +0000
 
 commit 7884dd9cec832e667594aaeed1144a2a9bab3800
 Merge: 9b5ec0e 1b5cbd0
-Author: Jakub Bukaj <jakub@jakub.cc>
+Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
 Date:   Wed Nov 19 22:39:29 2014 +0100
 
     rollup merge of #19087: jakub-/issue-19086
@@ -817,7 +818,7 @@ Date:   Wed Nov 19 22:39:29 2014 +0100
 
 commit 1faa09615e02d0d2739ea091cb49c040a5c9c41b
 Merge: 8997b09 bde225e
-Author: Jakub Bukaj <jakub@jakub.cc>
+Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
 Date:   Wed Nov 19 22:39:12 2014 +0100
 
     rollup merge of #19073: jakub-/issue-19069
@@ -830,7 +831,7 @@ Date:   Wed Nov 19 22:39:12 2014 +0100
 
 commit a22f06db19851bc437aefefb5688eeb9dab79079
 Merge: 384f611 4af3494
-Author: Jakub Bukaj <jakub@jakub.cc>
+Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
 Date:   Wed Nov 19 22:38:26 2014 +0100
 
     rollup merge of #19040: alexcrichton/issue-18904
@@ -865,7 +866,7 @@ Date:   Wed Nov 19 22:38:26 2014 +0100
     Closes #18904
 
 commit 4af3494bb02e80badc978faa65e59625ade0c675
-Author: Alex Crichton <alex@alexcrichton.com>
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
 Date:   Mon Nov 17 11:29:38 2014 -0800
 
     std: Stabilize std::fmt
@@ -900,7 +901,7 @@ Date:   Mon Nov 17 11:29:38 2014 -0800
     Closes #18904
 
 commit bdbc09ad484847378b87ee8d60096cd39d8fb47a
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Sat Nov 15 22:03:34 2014 -0800
 
     libs: stabilize most numerics after RFC changes
@@ -922,13 +923,13 @@ Date:   Sat Nov 15 22:03:34 2014 -0800
     [breaking-change]
 
 commit 5de56b3ca1defd9206db8364ecef5f3fd8cc5b38
-Author: Barosl Lee <vcs@barosl.com>
+Author: Barosl Lee &lt;vcs@barosl.com&gt;
 Date:   Tue Nov 11 17:13:10 2014 +0900
 
-    Make os::change_dir() return IoResult<()>
+    Make os::change_dir() return IoResult&lt;()&gt;
     
     os::change_dir() returns bool, without a meaningful error message.
-    Change it to return IoResult<()> to indicate what IoError caused the
+    Change it to return IoResult&lt;()&gt; to indicate what IoError caused the
     failure.
     
     Fixes #16315.
@@ -936,10 +937,10 @@ Date:   Tue Nov 11 17:13:10 2014 +0900
     [breaking-change]
 
 commit 6f422c4c05f4d108ba6429a174aa0c2ef3b183fa
-Author: Barosl Lee <vcs@barosl.com>
+Author: Barosl Lee &lt;vcs@barosl.com&gt;
 Date:   Tue Nov 11 14:38:20 2014 +0900
 
-    Make os::getcwd() return IoResult<Path>
+    Make os::getcwd() return IoResult&lt;Path&gt;
     
     os::getcwd() panics if the current directory is not available. According
     to getcwd(3), there are three cases:
@@ -948,11 +949,11 @@ Date:   Tue Nov 11 14:38:20 2014 +0900
     - ENOENT: The current working directory has been removed.
     - ERANGE: The buffer size is less than the actual absolute path.
     
-    This commit makes os::getcwd() return IoResult<Path>, not just Path,
+    This commit makes os::getcwd() return IoResult&lt;Path&gt;, not just Path,
     preventing it from panicking.
     
     As os::make_absolute() depends on os::getcwd(), it is also modified to
-    return IoResult<Path>.
+    return IoResult&lt;Path&gt;.
     
     Fixes #16946.
     
@@ -960,7 +961,7 @@ Date:   Tue Nov 11 14:38:20 2014 +0900
 
 commit c8d6e3b2c2a780eff92299da5d1c02e081617088
 Merge: 09e2ad1 6866bf3
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Tue Nov 18 19:11:43 2014 +0000
 
     auto merge of #18993 : nikomatsakis/rust/hrtb-5, r=pcwalton
@@ -971,11 +972,11 @@ Date:   Tue Nov 18 19:11:43 2014 +0000
     
     r? @pcwalton (or someone else?)
     
-    This is a [breaking-change]. In particular, several feature gates related to unboxed closures were consolidated into one (`overloaded_calls`, `unboxed_closure_sugar` => `unboxed_closures`). Otherwise, I think everything that worked before should still work. File a bug and cc @nikomatsakis if you find otherwise. :)
+    This is a [breaking-change]. In particular, several feature gates related to unboxed closures were consolidated into one (`overloaded_calls`, `unboxed_closure_sugar` =&gt; `unboxed_closures`). Otherwise, I think everything that worked before should still work. File a bug and cc @nikomatsakis if you find otherwise. :)
 
 commit d7a29d87ba6bfca0bfe6207a99c7ec2b7ce869b9
 Merge: 516ece6 3fcf284
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Tue Nov 18 13:41:38 2014 +0000
 
     auto merge of #19031 : nodakai/rust/libcore-pow-and-sq, r=bjz
@@ -986,7 +987,7 @@ Date:   Tue Nov 18 13:41:38 2014 +0000
 
 commit 7137c2cc83526e1f74af472380e625fc7c552826
 Merge: fcf9fb6 46be8eb
-Author: Jakub Bukaj <jakub@jakub.cc>
+Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
 Date:   Tue Nov 18 00:23:53 2014 +0100
 
     rollup merge of #18910: aturon/borrow-traits
@@ -1002,17 +1003,17 @@ Date:   Tue Nov 18 00:23:53 2014 +0100
     [breaking-change]
 
 commit 85914df05a95b1d14e483b69d9c4f0eba44b5d25
-Author: Nick Cameron <ncameron@mozilla.com>
+Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
 Date:   Tue Nov 4 14:42:24 2014 +1300
 
-    Disallow coercions from [T, ..n] to &[T]or *[T]
+    Disallow coercions from [T, ..n] to &amp;[T]or *[T]
     
     [breaking-change]
     
-    Insert an `&` to fix
+    Insert an `&amp;` to fix
 
 commit 80a2867ea736007397aa2fbaa0e4c539c80e162c
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Wed Nov 12 14:55:51 2014 -0800
 
     libstd: Deprecate _equiv methods
@@ -1024,7 +1025,7 @@ Date:   Wed Nov 12 14:55:51 2014 -0800
     [breaking-change]
 
 commit 5eec666c8c4be3706a79755e6cb1119990390c79
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Wed Nov 12 14:55:44 2014 -0800
 
     libcollections: use BorrowFrom in TreeSet, Map
@@ -1036,7 +1037,7 @@ Date:   Wed Nov 12 14:55:44 2014 -0800
 
 commit f09279395b6ca40f1398277971586197f949738a
 Merge: 88c743d 3dcd215
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Mon Nov 17 17:22:06 2014 +0000
 
     auto merge of #18973 : sfackler/rust/enum-namespace-pt2, r=pcwalton
@@ -1055,7 +1056,7 @@ Date:   Mon Nov 17 17:22:06 2014 +0000
         let a = A;
     }
     ```
-    =>
+    =&gt;
     ```
     pub use self::Foo::{A, B};
     
@@ -1083,7 +1084,7 @@ Date:   Mon Nov 17 17:22:06 2014 +0000
     [breaking-change]
 
 commit 3dcd2157403163789aaf21a9ab3c4d30a7c6494d
-Author: Steven Fackler <sfackler@gmail.com>
+Author: Steven Fackler &lt;sfackler@gmail.com&gt;
 Date:   Thu Nov 6 00:05:53 2014 -0800
 
     Switch to purely namespaced enums
@@ -1102,7 +1103,7 @@ Date:   Thu Nov 6 00:05:53 2014 -0800
         let a = A;
     }
     ```
-    =>
+    =&gt;
     ```
     pub use self::Foo::{A, B};
     
@@ -1130,36 +1131,36 @@ Date:   Thu Nov 6 00:05:53 2014 -0800
     [breaking-change]
 
 commit 197a0ac481ae6d154c0966b21849432f1b32c28f
-Author: Andrew Cann <shum@canndrew.org>
+Author: Andrew Cann &lt;shum@canndrew.org&gt;
 Date:   Mon Nov 17 17:35:18 2014 +0800
 
     change return type of slice_shift_char
     
     `slice_shift_char` splits a `str` into it's leading `char` and the remainder
-    of the `str`. Currently, it returns a `(Option<char>, &str)` such that:
+    of the `str`. Currently, it returns a `(Option&lt;char&gt;, &amp;str)` such that:
     
-        "bar".slice_shift_char() => (Some('b'), "ar")
-        "ar".slice_shift_char()  => (Some('a'), "r")
-        "r".slice_shift_char()   => (Some('r'), "")
-        "".slice_shift_char()    => (None,      "")
+        "bar".slice_shift_char() =&gt; (Some('b'), "ar")
+        "ar".slice_shift_char()  =&gt; (Some('a'), "r")
+        "r".slice_shift_char()   =&gt; (Some('r'), "")
+        "".slice_shift_char()    =&gt; (None,      "")
     
     This is a little odd. Either a `str` can be split into both a head and a
-    tail or it cannot. So the return type should be `Option<(char, &str)>`.
+    tail or it cannot. So the return type should be `Option&lt;(char, &amp;str)&gt;`.
     With the current behaviour, in the case of the empty string, the `str`
     returned is meaningless - it is always the empty string.
     
     This commit changes slice_shift_char so that:
     
-        "bar".slice_shift_char() => Some(('b', "ar"))
-        "ar".slice_shift_char()  => Some(('a', "r"))
-        "r".slice_shift_char()   => Some(('r', ""))
-        "".slice_shift_char()    => None
+        "bar".slice_shift_char() =&gt; Some(('b', "ar"))
+        "ar".slice_shift_char()  =&gt; Some(('a', "r"))
+        "r".slice_shift_char()   =&gt; Some(('r', ""))
+        "".slice_shift_char()    =&gt; None
     
     [breaking-change]
 
 commit edfb83c9e28df2a8f326d688f3d5b1f6faa72db8
 Merge: 803aacd dfb7a81
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Mon Nov 17 09:26:57 2014 +0000
 
     auto merge of #18914 : Gankro/rust/cloned, r=aturon
@@ -1170,7 +1171,7 @@ Date:   Mon Nov 17 09:26:57 2014 +0000
 
 commit aad75471fd327c0138f80aba46c650a7f9839d17
 Merge: 321488b 579c65d
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Sun Nov 16 18:27:10 2014 +0000
 
     auto merge of #18994 : sfackler/rust/struct-variants-pt2, r=jakub-
@@ -1185,7 +1186,7 @@ Date:   Sun Nov 16 18:27:10 2014 +0000
     r? @alexcrichton
 
 commit eb01b17b06eb35542bb80ff7456043b0ed5572ba
-Author: Jakub Bukaj <jakub@jakub.cc>
+Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
 Date:   Sun Nov 9 16:14:15 2014 +0100
 
     Complete the removal of ty_nil, ast::LitNil, ast::TyBot and ast::TyUniq
@@ -1196,7 +1197,7 @@ Date:   Sun Nov 9 16:14:15 2014 +0100
 
 commit cb51567e1911452f3da4b924a91e5360f5efe67c
 Merge: 7e43f41 43fd644
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Sun Nov 16 04:37:36 2014 +0000
 
     auto merge of #18788 : ricky26/rust/master, r=aturon
@@ -1210,7 +1211,7 @@ Date:   Sun Nov 16 04:37:36 2014 +0000
     The same is true for Buffer::chars() with std::io::CharsBuffer.
 
 commit 579c65da1babbcfa5f3fd1cb5a1062acbe5b61eb
-Author: Steven Fackler <sfackler@gmail.com>
+Author: Steven Fackler &lt;sfackler@gmail.com&gt;
 Date:   Sat Nov 15 17:57:54 2014 -0800
 
     Un-feature gate struct variants
@@ -1223,7 +1224,7 @@ Date:   Sat Nov 15 17:57:54 2014 -0800
     [breaking-change]
 
 commit 93c4942690753e982cbb4bf6667940da71c5d286
-Author: Jonathan Reem <jonathan.reem@gmail.com>
+Author: Jonathan Reem &lt;jonathan.reem@gmail.com&gt;
 Date:   Thu Nov 13 18:04:28 2014 -0800
 
     Rewrite std::sync::TaskPool to be load balancing and panic-resistant
@@ -1263,7 +1264,7 @@ Date:   Thu Nov 13 18:04:28 2014 -0800
 
 commit 6f7081fad5889c7b41460103fc8abc98f3285c60
 Merge: a58fc68 c9e6bda
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Fri Nov 14 05:37:17 2014 +0000
 
     auto merge of #18827 : bjz/rust/rfc369-numerics, r=alexcrichton
@@ -1284,7 +1285,7 @@ Date:   Fri Nov 14 05:37:17 2014 +0000
     - `core::iter::{range, range_inclusive, range_step, range_step_inclusive}` now require `core::num::Int` to be implemented for the type they a re parametrized over.
 
 commit 43fd6446add0bcf237f3fe15b7d715eceee2a08c
-Author: Ricky Taylor <rickytaylor26@gmail.com>
+Author: Ricky Taylor &lt;rickytaylor26@gmail.com&gt;
 Date:   Sat Nov 8 21:59:09 2014 +0000
 
     Make std::io::Buffer object-safe.
@@ -1294,7 +1295,7 @@ Date:   Sat Nov 8 21:59:09 2014 +0000
 
 commit 82f383839c7cc0ce66d7cfbd400182b535029f0f
 Merge: f6c0250 e6e58e4
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Thu Nov 13 12:27:03 2014 +0000
 
     auto merge of #18879 : pcwalton/rust/path-silliness, r=aturon
@@ -1306,7 +1307,7 @@ Date:   Thu Nov 13 12:27:03 2014 +0000
         }
     
         let f: Foo = ...;
-        ... f.x::<int> ...
+        ... f.x::&lt;int&gt; ...
     
     Change this code to not contain an unused type parameter. For example:
     
@@ -1325,7 +1326,7 @@ Date:   Thu Nov 13 12:27:03 2014 +0000
 
 commit 5745e419502d753deb3f42026fa35e015bc5d3fb
 Merge: 7a86aa8 fcd05ed
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Wed Nov 12 22:57:16 2014 +0000
 
     auto merge of #18858 : alexcrichton/rust/remove-time, r=jakub
@@ -1351,7 +1352,7 @@ Date:   Wed Nov 12 22:57:16 2014 +0000
     little nicer with that implemented
 
 commit fcd05ed99ff0aa6157e427a698ac53dbc450135f
-Author: Alex Crichton <alex@alexcrichton.com>
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
 Date:   Mon Nov 10 12:27:56 2014 -0800
 
     time: Deprecate the library in the distribution
@@ -1377,7 +1378,7 @@ Date:   Mon Nov 10 12:27:56 2014 -0800
     little nicer with that implemented
 
 commit e6e58e43f8f9507474fdf35544b6b0c0fc6cef39
-Author: Patrick Walton <pcwalton@mimiga.net>
+Author: Patrick Walton &lt;pcwalton@mimiga.net&gt;
 Date:   Tue Nov 11 10:45:59 2014 -0800
 
     libsyntax: Forbid type parameters in field expressions.
@@ -1389,7 +1390,7 @@ Date:   Tue Nov 11 10:45:59 2014 -0800
         }
     
         let f: Foo = ...;
-        ... f.x::<int> ...
+        ... f.x::&lt;int&gt; ...
     
     Change this code to not contain an unused type parameter. For example:
     
@@ -1406,7 +1407,7 @@ Date:   Tue Nov 11 10:45:59 2014 -0800
 
 commit 16d80de231abb2b1756f3951ffd4776d681035eb
 Merge: a2f303a 5ea09e6
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Sun Nov 9 05:51:44 2014 +0000
 
     auto merge of #18557 : aturon/rust/io-removal, r=alexcrichton
@@ -1415,8 +1416,8 @@ Date:   Sun Nov 9 05:51:44 2014 +0000
     
     TL;DR:
     
-    * Before this PR: `rustc hello.rs && wc -c hello` produces 715,996
-    * After this PR:  `rustc hello.rs && wc -c hello` produces 368,100
+    * Before this PR: `rustc hello.rs &amp;&amp; wc -c hello` produces 715,996
+    * After this PR:  `rustc hello.rs &amp;&amp; wc -c hello` produces 368,100
     
     That is, this PR reduces the footprint of hello world by ~50%.
     
@@ -1447,7 +1448,7 @@ Date:   Sun Nov 9 05:51:44 2014 +0000
     r? @alexcrichton
 
 commit fa94fdad3e880d2d6cbd82c12bd12caefbeb81a8
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Fri Oct 17 13:39:27 2014 -0700
 
     Runtime removal: fully remove rtio
@@ -1462,7 +1463,7 @@ Date:   Fri Oct 17 13:39:27 2014 -0700
     from `std` in the future.
 
 commit 431dcdc840a27f7c7418b7dff73a329eada8a407
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Fri Oct 17 13:33:08 2014 -0700
 
     Runtime removal: refactor tty
@@ -1478,7 +1479,7 @@ Date:   Fri Oct 17 13:33:08 2014 -0700
     from `std` in the future.
 
 commit b8f1193bb1bb66610f479cd78e3dc5526e93058d
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Thu Oct 16 18:57:11 2014 -0700
 
     Runtime removal: refactor timer
@@ -1494,7 +1495,7 @@ Date:   Thu Oct 16 18:57:11 2014 -0700
     from `std` in the future.
 
 commit 0f98e75b69d16edce9ca60d7961b8440856a3f72
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Thu Oct 9 16:27:28 2014 -0700
 
     Runtime removal: refactor process
@@ -1510,7 +1511,7 @@ Date:   Thu Oct 9 16:27:28 2014 -0700
     from `std` in the future.
 
 commit 3d195482a45bf3ed0f12dc9d70d14192262ca711
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Wed Oct 15 15:45:59 2014 -0700
 
     Runtime removal: refactor helper threads
@@ -1527,7 +1528,7 @@ Date:   Wed Oct 15 15:45:59 2014 -0700
     from `std` in the future.
 
 commit d34b1b0ca9bf5e0d7cd30952f5de0ab09ed57b41
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Fri Oct 10 10:11:49 2014 -0700
 
     Runtime removal: refactor pipes and networking
@@ -1543,7 +1544,7 @@ Date:   Fri Oct 10 10:11:49 2014 -0700
     from `std` in the future.
 
 commit 0c1e1ff1e300868a29405a334e65eae690df971d
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Tue Sep 30 17:34:14 2014 -0700
 
     Runtime removal: refactor fs
@@ -1559,7 +1560,7 @@ Date:   Tue Sep 30 17:34:14 2014 -0700
     from `std` in the future.
 
 commit 16470cf01b688c576f47b93bdb4af88db33cf1e1
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Thu Oct 9 16:40:05 2014 -0700
 
     Remove signal handling.
@@ -1571,14 +1572,14 @@ Date:   Thu Oct 9 16:40:05 2014 -0700
 
 commit a2f303ad098844351d08800038a4f99fa2ff0817
 Merge: 93c85eb cf4e53e
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Sun Nov 9 03:51:41 2014 +0000
 
     auto merge of #18743 : nikomatsakis/rust/hrtb-refactor-2, r=pcwalton
     
     Various miscellaneous changes pushing towards HRTB support:
     
-    1. Update parser and adjust ast to support `for<'a,'b>` syntax, both in closures and trait bounds. Warn on the old syntax (not error, for stage0).
+    1. Update parser and adjust ast to support `for&lt;'a,'b&gt;` syntax, both in closures and trait bounds. Warn on the old syntax (not error, for stage0).
     2. Refactor TyTrait representation to include a TraitRef.
     3. Purge `once_fns` feature gate and `once` keyword.
     
@@ -1588,11 +1589,11 @@ Date:   Sun Nov 9 03:51:41 2014 +0000
     
     - The `once_fns` feature is now officially deprecated. Rewrite using normal closures or unboxed closures.
     - The new `for`-based syntax now issues warnings (but not yet errors):
-      - `fn<'a>(T) -> U` becomes `for<'a> fn(T) -> U`
-      - `<'a> |T| -> U` becomes `for<'a> |T| -> U`
+      - `fn&lt;'a&gt;(T) -&gt; U` becomes `for&lt;'a&gt; fn(T) -&gt; U`
+      - `&lt;'a&gt; |T| -&gt; U` becomes `for&lt;'a&gt; |T| -&gt; U`
 
 commit 16c8cd931cd5ccc9c73b87cac488938556018019
-Author: gamazeps <gamaz3ps@gmail.com>
+Author: gamazeps &lt;gamaz3ps@gmail.com&gt;
 Date:   Sat Nov 8 01:39:39 2014 +0100
 
     Renamed Extendable to Extend
@@ -1606,7 +1607,7 @@ Date:   Sat Nov 8 01:39:39 2014 +0100
 
 commit afd657e20724f6a9093e34818c4923aa8601cafb
 Merge: 7bc3588 7ddf8cb
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Sat Nov 8 07:06:36 2014 +0000
 
     auto merge of #18556 : seanmonstar/rust/tm-fmt, r=alexcrichton
@@ -1625,7 +1626,7 @@ Date:   Sat Nov 8 07:06:36 2014 +0000
     [breaking-change]
 
 commit 7ddf8cb0e02549e6df7afe7e8486d735f8ee7eae
-Author: Sean McArthur <sean.monstar@gmail.com>
+Author: Sean McArthur &lt;sean.monstar@gmail.com&gt;
 Date:   Wed Sep 3 14:56:35 2014 -0700
 
     libtime: alter strftime to use a TmFmt
@@ -1643,7 +1644,7 @@ Date:   Wed Sep 3 14:56:35 2014 -0700
 
 commit 0b48001c28329392b26961eaf1c3ed293a352d6f
 Merge: 223ca76 00676c8
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Fri Nov 7 15:26:26 2014 +0000
 
     auto merge of #17830 : pczarn/rust/interp_tt, r=pnkfelix
@@ -1657,7 +1658,7 @@ Date:   Fri Nov 7 15:26:26 2014 +0000
     [breaking-change]
 
 commit b39f1dcba0d79fa9b791e6d0735b411795f44979
-Author: Alex Crichton <alex@alexcrichton.com>
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
 Date:   Tue Nov 4 11:22:32 2014 -0800
 
     Remove rlibc from the distribution
@@ -1676,7 +1677,7 @@ Date:   Tue Nov 4 11:22:32 2014 -0800
     cc #18585
 
 commit cf3b2e4fe6044cce018b723de9b21c500c6eac41
-Author: Alexis Beingessner <a.beingessner@gmail.com>
+Author: Alexis Beingessner &lt;a.beingessner@gmail.com&gt;
 Date:   Thu Nov 6 12:24:47 2014 -0500
 
     Implement low-hanging fruit of collection conventions
@@ -1697,7 +1698,7 @@ Date:   Thu Nov 6 12:24:47 2014 -0500
 
 commit 8ed288edb27fc83b15a549af69c82b5bb4f8ac1e
 Merge: 60a669a cfafc1b
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Thu Nov 6 16:52:09 2014 +0000
 
     auto merge of #18559 : aturon/rust/prelude_cleanup, r=alexcrichton
@@ -1715,7 +1716,7 @@ Date:   Thu Nov 6 16:52:09 2014 +0000
     Closes #17917
 
 commit cfafc1b7377d34d8c60db7cd386836d39b80af41
-Author: Aaron Turon <aturon@mozilla.com>
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
 Date:   Sun Nov 2 17:04:32 2014 -0800
 
     Prelude: rename and consolidate extension traits
@@ -1741,31 +1742,31 @@ Date:   Sun Nov 2 17:04:32 2014 -0800
 
 commit e84e7a00ddec76570bbaa9afea385d544f616814
 Merge: 0e2f9b9 11f4bae
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Thu Nov 6 08:06:50 2014 +0000
 
     auto merge of #18467 : japaric/rust/eq, r=alexcrichton
     
-    `eq`, `ne`, `cmp`, etc methods now require one less level of indirection when dealing with `&str`/`&[T]`
+    `eq`, `ne`, `cmp`, etc methods now require one less level of indirection when dealing with `&amp;str`/`&amp;[T]`
     
     ``` rust
-    "foo".ne(&"bar") -> "foo".ne("bar")
-    slice.cmp(&another_slice) -> slice.cmp(another_slice)
-    // slice and another_slice have type `&[T]`
+    "foo".ne(&amp;"bar") -&gt; "foo".ne("bar")
+    slice.cmp(&amp;another_slice) -&gt; slice.cmp(another_slice)
+    // slice and another_slice have type `&amp;[T]`
     ```
     
     [breaking-change]
 
 commit 63c4f22f2bf9f1c070311cdc08c6ceb279434733
 Merge: 5c1fd5f 81c00e6
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Wed Nov 5 22:31:44 2014 +0000
 
     auto merge of #18486 : nikomatsakis/rust/operator-dispatch, r=pcwalton
     
     This branch cleans up overloaded operator resolution so that it is strictly based on the traits in `ops`, rather than going through the normal method lookup mechanism. It also adds full support for autoderef to overloaded index (whereas before autoderef only worked for non-overloaded index) as well as for the slicing operators.
     
-    This is a [breaking-change]: in the past, we were accepting combinations of operands that were not intended to be accepted. For example, it was possible to compare a fixed-length array and a slice, or apply the `!` operator to a `&int`. See the first two commits in this pull-request for examples.
+    This is a [breaking-change]: in the past, we were accepting combinations of operands that were not intended to be accepted. For example, it was possible to compare a fixed-length array and a slice, or apply the `!` operator to a `&amp;int`. See the first two commits in this pull-request for examples.
     
     One downside of this change is that comparing fixed-length arrays doesn't always work as smoothly as it did before. Before this, comparisons sometimes worked due to various coercions to slices. I've added impls for `Eq`, `Ord`, etc for fixed-lengths arrays up to and including length 32, but if the array is longer than that you'll need to either newtype the array or convert to slices. Note that this plays better with deriving in any case than the previous scheme.
     
@@ -1777,7 +1778,7 @@ Date:   Wed Nov 5 22:31:44 2014 +0000
     cc @aturon
 
 commit 7e3344b17f777f5bca0d3eaa9278fa2d628ca064
-Author: Vladimir Matveev <vladimir.matweev@gmail.com>
+Author: Vladimir Matveev &lt;vladimir.matweev@gmail.com&gt;
 Date:   Wed Oct 29 22:59:43 2014 +0300
 
     Migrated io::net::udp over to ToSocketAddr
@@ -1788,7 +1789,7 @@ Date:   Wed Oct 29 22:59:43 2014 +0300
     [breaking-change]
 
 commit ac846749f0abbd0b6107406ba2f97886605e1ad4
-Author: Vladimir Matveev <vladimir.matweev@gmail.com>
+Author: Vladimir Matveev &lt;vladimir.matweev@gmail.com&gt;
 Date:   Wed Oct 22 23:00:47 2014 +0400
 
     Switched io::net::tcp to use ToSocketAddr
@@ -1800,7 +1801,7 @@ Date:   Wed Oct 22 23:00:47 2014 +0400
 
 commit eca8f11315cb3cd9836e6d8501a07fbb137f5e88
 Merge: 4375b32 3036b00
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Wed Nov 5 07:01:38 2014 +0000
 
     auto merge of #18592 : alexcrichton/rust/dylib-harder, r=pcwalton
@@ -1818,7 +1819,7 @@ Date:   Wed Nov 5 07:01:38 2014 +0000
 
 commit 4375b32dabf8096a1137a68c1070fc9a9292cb06
 Merge: ceeac26 e8d6031
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Wed Nov 5 03:31:33 2014 +0000
 
     auto merge of #18504 : pcwalton/rust/small-escapes, r=pcwalton
@@ -1838,7 +1839,7 @@ Date:   Wed Nov 5 03:31:33 2014 +0000
     r? @aturon
 
 commit e8d6031c71a5ab42648f26a253671ba17584407a
-Author: Patrick Walton <pcwalton@mimiga.net>
+Author: Patrick Walton &lt;pcwalton@mimiga.net&gt;
 Date:   Mon Oct 27 09:13:51 2014 -0700
 
     libsyntax: Forbid escapes in the inclusive range `\x80`-`\xff` in
@@ -1857,7 +1858,7 @@ Date:   Mon Oct 27 09:13:51 2014 -0700
     [breaking-change]
 
 commit 6b130e3dd9547e233dca2cfd72a5968891672d9c
-Author: Corey Richardson <corey@octayn.net>
+Author: Corey Richardson &lt;corey@octayn.net&gt;
 Date:   Wed Jul 23 11:56:36 2014 -0700
 
     Implement flexible target specification
@@ -1900,7 +1901,7 @@ Date:   Wed Jul 23 11:56:36 2014 -0700
     [breaking-change]
 
 commit 3036b001276a6e43409b08b7f2334ce72aeeb036
-Author: Alex Crichton <alex@alexcrichton.com>
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
 Date:   Sun Nov 2 23:02:53 2014 -0800
 
     rustc: Default to static linking dylibs
@@ -1918,7 +1919,7 @@ Date:   Sun Nov 2 23:02:53 2014 -0800
 
 commit 2790505c19b158a5494139dba084b6af82810b96
 Merge: b9b396c 696f72e
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Mon Nov 3 14:17:26 2014 +0000
 
     auto merge of #18468 : jakub-/rust/iter-repeat, r=alexcrichton
@@ -1929,7 +1930,7 @@ Date:   Mon Nov 3 14:17:26 2014 +0000
 
 commit b9b396cd7506c2e2aa6737adfa80f3404ed81b9d
 Merge: 851799d fe256f8
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Mon Nov 3 12:12:24 2014 +0000
 
     auto merge of #18463 : japaric/rust/bytes2, r=alexcrichton
@@ -1940,7 +1941,7 @@ Date:   Mon Nov 3 12:12:24 2014 +0000
     
     ``` rust
     Path::new("foo")  // Still works
-    path.join(another_path) -> path.join(&another_path)
+    path.join(another_path) -&gt; path.join(&amp;another_path)
     ```
     
     [breaking-change]
@@ -1956,13 +1957,13 @@ Date:   Mon Nov 3 12:12:24 2014 +0000
     
     Re: Breakage of `Path` methods
     
-    We could use the idea that @alexcrichton proposed in #18457 (add blanket `impl BytesContainer for &T where T: BytesContainer` + keep taking `T: BytesContainer` by value in `Path` methods) to avoid breaking any code.
+    We could use the idea that @alexcrichton proposed in #18457 (add blanket `impl BytesContainer for &amp;T where T: BytesContainer` + keep taking `T: BytesContainer` by value in `Path` methods) to avoid breaking any code.
     
     r? @aturon
     cc #16918
 
 commit 112c8a966fbdb52ff2a535dc8e6df3a8b3cb8fb2
-Author: Alexis Beingessner <a.beingessner@gmail.com>
+Author: Alexis Beingessner &lt;a.beingessner@gmail.com&gt;
 Date:   Thu Oct 30 21:25:08 2014 -0400
 
     refactor libcollections as part of collection reform
@@ -1971,7 +1972,7 @@ Date:   Thu Oct 30 21:25:08 2014 -0400
     * Changes exports so that each collection has its own module
     * Adds underscores to public modules and filenames to match standard naming conventions
     
-    (that is, treemap::{TreeMap, TreeSet} => tree_map::TreeMap, tree_set::TreeSet)
+    (that is, treemap::{TreeMap, TreeSet} =&gt; tree_map::TreeMap, tree_set::TreeSet)
     
     * Renames PriorityQueue to BinaryHeap
     * Renames SmallIntMap to VecMap
@@ -1980,15 +1981,15 @@ Date:   Thu Oct 30 21:25:08 2014 -0400
     [breaking-change]
 
 commit ab9a1b7d60495ba3652f770305888d6f166c39fe
-Author: whataloadofwhat <unusualmoniker@gmail.com>
+Author: whataloadofwhat &lt;unusualmoniker@gmail.com&gt;
 Date:   Sun Nov 2 13:27:15 2014 +0000
 
-    Change Json methods to &str and allow Indexing
+    Change Json methods to &amp;str and allow Indexing
     
-    Json's find, find_path, and search methods now use &str rather
-    than &String.
+    Json's find, find_path, and search methods now use &amp;str rather
+    than &amp;String.
     
-    Json can now be indexed with &str (for Objects) and uint
+    Json can now be indexed with &amp;str (for Objects) and uint
     (for Lists).
     
     Tests updated to reflect this change.
@@ -1997,7 +1998,7 @@ Date:   Sun Nov 2 13:27:15 2014 +0000
 
 commit a294b35060e069007ee46e190a6f0a19fa3eaab8
 Merge: 0c12684 fea985a
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Sun Nov 2 21:22:14 2014 +0000
 
     auto merge of #18406 : thestinger/rust/oom, r=cmr
@@ -2010,7 +2011,7 @@ Date:   Sun Nov 2 21:22:14 2014 +0000
     [breaking-change]
 
 commit fea985a0b5008bc2f441866a80c0e3a16592eaab
-Author: Daniel Micay <danielmicay@gmail.com>
+Author: Daniel Micay &lt;danielmicay@gmail.com&gt;
 Date:   Tue Oct 28 17:06:06 2014 -0400
 
     bubble up out-of-memory errors from liballoc
@@ -2024,7 +2025,7 @@ Date:   Tue Oct 28 17:06:06 2014 -0400
 
 commit 3327ecca422046699315122345c6c050ab73804b
 Merge: 39f90ae 05f6bda
-Author: bors <bors@rust-lang.org>
+Author: bors &lt;bors@rust-lang.org&gt;
 Date:   Sat Nov 1 22:41:48 2014 +0000
 
     auto merge of #17595 : danburkert/rust/tuple-index-deserialization, r=alexcrichton
@@ -2055,4 +2056,4 @@ Date:   Sat Nov 1 22:41:48 2014 +0000
     serialized prior to this change.
     
     [breaking-change]
-</pre>
+</pre></body></html>
