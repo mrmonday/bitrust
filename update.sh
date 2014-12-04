@@ -10,7 +10,7 @@ cd rust
 
 date=$(date -u)
 echo "<title>BitRust - Breaking Changes in rust-lang/rust - updated at $date</title>" > ../index.html
-echo '<pre>' > ../index.html
+echo '<pre>' >> ../index.html
 git log -n100 --grep '\[breaking-change\]' >> ../index.html
 echo '</pre>' >> ../index.html
 
