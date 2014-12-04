@@ -4,6 +4,8 @@ set -x
 
 cd $(dirname $0)
 
+git pull origin gh-pages
+
 git submodule update --remote --merge
 
 cd rust
