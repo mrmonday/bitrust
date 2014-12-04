@@ -1,5 +1,16 @@
-<title>BitRust - Breaking Changes in rust-lang/rust - updated at Thu Dec  4 14:14:03 UTC 2014</title>
+<title>BitRust - Breaking Changes in rust-lang/rust - updated at Thu Dec  4 14:19:31 UTC 2014</title>
 <pre>
+commit b82624bf205e83555d7764d9f849fbfd30df0083
+Author: Piotr Czarnecki <pioczarn@gmail.com>
+Date:   Sat Nov 8 17:26:52 2014 +0100
+
+    std: Change the behavior of `reserve` for HashMap.
+    
+    HashMap's `reserve` method now takes as an argument the *extra* space
+    to reserve.
+    
+    [breaking-change]
+
 commit 63553a10adc8b507edee1fce43f868d93628ce34
 Author: P1start <rewi-github@whanau.org>
 Date:   Sun Nov 30 21:33:04 2014 +1300
@@ -2023,26 +2034,6 @@ Author: bors <bors@rust-lang.org>
 Date:   Sat Nov 1 20:21:47 2014 +0000
 
     auto merge of #18474 : alexcrichton/rust/no-more-traits, r=aturon
-    
-    As part of the collections reform RFC, this commit removes all collections
-    traits in favor of inherent methods on collections themselves. All methods
-    should continue to be available on all collections.
-    
-    This is a breaking change with all of the collections traits being removed and
-    no longer being in the prelude. In order to update old code you should move the
-    trait implementations to inherent implementations directly on the type itself.
-    
-    Note that some traits had default methods which will also need to be implemented
-    to maintain backwards compatibility.
-    
-    [breaking-change]
-    cc #18424
-
-commit 21ac985af44f4e2470ef6f4c0eb4d72daf5a6497
-Author: Alex Crichton <alex@alexcrichton.com>
-Date:   Thu Oct 30 13:43:24 2014 -0700
-
-    collections: Remove all collections traits
     
     As part of the collections reform RFC, this commit removes all collections
     traits in favor of inherent methods on collections themselves. All methods
