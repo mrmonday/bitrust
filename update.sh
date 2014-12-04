@@ -5,6 +5,7 @@ set -x
 cd $(dirname $0)
 
 git submodule update --init --merge
+git submodule foreach git pull origin master
 
 cd rust
 
