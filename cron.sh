@@ -8,6 +8,7 @@ git submodule update --remote --merge
 
 cd rust
 
+echo '<title>BitRust - Breaking Changes in rust-lang/rust</title>' > ../index.html
 echo '<pre>' > ../index.html
 git log -n100 --grep '\[breaking-change\]' >> ../index.html
 echo '</pre>' >> ../index.html
