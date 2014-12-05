@@ -1,6 +1,121 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit a6ce402401f0da3a48a5a183ae109a00024ba666
+Merge: 26f2867 e7c1f57
+Author: Corey Richardson &lt;corey@octayn.net&gt;
+Date:   Fri Dec 5 10:06:52 2014 -0800
+
+    rollup merge of #19416: sfackler/global-stdin
+    
+    io::stdin returns a new `BufferedReader` each time it's called, which
+    results in some very confusing behavior with disappearing output. It now
+    returns a `StdinReader`, which wraps a global singleton
+    `Arc&lt;Mutex&lt;BufferedReader&lt;StdReader&gt;&gt;`. `Reader` is implemented directly
+    on `StdinReader`. However, `Buffer` is not, as the `fill_buf` method is
+    fundamentaly un-thread safe. A `lock` method is defined on `StdinReader`
+    which returns a smart pointer wrapping the underlying `BufferedReader`
+    while guaranteeing mutual exclusion.
+    
+    Code that treats the return value of io::stdin as implementing `Buffer`
+    will break. Add a call to `lock`:
+    
+    ```rust
+    io::stdin().read_line();
+    // =&gt;
+    io::stdin().lock().read_line();
+    ```
+    
+    Closes #14434
+    
+    [breaking-change]
+
+commit 08ce178866e4533d8815fe5868a520e0fc55b21c
+Merge: 4573da6 c3adbd3
+Author: Corey Richardson &lt;corey@octayn.net&gt;
+Date:   Fri Dec 5 10:06:39 2014 -0800
+
+    rollup merge of #19274: alexcrichton/rewrite-sync
+    
+    This commit is a reimplementation of `std::sync` to be based on the
+    system-provided primitives wherever possible. The previous implementation was
+    fundamentally built on top of channels, and as part of the runtime reform it has
+    become clear that this is not the level of abstraction that the standard level
+    should be providing. This rewrite aims to provide as thin of a shim as possible
+    on top of the system primitives in order to make them safe.
+    
+    The overall interface of the `std::sync` module has in general not changed, but
+    there are a few important distinctions, highlighted below:
+    
+    * The condition variable type, `Condvar`, has been separated out of a `Mutex`.
+      A condition variable is now an entirely separate type. This separation
+      benefits users who only use one mutex, and provides a clearer distinction of
+      who's responsible for managing condition variables (the application).
+    
+    * All of `Condvar`, `Mutex`, and `RWLock` are now directly built on top of
+      system primitives rather than using a custom implementation. The `Once`,
+      `Barrier`, and `Semaphore` types are still built upon these abstractions of
+      the system primitives.
+    
+    * The `Condvar`, `Mutex`, and `RWLock` types all have a new static type and
+      constant initializer corresponding to them. These are provided primarily for C
+      FFI interoperation, but are often useful to otherwise simply have a global
+      lock. The types, however, will leak memory unless `destroy()` is called on
+      them, which is clearly documented.
+    
+    * The fundamental architecture of this design is to provide two separate layers.
+      The first layer is that exposed by `sys_common` which is a cross-platform
+      bare-metal abstraction of the system synchronization primitives. No attempt is
+      made at making this layer safe, and it is quite unsafe to use! It is currently
+      not exported as part of the API of the standard library, but the stabilization
+      of the `sys` module will ensure that these will be exposed in time. The
+      purpose of this layer is to provide the core cross-platform abstractions if
+      necessary to implementors.
+    
+      The second layer is the layer provided by `std::sync` which is intended to be
+      the thinnest possible layer on top of `sys_common` which is entirely safe to
+      use. There are a few concerns which need to be addressed when making these
+      system primitives safe:
+    
+        * Once used, the OS primitives can never be **moved**. This means that they
+          essentially need to have a stable address. The static primitives use
+          `&amp;'static self` to enforce this, and the non-static primitives all use a
+          `Box` to provide this guarantee.
+    
+        * Poisoning is leveraged to ensure that invalid data is not accessible from
+          other tasks after one has panicked.
+    
+      In addition to these overall blanket safety limitations, each primitive has a
+      few restrictions of its own:
+    
+        * Mutexes and rwlocks can only be unlocked from the same thread that they
+          were locked by. This is achieved through RAII lock guards which cannot be
+          sent across threads.
+    
+        * Mutexes and rwlocks can only be unlocked if they were previously locked.
+          This is achieved by not exposing an unlocking method.
+    
+        * A condition variable can only be waited on with a locked mutex. This is
+          achieved by requiring a `MutexGuard` in the `wait()` method.
+    
+        * A condition variable cannot be used concurrently with more than one mutex.
+          This is guaranteed by dynamically binding a condition variable to
+          precisely one mutex for its entire lifecycle. This restriction may be able
+          to be relaxed in the future (a mutex is unbound when no threads are
+          waiting on the condvar), but for now it is sufficient to guarantee safety.
+    
+    * Condvars support timeouts for their blocking operations. The
+      implementation for these operations is provided by the system.
+    
+    Due to the modification of the `Condvar` API, removal of the `std::sync::mutex`
+    API, and reimplementation, this is a breaking change. Most code should be fairly
+    easy to port using the examples in the documentation of these primitives.
+    
+    [breaking-change]
+    
+    Closes #17094
+    Closes #18003
+
 commit d91331074862f13d87f67b85eeba2a1192c3a12d
 Author: Erick Tryzelaar &lt;erick.tryzelaar@gmail.com&gt;
 Date:   Fri Dec 5 09:04:55 2014 -0800
@@ -8,6 +123,95 @@ Date:   Fri Dec 5 09:04:55 2014 -0800
     test: expose boxplot and the extra stats test keeps track of
     
     [breaking-change]
+
+commit 71d4e77db8ad4b6d821da7e5d5300134ac95974e
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Nov 24 11:16:40 2014 -0800
+
+    std: Rewrite the `sync` module
+    
+    This commit is a reimplementation of `std::sync` to be based on the
+    system-provided primitives wherever possible. The previous implementation was
+    fundamentally built on top of channels, and as part of the runtime reform it has
+    become clear that this is not the level of abstraction that the standard level
+    should be providing. This rewrite aims to provide as thin of a shim as possible
+    on top of the system primitives in order to make them safe.
+    
+    The overall interface of the `std::sync` module has in general not changed, but
+    there are a few important distinctions, highlighted below:
+    
+    * The condition variable type, `Condvar`, has been separated out of a `Mutex`.
+      A condition variable is now an entirely separate type. This separation
+      benefits users who only use one mutex, and provides a clearer distinction of
+      who's responsible for managing condition variables (the application).
+    
+    * All of `Condvar`, `Mutex`, and `RWLock` are now directly built on top of
+      system primitives rather than using a custom implementation. The `Once`,
+      `Barrier`, and `Semaphore` types are still built upon these abstractions of
+      the system primitives.
+    
+    * The `Condvar`, `Mutex`, and `RWLock` types all have a new static type and
+      constant initializer corresponding to them. These are provided primarily for C
+      FFI interoperation, but are often useful to otherwise simply have a global
+      lock. The types, however, will leak memory unless `destroy()` is called on
+      them, which is clearly documented.
+    
+    * The `Condvar` implementation for an `RWLock` write lock has been removed. This
+      may be added back in the future with a userspace implementation, but this
+      commit is focused on exposing the system primitives first.
+    
+    * The fundamental architecture of this design is to provide two separate layers.
+      The first layer is that exposed by `sys_common` which is a cross-platform
+      bare-metal abstraction of the system synchronization primitives. No attempt is
+      made at making this layer safe, and it is quite unsafe to use! It is currently
+      not exported as part of the API of the standard library, but the stabilization
+      of the `sys` module will ensure that these will be exposed in time. The
+      purpose of this layer is to provide the core cross-platform abstractions if
+      necessary to implementors.
+    
+      The second layer is the layer provided by `std::sync` which is intended to be
+      the thinnest possible layer on top of `sys_common` which is entirely safe to
+      use. There are a few concerns which need to be addressed when making these
+      system primitives safe:
+    
+        * Once used, the OS primitives can never be **moved**. This means that they
+          essentially need to have a stable address. The static primitives use
+          `&amp;'static self` to enforce this, and the non-static primitives all use a
+          `Box` to provide this guarantee.
+    
+        * Poisoning is leveraged to ensure that invalid data is not accessible from
+          other tasks after one has panicked.
+    
+      In addition to these overall blanket safety limitations, each primitive has a
+      few restrictions of its own:
+    
+        * Mutexes and rwlocks can only be unlocked from the same thread that they
+          were locked by. This is achieved through RAII lock guards which cannot be
+          sent across threads.
+    
+        * Mutexes and rwlocks can only be unlocked if they were previously locked.
+          This is achieved by not exposing an unlocking method.
+    
+        * A condition variable can only be waited on with a locked mutex. This is
+          achieved by requiring a `MutexGuard` in the `wait()` method.
+    
+        * A condition variable cannot be used concurrently with more than one mutex.
+          This is guaranteed by dynamically binding a condition variable to
+          precisely one mutex for its entire lifecycle. This restriction may be able
+          to be relaxed in the future (a mutex is unbound when no threads are
+          waiting on the condvar), but for now it is sufficient to guarantee safety.
+    
+    * Condvars now support timeouts for their blocking operations. The
+      implementation for these operations is provided by the system.
+    
+    Due to the modification of the `Condvar` API, removal of the `std::sync::mutex`
+    API, and reimplementation, this is a breaking change. Most code should be fairly
+    easy to port using the examples in the documentation of these primitives.
+    
+    [breaking-change]
+    
+    Closes #17094
+    Closes #18003
 
 commit 6d965cc2c99787a949d38abf225412fe502d3ed8
 Merge: 53e8bd6 5cfac94
@@ -36,6 +240,34 @@ Date:   Thu Dec 4 12:02:56 2014 +0000
     cc #19148
     
     r? @aturon
+
+commit e7c1f57d6c8781cfb3e746eac5f13f760fcde2b4
+Author: Steven Fackler &lt;sfackler@gmail.com&gt;
+Date:   Sat Nov 29 23:07:43 2014 -0800
+
+    Back io::stdin with a global singleton BufferedReader
+    
+    io::stdin returns a new `BufferedReader` each time it's called, which
+    results in some very confusing behavior with disappearing output. It now
+    returns a `StdinReader`, which wraps a global singleton
+    `Arc&lt;Mutex&lt;BufferedReader&lt;StdReader&gt;&gt;`. `Reader` is implemented directly
+    on `StdinReader`. However, `Buffer` is not, as the `fill_buf` method is
+    fundamentaly un-thread safe. A `lock` method is defined on `StdinReader`
+    which returns a smart pointer wrapping the underlying `BufferedReader`
+    while guaranteeing mutual exclusion.
+    
+    Code that treats the return value of io::stdin as implementing `Buffer`
+    will break. Add a call to `lock`:
+    
+    ```rust
+    io::stdin().lines()
+    // =&gt;
+    io::stdin().lock().lines()
+    ```
+    
+    Closes #14434
+    
+    [breaking-change]
 
 commit b82624bf205e83555d7764d9f849fbfd30df0083
 Author: Piotr Czarnecki &lt;pioczarn@gmail.com&gt;
@@ -1969,65 +2201,4 @@ Date:   Mon Nov 3 12:12:24 2014 +0000
     
     r? @aturon
     cc #16918
-
-commit 112c8a966fbdb52ff2a535dc8e6df3a8b3cb8fb2
-Author: Alexis Beingessner &lt;a.beingessner@gmail.com&gt;
-Date:   Thu Oct 30 21:25:08 2014 -0400
-
-    refactor libcollections as part of collection reform
-    
-    * Moves multi-collection files into their own directory, and splits them into seperate files
-    * Changes exports so that each collection has its own module
-    * Adds underscores to public modules and filenames to match standard naming conventions
-    
-    (that is, treemap::{TreeMap, TreeSet} =&gt; tree_map::TreeMap, tree_set::TreeSet)
-    
-    * Renames PriorityQueue to BinaryHeap
-    * Renames SmallIntMap to VecMap
-    * Miscellanious fallout fixes
-    
-    [breaking-change]
-
-commit ab9a1b7d60495ba3652f770305888d6f166c39fe
-Author: whataloadofwhat &lt;unusualmoniker@gmail.com&gt;
-Date:   Sun Nov 2 13:27:15 2014 +0000
-
-    Change Json methods to &amp;str and allow Indexing
-    
-    Json's find, find_path, and search methods now use &amp;str rather
-    than &amp;String.
-    
-    Json can now be indexed with &amp;str (for Objects) and uint
-    (for Lists).
-    
-    Tests updated to reflect this change.
-    
-    [breaking-change]
-
-commit a294b35060e069007ee46e190a6f0a19fa3eaab8
-Merge: 0c12684 fea985a
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Sun Nov 2 21:22:14 2014 +0000
-
-    auto merge of #18406 : thestinger/rust/oom, r=cmr
-    
-    This makes the low-level allocation API suitable for use cases where
-    out-of-memory conditions need to be handled.
-    
-    Closes #18292
-    
-    [breaking-change]
-
-commit fea985a0b5008bc2f441866a80c0e3a16592eaab
-Author: Daniel Micay &lt;danielmicay@gmail.com&gt;
-Date:   Tue Oct 28 17:06:06 2014 -0400
-
-    bubble up out-of-memory errors from liballoc
-    
-    This makes the low-level allocation API suitable for use cases where
-    out-of-memory conditions need to be handled.
-    
-    Closes #18292
-    
-    [breaking-change]
 </pre></body></html>
