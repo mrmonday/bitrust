@@ -1,6 +1,14 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit d91331074862f13d87f67b85eeba2a1192c3a12d
+Author: Erick Tryzelaar &lt;erick.tryzelaar@gmail.com&gt;
+Date:   Fri Dec 5 09:04:55 2014 -0800
+
+    test: expose boxplot and the extra stats test keeps track of
+    
+    [breaking-change]
+
 commit 6d965cc2c99787a949d38abf225412fe502d3ed8
 Merge: 53e8bd6 5cfac94
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2020,40 +2028,6 @@ Date:   Tue Oct 28 17:06:06 2014 -0400
     out-of-memory conditions need to be handled.
     
     Closes #18292
-    
-    [breaking-change]
-
-commit 3327ecca422046699315122345c6c050ab73804b
-Merge: 39f90ae 05f6bda
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Sat Nov 1 22:41:48 2014 +0000
-
-    auto merge of #17595 : danburkert/rust/tuple-index-deserialization, r=alexcrichton
-    
-    Currently `Decoder` implementations are not provided the tuple arity as
-    a parameter to `read_tuple`. This forces all encoder/decoder combos to
-    serialize the arity along with the elements. Tuple-arity is always known
-    statically at the decode site, because it is part of the type of the
-    tuple, so it could instead be provided as an argument to `read_tuple`,
-    as it is to `read_struct`.
-    
-    The upside to this is that serialized tuples could become smaller in
-    encoder/decoder implementations which choose not to serialize type
-    (arity) information. For example, @TyOverby's
-    [binary-encode](https://github.com/TyOverby/binary-encode) format is
-    currently forced to serialize the tuple-arity along with every tuple,
-    despite the information being statically known at the decode site.
-    
-    A downside to this change is that the tuple-arity of serialized tuples
-    can no longer be automatically checked during deserialization. However,
-    for formats which do serialize the tuple-arity, either explicitly (rbml)
-    or implicitly (json), this check can be added to the `read_tuple` method.
-    
-    The signature of `Deserialize::read_tuple` and
-    `Deserialize::read_tuple_struct` are changed, and thus binary
-    backwards-compatibility is broken. This change does *not* force
-    serialization formats to change, and thus does not break decoding values
-    serialized prior to this change.
     
     [breaking-change]
 </pre></body></html>
