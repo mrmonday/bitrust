@@ -1,6 +1,37 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 558f8d8e3ea6b7da3d6d338740637149a7e45840
+Merge: a243e88 6e18b5a
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Sun Dec 7 16:12:22 2014 +0000
+
+    auto merge of #19539 : cmr/rust/18959, r=nikomatsakis
+    
+    Closes #18959
+    
+    Technically, this causes code that once compiled to no longer compile, but
+    that code probably never ran.
+    
+    [breaking-change]
+    
+    ------------
+    
+    Not quite sure the error message is good enough, I feel like it ought to tell you "because it inherits from non-object-safe trait Foo", so I've opened up a follow-up issue #19538
+
+commit 6e18b5af9336947ec5d41e66d216c52c12bf74a3
+Author: Corey Richardson &lt;corey@octayn.net&gt;
+Date:   Thu Nov 27 11:28:51 2014 -0500
+
+    rustc: check supertraits for object safety
+    
+    Closes #18959
+    
+    Technically, this causes code that once compiled to no longer compile, but
+    that code probably never ran.
+    
+    [breaking-change]
+
 commit a6ce402401f0da3a48a5a183ae109a00024ba666
 Merge: 26f2867 e7c1f57
 Author: Corey Richardson &lt;corey@octayn.net&gt;
@@ -2156,49 +2187,4 @@ Date:   Sun Nov 2 23:02:53 2014 -0800
     
     Closes #18499
     [breaking-change]
-
-commit 2790505c19b158a5494139dba084b6af82810b96
-Merge: b9b396c 696f72e
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Mon Nov 3 14:17:26 2014 +0000
-
-    auto merge of #18468 : jakub-/rust/iter-repeat, r=alexcrichton
-    
-    Implements a part of RFC 235.
-    
-    [breaking-change]
-
-commit b9b396cd7506c2e2aa6737adfa80f3404ed81b9d
-Merge: 851799d fe256f8
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Mon Nov 3 12:12:24 2014 +0000
-
-    auto merge of #18463 : japaric/rust/bytes2, r=alexcrichton
-    
-    - The `BytesContainer::container_into_owned_bytes` method has been removed
-    
-    - Methods that used to take `BytesContainer` implementors by value, now take them by reference. In particular, this breaks some uses of Path:
-    
-    ``` rust
-    Path::new("foo")  // Still works
-    path.join(another_path) -&gt; path.join(&amp;another_path)
-    ```
-    
-    [breaking-change]
-    
-    ---
-    
-    Re: `container_into_owned_bytes`, I've removed it because
-    
-    - Nothing in the whole repository uses it
-    - Takes `self` by value, which is incompatible with unsized types (`str`)
-    
-    The alternative to removing this method is to split `BytesContainer` into `BytesContainer for Sized?` and `SizedBytesContainer: BytesContainer + Sized`, where the second trait only contains the `container_into_owned_bytes` method. I tried this alternative [in another branch](https://github.com/japaric/rust/commits/bytes) and it works, but it seemed better not to create a new trait for an unused method.
-    
-    Re: Breakage of `Path` methods
-    
-    We could use the idea that @alexcrichton proposed in #18457 (add blanket `impl BytesContainer for &amp;T where T: BytesContainer` + keep taking `T: BytesContainer` by value in `Path` methods) to avoid breaking any code.
-    
-    r? @aturon
-    cc #16918
 </pre></body></html>
