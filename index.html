@@ -1,6 +1,88 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 2457375534dc51bff5229a21f9966c60d5800c47
+Merge: b4b1bb0 9af324a
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Tue Dec 9 09:25:14 2014 -0800
+
+    rollup merge of #19653: frewsxcv/rm-reexports
+    
+    Brief note: This does *not* affect anything in the prelude
+    
+    Part of #19253
+    
+    All this does is remove the reexporting of Result and Option from their
+    respective modules. More core reexports might be removed, but these ones
+    are the safest to remove since these enums (and their variants) are included in
+    the prelude.
+    
+    Depends on https://github.com/rust-lang/rust/pull/19407 which is merged, but might need a new snapshot
+    
+    [breaking-change]
+
+commit d0ad3c7f933d575d3700d8f5124e5474dfcdbd63
+Merge: ae60f9c a119ad8
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Tue Dec 9 09:24:50 2014 -0800
+
+    rollup merge of #19594: Arcterus/master
+    
+    It is useful to have configurable newlines in base64 as the standard
+    leaves that for the implementation to decide.  GNU `base64` apparently
+    uses LF, which meant in `uutils` we had to manually convert the CRLF to
+    LF.  This made the program very slow for large inputs.
+    
+    [breaking-change]
+
+commit 26c24221e47f76aef8c479ec66c01700df4d6ebb
+Merge: 60f97fc e852419
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Tue Dec 9 09:24:44 2014 -0800
+
+    rollup merge of #19587: huonw/closure-feature-gate
+    
+    detect UFCS drop and allow UFCS methods to have explicit type parameters.
+    
+    Work towards #18875.
+    
+    Since code could previously call the methods &amp; implement the traits
+    manually, this is a
+    
+    [breaking-change]
+    
+    Closes #19586. Closes #19375.
+
+commit 553ab271a31a9573fb6e95d03d8f4d00e17d6511
+Author: Arcterus &lt;Arcterus@mail.com&gt;
+Date:   Sat Dec 6 02:35:26 2014 -0800
+
+    serialize: base64: allow LF in addition to CRLF and optimize slightly
+    
+    It is useful to have configurable newlines in base64 as the standard
+    leaves that for the implementation to decide.  GNU `base64` apparently
+    uses LF, which meant in `uutils` we had to manually convert the CRLF to
+    LF.  This made the program very slow for large inputs.
+    
+    [breaking-change]
+
+commit 9af324a673443367c5b58a182804982c11f73981
+Author: Corey Farwell &lt;coreyf@rwell.org&gt;
+Date:   Mon Dec 8 12:58:01 2014 -0500
+
+    Remove Result and Option reexports
+    
+    Brief note: This does *not* affect anything in the prelude
+    
+    Part of #19253
+    
+    All this does is remove the reexporting of Result and Option from their
+    respective modules. More core reexports might be removed, but these ones
+    are the safest to remove since these enums (and their variants) are included in
+    the prelude.
+    
+    [breaking-change]
+
 commit 096a28607fb80c91e6e2ca64d9ef44c4e550e96c
 Author: Niko Matsakis &lt;niko@alum.mit.edu&gt;
 Date:   Fri Dec 5 17:01:33 2014 -0800
@@ -157,6 +239,22 @@ Date:   Thu Nov 27 11:28:51 2014 -0500
     that code probably never ran.
     
     [breaking-change]
+
+commit e8524198e3931373f5e097dece21e36d21c4a537
+Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+Date:   Fri Dec 5 15:53:30 2014 -0800
+
+    Feature-gate explicit unboxed closure method calls &amp; manual impls,
+    detect UFCS drop and allow UFCS methods to have explicit type parameters.
+    
+    Work towards #18875.
+    
+    Since code could previously call the methods &amp; implement the traits
+    manually, this is a
+    
+    [breaking-change]
+    
+    Closes #19586. Closes #19375.
 
 commit a6ce402401f0da3a48a5a183ae109a00024ba666
 Merge: 26f2867 e7c1f57
@@ -2111,106 +2209,4 @@ Date:   Thu Nov 6 16:52:09 2014 +0000
     However, I do not expect any code that currently uses the standard library to actually break.
     
     Closes #17917
-
-commit cfafc1b7377d34d8c60db7cd386836d39b80af41
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Sun Nov 2 17:04:32 2014 -0800
-
-    Prelude: rename and consolidate extension traits
-    
-    This commit renames a number of extension traits for slices and string
-    slices, now that they have been refactored for DST. In many cases,
-    multiple extension traits could now be consolidated. Further
-    consolidation will be possible with generalized where clauses.
-    
-    The renamings are consistent with the [new `-Prelude`
-    suffix](https://github.com/rust-lang/rfcs/pull/344). There are probably
-    a few more candidates for being renamed this way, but that is left for
-    API stabilization of the relevant modules.
-    
-    Because this renames traits, it is a:
-    
-    [breaking-change]
-    
-    However, I do not expect any code that currently uses the standard
-    library to actually break.
-    
-    Closes #17917
-
-commit e84e7a00ddec76570bbaa9afea385d544f616814
-Merge: 0e2f9b9 11f4bae
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Thu Nov 6 08:06:50 2014 +0000
-
-    auto merge of #18467 : japaric/rust/eq, r=alexcrichton
-    
-    `eq`, `ne`, `cmp`, etc methods now require one less level of indirection when dealing with `&amp;str`/`&amp;[T]`
-    
-    ``` rust
-    "foo".ne(&amp;"bar") -&gt; "foo".ne("bar")
-    slice.cmp(&amp;another_slice) -&gt; slice.cmp(another_slice)
-    // slice and another_slice have type `&amp;[T]`
-    ```
-    
-    [breaking-change]
-
-commit 63c4f22f2bf9f1c070311cdc08c6ceb279434733
-Merge: 5c1fd5f 81c00e6
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Wed Nov 5 22:31:44 2014 +0000
-
-    auto merge of #18486 : nikomatsakis/rust/operator-dispatch, r=pcwalton
-    
-    This branch cleans up overloaded operator resolution so that it is strictly based on the traits in `ops`, rather than going through the normal method lookup mechanism. It also adds full support for autoderef to overloaded index (whereas before autoderef only worked for non-overloaded index) as well as for the slicing operators.
-    
-    This is a [breaking-change]: in the past, we were accepting combinations of operands that were not intended to be accepted. For example, it was possible to compare a fixed-length array and a slice, or apply the `!` operator to a `&amp;int`. See the first two commits in this pull-request for examples.
-    
-    One downside of this change is that comparing fixed-length arrays doesn't always work as smoothly as it did before. Before this, comparisons sometimes worked due to various coercions to slices. I've added impls for `Eq`, `Ord`, etc for fixed-lengths arrays up to and including length 32, but if the array is longer than that you'll need to either newtype the array or convert to slices. Note that this plays better with deriving in any case than the previous scheme.
-    
-    Fixes #4920.
-    Fixes #16821.
-    Fixes #15757.
-    
-    cc @alexcrichton
-    cc @aturon
-
-commit 7e3344b17f777f5bca0d3eaa9278fa2d628ca064
-Author: Vladimir Matveev &lt;vladimir.matweev@gmail.com&gt;
-Date:   Wed Oct 29 22:59:43 2014 +0300
-
-    Migrated io::net::udp over to ToSocketAddr
-    
-    UdpSocket constructor methods now use ToSocketAddr trait instead of
-    SocketAddr.
-    
-    [breaking-change]
-
-commit ac846749f0abbd0b6107406ba2f97886605e1ad4
-Author: Vladimir Matveev &lt;vladimir.matweev@gmail.com&gt;
-Date:   Wed Oct 22 23:00:47 2014 +0400
-
-    Switched io::net::tcp to use ToSocketAddr
-    
-    TcpListener and TcpStream are converted to use ToSocketAddr trait in
-    their constructor methods.
-    
-    [breaking-change]
-
-commit eca8f11315cb3cd9836e6d8501a07fbb137f5e88
-Merge: 4375b32 3036b00
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Wed Nov 5 07:01:38 2014 +0000
-
-    auto merge of #18592 : alexcrichton/rust/dylib-harder, r=pcwalton
-    
-    If a dylib is being produced, the compiler will now first check to see if it can
-    be created entirely statically before falling back to dynamic dependencies. This
-    behavior can be overridden with `-C prefer-dynamic`.
-    
-    Due to the alteration in behavior, this is a breaking change. Any previous users
-    relying on dylibs implicitly maximizing dynamic dependencies should start
-    passing `-C prefer-dynamic` to compilations.
-    
-    Closes #18499
-    [breaking-change]
 </pre></body></html>
