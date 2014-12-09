@@ -63,6 +63,70 @@ Date:   Fri Dec 5 17:01:33 2014 -0800
     
     [breaking-change]
 
+commit fec0f16c98ab066ff11be35b5a8bb0d80efa90f1
+Author: Barosl Lee &lt;vcs@barosl.com&gt;
+Date:   Mon Nov 24 03:14:02 2014 +0900
+
+    libserialize: Always use a decimal point when emitting a float value
+    
+    JSON doesn't distinguish between integer and float. They are just
+    numbers. Also, in the current implementation, a fractional number
+    without the fractional part is encoded without a decimal point.
+    
+    Thereforce, when the value is decoded, it is first rendered as Json,
+    either I64 or U64. This reduces type safety, because while the original
+    intention was to cast the value to float, it can also be casted to
+    integer.
+    
+    As a workaround of this problem, this commit makes the encoder always
+    emit a decimal point even if it is not necessary. If the fractional part
+    of a float number is zero, ".0" is padded to the end of the result.
+    
+    [breaking-change]
+
+commit f102123b659911dbee25bbe518d73d66185bb978
+Author: Barosl Lee &lt;vcs@barosl.com&gt;
+Date:   Mon Nov 24 03:00:10 2014 +0900
+
+    libserialize: Do not coerce to integer when decoding a float value
+    
+    When an integral value is expected by the user but a fractional value is
+    found, the current implementation uses std::num::cast() to coerce to an
+    integer type, losing the fractional part. This behavior is not desirable
+    because the number loses precision without notice.
+    
+    This commit makes it raise ExpectedError when such a situation arises.
+    
+    [breaking-change]
+
+commit ca4f53655e82a0a0e1d613b16108720bb7a50fde
+Author: Barosl Lee &lt;vcs@barosl.com&gt;
+Date:   Mon Nov 24 02:22:30 2014 +0900
+
+    libserialize: Remove float preprocessing in serialize::json::Encoder
+    
+    serialize::json::Encoder currently uses f64 to emit any integral type.
+    This is possibly due to the behavior of JavaScript, which uses f64 to
+    represent any numeric value.
+    
+    This leads to a problem that only the integers in the range of [-2^53+1,
+    2^53-1] can be encoded. Therefore, i64 and u64 cannot be used reliably
+    in the current implementation.
+    
+    RFC 7159 suggests that good interoperability can be achieved if the
+    range is respected by implementations. However, it also says that
+    implementations are allowed to set the range of number accepted. And it
+    seems that the JSON encoders outside of the JavaScript world usually
+    make use of i64 values.
+    
+    This commit removes the float preprocessing done in the emit_* methods.
+    It also increases performance, because transforming f64 into String
+    costs more than that of an integral type.
+    
+    Fixes #18319
+    
+    [breaking-change]
+
 commit 558f8d8e3ea6b7da3d6d338740637149a7e45840
 Merge: a243e88 6e18b5a
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2148,88 +2212,5 @@ Date:   Wed Nov 5 07:01:38 2014 +0000
     passing `-C prefer-dynamic` to compilations.
     
     Closes #18499
-    [breaking-change]
-
-commit 4375b32dabf8096a1137a68c1070fc9a9292cb06
-Merge: ceeac26 e8d6031
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Wed Nov 5 03:31:33 2014 +0000
-
-    auto merge of #18504 : pcwalton/rust/small-escapes, r=pcwalton
-    
-    Use `\u0080`-`\u00ff` instead. ASCII/byte literals are unaffected.
-    
-    This PR introduces a new function, `escape_default`, into the ASCII
-    module. This was necessary for the pretty printer to continue to
-    function.
-    
-    RFC #326.
-    
-    Closes #18062.
-    
-    [breaking-change]
-    
-    r? @aturon
-
-commit e8d6031c71a5ab42648f26a253671ba17584407a
-Author: Patrick Walton &lt;pcwalton@mimiga.net&gt;
-Date:   Mon Oct 27 09:13:51 2014 -0700
-
-    libsyntax: Forbid escapes in the inclusive range `\x80`-`\xff` in
-    Unicode characters and strings.
-    
-    Use `\u0080`-`\u00ff` instead. ASCII/byte literals are unaffected.
-    
-    This PR introduces a new function, `escape_default`, into the ASCII
-    module. This was necessary for the pretty printer to continue to
-    function.
-    
-    RFC #326.
-    
-    Closes #18062.
-    
-    [breaking-change]
-
-commit 6b130e3dd9547e233dca2cfd72a5968891672d9c
-Author: Corey Richardson &lt;corey@octayn.net&gt;
-Date:   Wed Jul 23 11:56:36 2014 -0700
-
-    Implement flexible target specification
-    
-    Removes all target-specific knowledge from rustc. Some targets have changed
-    during this, but none of these should be very visible outside of
-    cross-compilation. The changes make our targets more consistent.
-    
-    iX86-unknown-linux-gnu is now only available as i686-unknown-linux-gnu. We
-    used to accept any value of X greater than 1. i686 was released in 1995, and
-    should encompass the bare minimum of what Rust supports on x86 CPUs.
-    
-    The only two windows targets are now i686-pc-windows-gnu and
-    x86_64-pc-windows-gnu.
-    
-    The iOS target has been renamed from arm-apple-ios to arm-apple-darwin.
-    
-    A complete list of the targets we accept now:
-    
-    arm-apple-darwin
-    arm-linux-androideabi
-    arm-unknown-linux-gnueabi
-    arm-unknown-linux-gnueabihf
-    
-    i686-apple-darwin
-    i686-pc-windows-gnu
-    i686-unknown-freebsd
-    i686-unknown-linux-gnu
-    
-    mips-unknown-linux-gnu
-    mipsel-unknown-linux-gnu
-    
-    x86_64-apple-darwin
-    x86_64-unknown-freebsd
-    x86_64-unknown-linux-gnu
-    x86_64-pc-windows-gnu
-    
-    Closes #16093
-    
     [breaking-change]
 </pre></body></html>
