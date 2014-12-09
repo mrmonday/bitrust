@@ -1,6 +1,68 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 096a28607fb80c91e6e2ca64d9ef44c4e550e96c
+Author: Niko Matsakis &lt;niko@alum.mit.edu&gt;
+Date:   Fri Dec 5 17:01:33 2014 -0800
+
+    librustc: Make `Copy` opt-in.
+    
+    This change makes the compiler no longer infer whether types (structures
+    and enumerations) implement the `Copy` trait (and thus are implicitly
+    copyable). Rather, you must implement `Copy` yourself via `impl Copy for
+    MyType {}`.
+    
+    A new warning has been added, `missing_copy_implementations`, to warn
+    you if a non-generic public type has been added that could have
+    implemented `Copy` but didn't.
+    
+    For convenience, you may *temporarily* opt out of this behavior by using
+    `#![feature(opt_out_copy)]`. Note though that this feature gate will never be
+    accepted and will be removed by the time that 1.0 is released, so you should
+    transition your code away from using it.
+    
+    This breaks code like:
+    
+        #[deriving(Show)]
+        struct Point2D {
+            x: int,
+            y: int,
+        }
+    
+        fn main() {
+            let mypoint = Point2D {
+                x: 1,
+                y: 1,
+            };
+            let otherpoint = mypoint;
+            println!("{}{}", mypoint, otherpoint);
+        }
+    
+    Change this code to:
+    
+        #[deriving(Show)]
+        struct Point2D {
+            x: int,
+            y: int,
+        }
+    
+        impl Copy for Point2D {}
+    
+        fn main() {
+            let mypoint = Point2D {
+                x: 1,
+                y: 1,
+            };
+            let otherpoint = mypoint;
+            println!("{}{}", mypoint, otherpoint);
+        }
+    
+    This is the backwards-incompatible part of #13231.
+    
+    Part of RFC #3.
+    
+    [breaking-change]
+
 commit 558f8d8e3ea6b7da3d6d338740637149a7e45840
 Merge: a243e88 6e18b5a
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2169,22 +2231,5 @@ Date:   Wed Jul 23 11:56:36 2014 -0700
     
     Closes #16093
     
-    [breaking-change]
-
-commit 3036b001276a6e43409b08b7f2334ce72aeeb036
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Sun Nov 2 23:02:53 2014 -0800
-
-    rustc: Default to static linking dylibs
-    
-    If a dylib is being produced, the compiler will now first check to see if it can
-    be created entirely statically before falling back to dynamic dependencies. This
-    behavior can be overridden with `-C prefer-dynamic`.
-    
-    Due to the alteration in behavior, this is a breaking change. Any previous users
-    relying on dylibs implicitly maximizing dynamic dependencies should start
-    passing `-C prefer-dynamic` to compilations.
-    
-    Closes #18499
     [breaking-change]
 </pre></body></html>
