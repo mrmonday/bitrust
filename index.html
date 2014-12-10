@@ -1,6 +1,22 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit bc486dc233b23f79d5f144cbbbd67cde208c14b6
+Merge: daa2bde 20eaf16
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Wed Dec 10 15:22:18 2014 +0000
+
+    auto merge of #19663 : tbu-/rust/pr_fix_vecmap, r=Gankro
+    
+    - Introduce a named type for the return type of `VecMap::move_iter`
+    - Rename all type parameters to `V` for "Value".
+    - Remove unnecessary call to an `Option::unwrap`, use pattern matching instead.
+    - Remove incorrect `Hash` implementation which took the `VecMap`'s capacity
+      into account.
+    
+    This is a [breaking-change], however whoever used the `Hash` implementation
+    relied on an incorrect implementation.
+
 commit 2457375534dc51bff5229a21f9966c60d5800c47
 Merge: b4b1bb0 9af324a
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -52,6 +68,21 @@ Date:   Tue Dec 9 09:24:44 2014 -0800
     [breaking-change]
     
     Closes #19586. Closes #19375.
+
+commit 67ae3a49e4864133784cd745a9a8866889f3ae15
+Author: Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
+Date:   Tue Dec 9 18:17:18 2014 +0100
+
+    Clean up `libcollections::VecMap`
+    
+    - Introduce a named type for the return type of `VecMap::move_iter`
+    - Rename all type parameters to `V` for "Value".
+    - Remove unnecessary call to an `Option::unwrap`, use pattern matching instead.
+    - Remove incorrect `Hash` implementation which took the `VecMap`'s capacity
+      into account.
+    
+    This is a [breaking-change], however whoever used the `Hash` implementation
+    relied on an incorrect implementation.
 
 commit 553ab271a31a9573fb6e95d03d8f4d00e17d6511
 Author: Arcterus &lt;Arcterus@mail.com&gt;
@@ -2170,43 +2201,4 @@ Date:   Tue Nov 4 11:22:32 2014 -0800
     
     [breaking-change]
     cc #18585
-
-commit cf3b2e4fe6044cce018b723de9b21c500c6eac41
-Author: Alexis Beingessner &lt;a.beingessner@gmail.com&gt;
-Date:   Thu Nov 6 12:24:47 2014 -0500
-
-    Implement low-hanging fruit of collection conventions
-    
-    * Renames/deprecates the simplest and most obvious methods
-    * Adds FIXME(conventions)s for outstanding work
-    * Marks "handled" methods as unstable
-    
-    NOTE: the semantics of reserve and reserve_exact have changed!
-    Other methods have had their semantics changed as well, but in a
-    way that should obviously not typecheck if used incorrectly.
-    
-    Lots of work and breakage to come, but this handles most of the core
-    APIs and most eggregious breakage. Future changes should *mostly* focus on
-    niche collections, APIs, or simply back-compat additions.
-    
-    [breaking-change]
-
-commit 8ed288edb27fc83b15a549af69c82b5bb4f8ac1e
-Merge: 60a669a cfafc1b
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Thu Nov 6 16:52:09 2014 +0000
-
-    auto merge of #18559 : aturon/rust/prelude_cleanup, r=alexcrichton
-    
-    This commit renames a number of extension traits for slices and string slices, now that they have been refactored for DST. In many cases, multiple extension traits could now be consolidated. Further consolidation will be possible with generalized where clauses.
-    
-    The renamings are consistent with the [new `-Prelude` suffix](https://github.com/rust-lang/rfcs/pull/344). There are probably a few more candidates for being renamed this way, but that is left for API stabilization of the relevant modules.
-    
-    Because this renames traits, it is a:
-    
-    [breaking-change]
-    
-    However, I do not expect any code that currently uses the standard library to actually break.
-    
-    Closes #17917
 </pre></body></html>
