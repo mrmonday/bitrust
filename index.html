@@ -1,6 +1,111 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 444fa1b7cffcd99ca5b8abb51acf979f06a25899
+Merge: 567b90f b8e0b81
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Sat Dec 13 22:57:21 2014 +0000
+
+    auto merge of #19467 : japaric/rust/uc, r=alexcrichton
+    
+    This PR moves almost all our current uses of closures, both in public API and internal uses, to the new "unboxed" closures system.
+    
+    In most cases, downstream code that *only uses* closures will continue to work as it is. The reason is that the `|| {}` syntax can be inferred either as a boxed or an "unboxed" closure according to the context. For example the following code will continue to work:
+    
+    ``` rust
+    some_option.map(|x| x.transform_with(upvar))
+    ```
+    
+    And will get silently upgraded to an "unboxed" closure.
+    
+    In some other cases, it may be necessary to "annotate" which `Fn*` trait the closure implements:
+    
+    ```
+    // Change this
+    |x| { /* body */}
+    // to either of these
+    |: x| { /* body */}  // closure implements the FnOnce trait
+    |&amp;mut : x| { /* body */}  // FnMut
+    |&amp;: x| { /* body */}  // Fn
+    ```
+    
+    This mainly occurs when the closure is assigned to a variable first, and then passed to a function/method.
+    
+    ``` rust
+    let closure = |: x| x.transform_with(upvar);
+    some.option.map(closure)
+    ```
+    
+    (It's very likely that in the future, an improved inference engine will make this annotation unnecessary)
+    
+    Other cases that require annotation are closures that implement some trait via a blanket `impl`, for example:
+    
+    - `std::finally::Finally`
+    - `regex::Replacer`
+    - `std::str::CharEq`
+    
+    ``` rust
+    string.trim_left_chars(|c: char| c.is_whitespace())
+    //~^ ERROR: the trait `Fn&lt;(char,), bool&gt;` is not implemented for the type `|char| -&gt; bool`
+    string.trim_left_chars(|&amp;: c: char| c.is_whitespace())  // OK
+    ```
+    
+    Finally, all implementations of traits that contain boxed closures in the arguments of their methods are now broken. And will need to be updated to use unboxed closures. These are the main affected traits:
+    
+    - `serialize::Decoder`
+    - `serialize::DecoderHelpers`
+    - `serialize::Encoder`
+    - `serialize::EncoderHelpers`
+    - `rustrt::ToCStr`
+    
+    For example, change this:
+    
+    ``` rust
+    // libserialize/json.rs
+    impl&lt;'a&gt; Encoder&lt;io::IoError&gt; for Encoder&lt;'a&gt; {
+        fn emit_enum(&amp;mut self,
+                     _name: &amp;str,
+                     f: |&amp;mut Encoder&lt;'a&gt;| -&gt; EncodeResult) -&gt; EncodeResult {
+            f(self)
+        }
+    }
+    ```
+    
+    to:
+    
+    ``` rust
+    // libserialize/json.rs
+    impl&lt;'a&gt; Encoder&lt;io::IoError&gt; for Encoder&lt;'a&gt; {
+        fn emit_enum&lt;F&gt;(&amp;mut self, _name: &amp;str, f: F) -&gt; EncodeResult where
+            F: FnOnce(&amp;mut Encoder&lt;'a&gt;) -&gt; EncodeResult
+        {
+            f(self)
+        }
+    }
+    ```
+    
+    [breaking-change]
+    
+    ---
+    
+    ### How the `Fn*` bound has been selected
+    
+    I've chosen the bounds to make the functions/structs as "generic as possible", i.e. to let them allow the maximum amount of input.
+    
+    - An `F: FnOnce` bound accepts the three kinds of closures: `|:|`, `|&amp;mut:|` and `|&amp;:|`.
+    - An `F: FnMut` bound only accepts "non-consuming" closures: `|&amp;mut:|` and `|&amp;:|`.
+    - An `F: Fn` bound only accept the "immutable environment" closures: `|&amp;:|`.
+    
+    This means that whenever possible the `FnOnce` bound has been used, if the `FnOnce` bound couldn't be used, then the `FnMut` was used. The `Fn` bound was never used in the whole repository.
+    
+    The `FnMut` bound was the most used, because it resembles the semantics of the current boxed closures: the closure can modify its environment, and the closure may be called several times.
+    
+    The `FnOnce` bound allows new semantics: you can move out the upvars when the closure is called. This can be effectively paired with the `move || {}` syntax to transfer ownership from the environment to the closure caller.
+    
+    In the case of trait methods, is hard to select the "right" bound since we can't control how the trait may be implemented by downstream users. In these cases, I have selected the bound based on how we use these traits in the repository. For this reason the selected bounds may not be ideal, and may require tweaking before stabilization.
+    
+    r? @aturon
+
 commit bc486dc233b23f79d5f144cbbbd67cde208c14b6
 Merge: daa2bde 20eaf16
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2182,23 +2287,4 @@ Date:   Fri Nov 7 15:26:26 2014 +0000
     If you're using `$foo:matchers` in a macro, write `$foo:tt` instead.
     
     [breaking-change]
-
-commit b39f1dcba0d79fa9b791e6d0735b411795f44979
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Tue Nov 4 11:22:32 2014 -0800
-
-    Remove rlibc from the distribution
-    
-    To make progress on #18585 we're paring down the distribution to theoretically
-    "only libstd", and this commit makes progress on this by removing the rlibc
-    crate from the distribution.
-    
-    The crate has now been moved into an external cargo package located in the rust
-    lang organization [1]. This is a breaking change due to this removal, and
-    existing crates depending on `rlibc` should use the Cargo crate instead.
-    
-    [1]: https://github.com/rust-lang/rlibc
-    
-    [breaking-change]
-    cc #18585
 </pre></body></html>
