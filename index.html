@@ -1,6 +1,21 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 52f7a4a351646d3837f214b5c7aec390c9b08221
+Merge: 3a9305c f6d60f3
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Sun Dec 14 11:37:27 2014 +0000
+
+    auto merge of #19338 : nikomatsakis/rust/unboxed-closure-purge-the-proc, r=acrichto
+    
+    They are replaced with unboxed closures.
+    
+    cc @pcwalton @aturon
+    
+    This is a [breaking-change]. Mostly, uses of `proc()` simply need to be converted to `move||` (unboxed closures), but in some cases the adaptations required are more complex (particularly for library authors). A detailed write-up can be found here: http://smallcultfollowing.com/babysteps/blog/2014/11/26/purging-proc/
+    
+    The commits are ordered to emphasize the more important changes, but are not truly standalone.
+
 commit 444fa1b7cffcd99ca5b8abb51acf979f06a25899
 Merge: 567b90f b8e0b81
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2270,21 +2285,6 @@ Date:   Wed Sep 3 14:56:35 2014 -0700
     was introduced, and is returned from all formatting methods on Tm. This
     allows the saving of another string allocation. Anyone wanting a String
     can just call .to_string() on the returned value.
-    
-    [breaking-change]
-
-commit 0b48001c28329392b26961eaf1c3ed293a352d6f
-Merge: 223ca76 00676c8
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Fri Nov 7 15:26:26 2014 +0000
-
-    auto merge of #17830 : pczarn/rust/interp_tt, r=pnkfelix
-    
-    Closes #14197
-    
-    Removes the `matchers` nonterminal.
-    
-    If you're using `$foo:matchers` in a macro, write `$foo:tt` instead.
     
     [breaking-change]
 </pre></body></html>
