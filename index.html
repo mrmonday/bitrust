@@ -24,6 +24,40 @@ Date:   Mon Dec 15 22:11:44 2014 +0000
     @aturon r? the library changes. I think the only controversial bit is the semantic change of the `Vec`/`String` `Add` implementation.
     cc #19148
 
+commit b60de4bfc2cf45ebe16b9b5b768f0aad54211625
+Author: Niko Matsakis &lt;niko@alum.mit.edu&gt;
+Date:   Fri Dec 12 11:09:24 2014 -0500
+
+    Emit warning when lifetime names are shadowed.
+    
+    This is not technically a [breaking-change], but it will be soon, so
+    you should update your code. Typically, shadowing is accidental, and
+    the shadowing lifetime can simply be removed. This frequently occurs
+    in constructor patterns:
+    
+    ```rust
+    // Old:
+    impl&lt;'a&gt; SomeStruct&lt;'a&gt; { fn new&lt;'a&gt;(..) -&gt; SomeStruct&lt;'a&gt; { ... } }
+    
+    // Should be:
+    impl&lt;'a&gt; SomeStruct&lt;'a&gt; { fn new(..) -&gt; SomeStruct&lt;'a&gt; { ... } }
+    ```
+    
+    Otherwise, you should rename the inner lifetime to something
+    else. Note though that lifetime elision frequently applies:
+    
+    ```rust
+    // Old
+    impl&lt;'a&gt; SomeStruct&lt;'a&gt; {
+        fn get&lt;'a&gt;(x: &amp;'a self) -&gt; &amp;'a T { &amp;self.field }
+    }
+    
+    // Should be:
+    impl&lt;'a&gt; SomeStruct&lt;'a&gt; {
+        fn get(x: &amp;self) -&gt; &amp;T { &amp;self.field }
+    }
+    ``
+
 commit 52f7a4a351646d3837f214b5c7aec390c9b08221
 Merge: 3a9305c f6d60f3
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2271,26 +2305,6 @@ Date:   Sat Nov 8 01:39:39 2014 +0100
     your code
     
     Part of #18424
-    
-    [breaking-change]
-
-commit afd657e20724f6a9093e34818c4923aa8601cafb
-Merge: 7bc3588 7ddf8cb
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Sat Nov 8 07:06:36 2014 +0000
-
-    auto merge of #18556 : seanmonstar/rust/tm-fmt, r=alexcrichton
-    
-    The internals of strftime were converted to use a single formatter,
-    instead of creating and concatenating a bunch of small strings. This
-    showed ~3x improvement in the benches.
-    
-    Also, since the formatted time may be going straight to a Writer, TmFmt
-    was introduced, and is returned from all formatting methods on Tm. This
-    allows the saving of another string allocation. Anyone wanting a String
-    can just call .to_string() on the returned value.
-    
-    This runs validation prior to return the created `TmFmt`, catching errors before formatting happens. The specialized formats skip this validation, since we already know they are valid.
     
     [breaking-change]
 </pre></body></html>
