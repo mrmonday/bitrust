@@ -1,6 +1,29 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 0669a432a2e09ad08886cb2138dbe9f5d681fb7f
+Merge: 92e9e70 89d2061
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Mon Dec 15 22:11:44 2014 +0000
+
+    auto merge of #19448 : japaric/rust/binops-by-value, r=nikomatsakis
+    
+    - The following operator traits now take their arguments by value: `Add`, `Sub`, `Mul`, `Div`, `Rem`, `BitAnd`, `BitOr`, `BitXor`, `Shl`, `Shr`. This breaks all existing implementations of these traits.
+    
+    - The binary operation `a OP b` now "desugars" to `OpTrait::op_method(a, b)` and consumes both arguments.
+    
+    - `String` and `Vec` addition have been changed to reuse the LHS owned value, and to avoid internal cloning. Only the following asymmetric operations are available: `String + &amp;str` and `Vec&lt;T&gt; + &amp;[T]`, which are now a short-hand for the "append" operation.
+    
+    [breaking-change]
+    
+    ---
+    
+    This passes `make check` locally. I haven't touch the unary operators in this PR, but converting them to by value should be very similar to this PR. I can work on them after this gets the thumbs up.
+    
+    @nikomatsakis r? the compiler changes
+    @aturon r? the library changes. I think the only controversial bit is the semantic change of the `Vec`/`String` `Add` implementation.
+    cc #19148
+
 commit 52f7a4a351646d3837f214b5c7aec390c9b08221
 Merge: 3a9305c f6d60f3
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2268,23 +2291,6 @@ Date:   Sat Nov 8 07:06:36 2014 +0000
     can just call .to_string() on the returned value.
     
     This runs validation prior to return the created `TmFmt`, catching errors before formatting happens. The specialized formats skip this validation, since we already know they are valid.
-    
-    [breaking-change]
-
-commit 7ddf8cb0e02549e6df7afe7e8486d735f8ee7eae
-Author: Sean McArthur &lt;sean.monstar@gmail.com&gt;
-Date:   Wed Sep 3 14:56:35 2014 -0700
-
-    libtime: alter strftime to use a TmFmt
-    
-    The internals of strftime were converted to use a single formatter,
-    instead of creating and concatenating a bunch of small strings. This
-    showed ~3x improvement in the benches.
-    
-    Also, since the formatted time may be going straight to a Writer, TmFmt
-    was introduced, and is returned from all formatting methods on Tm. This
-    allows the saving of another string allocation. Anyone wanting a String
-    can just call .to_string() on the returned value.
     
     [breaking-change]
 </pre></body></html>
