@@ -1,6 +1,118 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 137a3dbffd5454874bf001e213f695644b78523a
+Merge: dea69e6 1fbca88
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Wed Dec 17 08:34:14 2014 -0800
+
+    rollup merge of #19849: alexcrichton/second-pass-option
+    
+    This commit takes a second pass through the `std::option` module to fully
+    stabilize any lingering methods inside of it.
+    
+    These items were made stable as-is
+    
+    * Some
+    * None
+    * as_mut
+    * expect
+    * unwrap
+    * unwrap_or
+    * unwrap_or_else
+    * map
+    * map_or
+    * map_or_else
+    * and_then
+    * or_else
+    * unwrap_or_default
+    * Default implementation
+    * FromIterator implementation
+    * Copy implementation
+    
+    These items were made stable with modifications
+    
+    * iter - now returns a struct called Iter
+    * iter_mut - now returns a struct called IterMut
+    * into_iter - now returns a struct called IntoIter, Clone is never implemented
+    
+    This is a breaking change due to the modifications to the names of the iterator
+    types returned. Code referencing the old names should updated to referencing the
+    newer names instead. This is also a breaking change due to the fact that
+    `IntoIter` no longer implements the `Clone` trait.
+    
+    These items were explicitly not stabilized
+    
+    * as_slice - waiting on indexing conventions
+    * as_mut_slice - waiting on conventions with as_slice as well
+    * cloned - the API was still just recently added
+    * ok_or - API remains experimental
+    * ok_or_else - API remains experimental
+    
+    [breaking-change]
+
+commit 5294ceb312b059709f204300156b732cc78cfaf0
+Merge: 974e17b c2b0d7d
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Wed Dec 17 08:34:01 2014 -0800
+
+    rollup merge of #19818: emk/regex_at_name_opt
+    
+    Hello! This is my first Rust patch, and I fear that I've probably skipped at least 7 critical steps. I'd appreciate your feedback and advice about how to contribute to Rust.
+    
+    This patch is based on a discussion with @BurntSushi in #14602 a while back. I'm happy to revise it as needed to fit into the modern world. :-)
+    
+    As discussed in that issue, the existing `at` and `name` functions represent two different results with the empty string:
+    
+    1. Matched the empty string.
+    2. Did not match anything.
+    
+    Consider the following example.  This regex has two named matched groups, `key` and `value`. `value` is optional:
+    
+    ```rust
+    // Matches "foo", "foo;v=bar" and "foo;v=".
+    regex!(r"(?P&lt;key&gt;[a-z]+)(;v=(?P&lt;value&gt;[a-z]*))?");
+    ```
+    
+    We can access `value` using `caps.name("value")`, but there's no way for us to distinguish between the `"foo"` and `"foo;v="` cases.
+    
+    Early this year, @BurntSushi recommended modifying the existing `at` and `name` functions to return `Option`, instead of adding new functions to the API.
+    
+    This is a [breaking-change], but the fix is easy:
+    
+    - `refs.at(1)` becomes `refs.at(1).unwrap_or("")`.
+    - `refs.name(name)` becomes `refs.name(name).unwrap_or("")`.
+
+commit 974e17b9ea63b38b4a512742fc877a7e4ee94e03
+Merge: 126a83f 341cf40
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Wed Dec 17 08:33:58 2014 -0800
+
+    rollup merge of #19770: csouth3/iterator-wrapperstructs
+    
+    Using a type alias for iterator implementations is fragile since this exposes the implementation to users of the iterator, and any changes could break existing code.
+    
+    This PR changes the iterators of `BTreeMap`, `BTreeSet`, `HashMap`, and `HashSet` to use proper new types, rather than type aliases.  However, since it is fair-game to treat a type-alias as the aliased type, this is a:
+    
+    [breaking-change].
+
+commit 71201234d2ed3f20637fc373df063e7750cbc0ad
+Merge: 66c297d 81f9a31
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Wed Dec 17 08:33:44 2014 -0800
+
+    rollup merge of #19720: csouth3/vecmap-newtypes
+    
+    Using a type alias for iterator implementations is fragile since this
+    exposes the implementation to users of the iterator, and any changes
+    could break existing code.
+    
+    This commit changes the iterators of `VecMap` to use
+    proper new types, rather than type aliases.  However, since it is
+    fair-game to treat a type-alias as the aliased type, this is a:
+    
+    [breaking-change].
+
 commit 4265e86844b6f328ed8a0d144d02a935706c35ee
 Merge: 42deaa5 769aa0a
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -28,6 +140,70 @@ Date:   Fri Dec 12 13:23:21 2014 +1300
     
     A receiver will only ever get a single auto-reference. Previously arrays and strings would get two, e.g., [T] would be auto-ref'ed to &amp;&amp;[T]. This is usually apparent when a trait is implemented for `&amp;[T]` and has a method takes self by reference. The usual solution is to implement the trait for `[T]` (the DST form).
 
+commit 341cf405e5be56b9b1c8f3be6d0fe9a014eeff26
+Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
+Date:   Sat Dec 13 12:36:05 2014 -0600
+
+    Use wrapper structs for `HashSet`'s iterators.
+    
+    Using a type alias for iterator implementations is fragile since this
+    exposes the implementation to users of the iterator, and any changes
+    could break existing code.
+    
+    This commit changes the iterators of `HashSet` to use
+    proper new types, rather than type aliases.  However, since it is
+    fair-game to treat a type-alias as the aliased type, this is a:
+    
+    [breaking-change].
+
+commit 85fe141fb7c066e88a6872e74347c5f34d0223a7
+Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
+Date:   Fri Dec 12 01:02:19 2014 -0600
+
+    Use wrapper structs for `HashMap`'s iterators.
+    
+    Using a type alias for iterator implementations is fragile since this
+    exposes the implementation to users of the iterator, and any changes
+    could break existing code.
+    
+    This commit changes the keys and values iterators of `HashMap` to use
+    proper new types, rather than type aliases.  However, since it is
+    fair-game to treat a type-alias as the aliased type, this is a:
+    
+    [breaking-change].
+
+commit a81c3ab468ad7aebcab8a545b196e74c2fb3ac32
+Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
+Date:   Fri Dec 12 23:14:57 2014 -0600
+
+    Use wrapper structs for `BTreeSet`'s iterators.
+    
+    Using a type alias for iterator implementations is fragile since this
+    exposes the implementation to users of the iterator, and any changes
+    could break existing code.
+    
+    This commit changes the iterators of `BTreeSet` to use
+    proper new types, rather than type aliases.  However, since it is
+    fair-game to treat a type-alias as the aliased type, this is a:
+    
+    [breaking-change].
+
+commit 765806ef1ee93b352b724aa76870d23d82894e4e
+Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
+Date:   Fri Dec 12 00:04:47 2014 -0600
+
+    Use wrapper structs for `BTreeMap`'s iterators.
+    
+    Using a type alias for iterator implementations is fragile since this
+    exposes the implementation to users of the iterator, and any changes
+    could break existing code.
+    
+    This commit changes the keys and values iterators of `BTreeMap` to use
+    proper new types, rather than type aliases.  However, since it is
+    fair-game to treat a type-alias as the aliased type, this is a:
+    
+    [breaking-change].
+
 commit 0669a432a2e09ad08886cb2138dbe9f5d681fb7f
 Merge: 92e9e70 89d2061
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -50,6 +226,23 @@ Date:   Mon Dec 15 22:11:44 2014 +0000
     @nikomatsakis r? the compiler changes
     @aturon r? the library changes. I think the only controversial bit is the semantic change of the `Vec`/`String` `Add` implementation.
     cc #19148
+
+commit c9ea7c9a58bc2bcfe77d264cedaeca5a3296634a
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 15 09:06:06 2014 -0800
+
+    serialize: Change some FnOnce bounds to FnMut
+    
+    Relax some of the bounds on the decoder methods back to FnMut to help accomodate
+    some more flavorful variants of decoders which may need to run the closure more
+    than once when it, for example, attempts to find the first successful enum to
+    decode.
+    
+    This a breaking change due to the bounds for the trait switching, and clients
+    will need to update from `FnOnce` to `FnMut` as well as likely making the local
+    function binding mutable in order to call the function.
+    
+    [breaking-change]
 
 commit b60de4bfc2cf45ebe16b9b5b768f0aad54211625
 Author: Niko Matsakis &lt;niko@alum.mit.edu&gt;
@@ -85,6 +278,87 @@ Date:   Fri Dec 12 11:09:24 2014 -0500
     }
     ``
 
+commit 1fbca8824a6b6018191b7ee998d2c97f30c481d7
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Sun Dec 14 10:34:23 2014 -0800
+
+    std: Fully stabilize Option&lt;T&gt;
+    
+    This commit takes a second pass through the `std::option` module to fully
+    stabilize any lingering methods inside of it.
+    
+    These items were made stable as-is
+    
+    * Some
+    * None
+    * as_mut
+    * expect
+    * unwrap
+    * unwrap_or
+    * unwrap_or_else
+    * map
+    * map_or
+    * map_or_else
+    * and_then
+    * or_else
+    * unwrap_or_default
+    * Default implementation
+    * FromIterator implementation
+    * Copy implementation
+    
+    These items were made stable with modifications
+    
+    * iter - now returns a struct called Iter
+    * iter_mut - now returns a struct called IterMut
+    * into_iter - now returns a struct called IntoIter, Clone is never implemented
+    
+    This is a breaking change due to the modifications to the names of the iterator
+    types returned. Code referencing the old names should updated to referencing the
+    newer names instead. This is also a breaking change due to the fact that
+    `IntoIter` no longer implements the `Clone` trait.
+    
+    These items were explicitly not stabilized
+    
+    * as_slice - waiting on indexing conventions
+    * as_mut_slice - waiting on conventions with as_slice as well
+    * cloned - the API was still just recently added
+    * ok_or - API remains experimental
+    * ok_or_else - API remains experimental
+    
+    [breaking-change]
+
+commit c2b0d7dd8818a0dca9b1fa7af6873375907f05ca
+Author: Eric Kidd &lt;git@randomhacks.net&gt;
+Date:   Sat Dec 13 13:33:18 2014 -0500
+
+    Modify `regex::Captures::{at,name}` to return `Option`
+    
+    Closes #14602.  As discussed in that issue, the existing `at` and `name`
+    functions represent two different results with the empty string:
+    
+    1. Matched the empty string.
+    2. Did not match anything.
+    
+    Consider the following example.  This regex has two named matched
+    groups, `key` and `value`. `value` is optional:
+    
+    ```rust
+    // Matches "foo", "foo;v=bar" and "foo;v=".
+    regex!(r"(?P&lt;key&gt;[a-z]+)(;v=(?P&lt;value&gt;[a-z]*))?");
+    ```
+    
+    We can access `value` using `caps.name("value")`, but there's no way for
+    us to distinguish between the `"foo"` and `"foo;v="` cases.
+    
+    Early this year, @BurntSushi recommended modifying the existing `at` and
+    `name` functions to return `Option`, instead of adding new functions to
+    the API.
+    
+    This is a [breaking-change], but the fix is easy:
+    
+    - `refs.at(1)` becomes `refs.at(1).unwrap_or("")`.
+    - `refs.name(name)` becomes `refs.name(name).unwrap_or("")`.
+
 commit 52f7a4a351646d3837f214b5c7aec390c9b08221
 Merge: 3a9305c f6d60f3
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -99,6 +373,22 @@ Date:   Sun Dec 14 11:37:27 2014 +0000
     This is a [breaking-change]. Mostly, uses of `proc()` simply need to be converted to `move||` (unboxed closures), but in some cases the adaptations required are more complex (particularly for library authors). A detailed write-up can be found here: http://smallcultfollowing.com/babysteps/blog/2014/11/26/purging-proc/
     
     The commits are ordered to emphasize the more important changes, but are not truly standalone.
+
+commit 81f9a319265ddbe6b7823b50c29e3aff076d82c1
+Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
+Date:   Wed Dec 10 23:12:31 2014 -0600
+
+    Change `VecMap`'s iterators to use wrapper structs instead of typedefs.
+    
+    Using a type alias for iterator implementations is fragile since this
+    exposes the implementation to users of the iterator, and any changes
+    could break existing code.
+    
+    This commit changes the iterators of `VecMap` to use
+    proper new types, rather than type aliases.  However, since it is
+    fair-game to treat a type-alias as the aliased type, this is a:
+    
+    [breaking-change].
 
 commit 444fa1b7cffcd99ca5b8abb51acf979f06a25899
 Merge: 567b90f b8e0b81
@@ -2053,250 +2343,4 @@ Date:   Thu Nov 13 12:27:03 2014 +0000
     [breaking-change]
     
     r? @aturon
-
-commit 5745e419502d753deb3f42026fa35e015bc5d3fb
-Merge: 7a86aa8 fcd05ed
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Wed Nov 12 22:57:16 2014 +0000
-
-    auto merge of #18858 : alexcrichton/rust/remove-time, r=jakub
-    
-    This commit deprecates the entire libtime library in favor of the
-    externally-provided libtime in the rust-lang organization. Users of the
-    `libtime` crate as-is today should add this to their Cargo manifests:
-    
-        [dependencies.time]
-        git = "https://github.com/rust-lang/time"
-    
-    To implement this transition, a new function `Duration::span` was added to the
-    `std::time::Duration` time. This function takes a closure and then returns the
-    duration of time it took that closure to execute. This interface will likely
-    improve with `FnOnce` unboxed closures as moving in and out will be a little
-    easier.
-    
-    Due to the deprecation of the in-tree crate, this is a:
-    
-    [breaking-change]
-    
-    cc #18855, some of the conversions in the `src/test/bench` area may have been a
-    little nicer with that implemented
-
-commit fcd05ed99ff0aa6157e427a698ac53dbc450135f
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Mon Nov 10 12:27:56 2014 -0800
-
-    time: Deprecate the library in the distribution
-    
-    This commit deprecates the entire libtime library in favor of the
-    externally-provided libtime in the rust-lang organization. Users of the
-    `libtime` crate as-is today should add this to their Cargo manifests:
-    
-        [dependencies.time]
-        git = "https://github.com/rust-lang/time"
-    
-    To implement this transition, a new function `Duration::span` was added to the
-    `std::time::Duration` time. This function takes a closure and then returns the
-    duration of time it took that closure to execute. This interface will likely
-    improve with `FnOnce` unboxed closures as moving in and out will be a little
-    easier.
-    
-    Due to the deprecation of the in-tree crate, this is a:
-    
-    [breaking-change]
-    
-    cc #18855, some of the conversions in the `src/test/bench` area may have been a
-    little nicer with that implemented
-
-commit e6e58e43f8f9507474fdf35544b6b0c0fc6cef39
-Author: Patrick Walton &lt;pcwalton@mimiga.net&gt;
-Date:   Tue Nov 11 10:45:59 2014 -0800
-
-    libsyntax: Forbid type parameters in field expressions.
-    
-    This breaks code like:
-    
-        struct Foo {
-            x: int,
-        }
-    
-        let f: Foo = ...;
-        ... f.x::&lt;int&gt; ...
-    
-    Change this code to not contain an unused type parameter. For example:
-    
-        struct Foo {
-            x: int,
-        }
-    
-        let f: Foo = ...;
-        ... f.x ...
-    
-    Closes #18680.
-    
-    [breaking-change]
-
-commit 16d80de231abb2b1756f3951ffd4776d681035eb
-Merge: a2f303a 5ea09e6
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Sun Nov 9 05:51:44 2014 +0000
-
-    auto merge of #18557 : aturon/rust/io-removal, r=alexcrichton
-    
-    This PR includes a sequence of commits that gradually dismantles the `librustrt` `rtio` system -- the main trait previously used to abstract over green and native io. It also largely dismantles `libnative`, moving much of its code into `libstd` and refactoring as it does so.
-    
-    TL;DR:
-    
-    * Before this PR: `rustc hello.rs &amp;&amp; wc -c hello` produces 715,996
-    * After this PR:  `rustc hello.rs &amp;&amp; wc -c hello` produces 368,100
-    
-    That is, this PR reduces the footprint of hello world by ~50%.
-    
-    This is a major step toward #17325 (i.e. toward implementing the [runtime removal RFC](https://github.com/rust-lang/rfcs/pull/230).) What remains is to pull out the scheduling, synchronization and task infrastructure, and to remove `libgreen`. These will be done soon in a follow-up PR.
-    
-    Part of the work here is eliminating the `rtio` abstraction, which in many cases means bringing the implementation of io closer to the actual API presented in `std::io`.
-    
-    Another aspect of this PR is the creation of two new, *private* modules within `std` that implement io:
-    
-    * The `sys` module, which represents a platform-specific implementation of a number of low-level abstractions that are used directly within `std::io` and `std::os`. These "abstractions" are left largely the same as they were in `libnative` (except for the removal of `Arc` in file descriptors), but they are expected to evolve greatly over time. Organizationally, there are `sys/unix/` and `sys/windows/` directories which both implement the entire `sys` module hierarchy; this means that nearly all of the platform-specific code is isolated and you can get a handle on each platform in isolation.
-    
-    * The `sys_common` module, which is rooted at `sys/common`, and provides a few pieces of private, low-level, but cross-platform functionality.
-    
-    In the long term, the `sys` modules will provide hooks for exposing high-level platform-specific APIs as part of `libstd`. The first such API will be access to file descriptors from `std::io` abstractions, but a bit of design work remains before that step can be taken.
-    
-    The `sys_common` module includes some traits (like `AsFileDesc`) which allow communication of private details between modules in disparate locations in the hierarchy; this helps overcome the relatively simple hierarchical privacy system in Rust.
-    
-    To emphasize: the organization in `sys` is *very preliminary* and the main goal was to migrate away from `rtio` as quickly and simply as possible. The design will certainly evolve over time, and all of the details are currently private.
-    
-    Along the way, this PR also entirely removes signal handling, since it was only supported on `librustuv` which was removed a while ago.
-    
-    Because of the removal of APIs from `libnative` and `librustrt`, and the removal of signal handling, this is a:
-    
-    [breaking-change]
-    
-    Some of these APIs will return in public from from `std` over time.
-    
-    r? @alexcrichton
-
-commit fa94fdad3e880d2d6cbd82c12bd12caefbeb81a8
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Fri Oct 17 13:39:27 2014 -0700
-
-    Runtime removal: fully remove rtio
-    
-    This patch cleans up the remnants of the runtime IO interface.
-    
-    Because this eliminates APIs in `libnative` and `librustrt`, it is a:
-    
-    [breaking-change]
-    
-    This functionality is likely to be available publicly, in some form,
-    from `std` in the future.
-
-commit 431dcdc840a27f7c7418b7dff73a329eada8a407
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Fri Oct 17 13:33:08 2014 -0700
-
-    Runtime removal: refactor tty
-    
-    This patch continues runtime removal by moving the tty implementations
-    into `sys`.
-    
-    Because this eliminates APIs in `libnative` and `librustrt`, it is a:
-    
-    [breaking-change]
-    
-    This functionality is likely to be available publicly, in some form,
-    from `std` in the future.
-
-commit b8f1193bb1bb66610f479cd78e3dc5526e93058d
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Thu Oct 16 18:57:11 2014 -0700
-
-    Runtime removal: refactor timer
-    
-    This patch continues runtime removal by moving out timer-related code
-    into `sys`.
-    
-    Because this eliminates APIs in `libnative` and `librustrt`, it is a:
-    
-    [breaking-change]
-    
-    This functionality is likely to be available publicly, in some form,
-    from `std` in the future.
-
-commit 0f98e75b69d16edce9ca60d7961b8440856a3f72
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Thu Oct 9 16:27:28 2014 -0700
-
-    Runtime removal: refactor process
-    
-    This patch continues the runtime removal by moving and refactoring the
-    process implementation into the new `sys` module.
-    
-    Because this eliminates APIs in `libnative` and `librustrt`, it is a:
-    
-    [breaking-change]
-    
-    This functionality is likely to be available publicly, in some form,
-    from `std` in the future.
-
-commit 3d195482a45bf3ed0f12dc9d70d14192262ca711
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Wed Oct 15 15:45:59 2014 -0700
-
-    Runtime removal: refactor helper threads
-    
-    This patch continues the runtime removal by moving
-    libnative::io::helper_thread into sys::helper_signal and
-    sys_common::helper_thread
-    
-    Because this eliminates APIs in `libnative` and `librustrt`, it is a:
-    
-    [breaking-change]
-    
-    This functionality is likely to be available publicly, in some form,
-    from `std` in the future.
-
-commit d34b1b0ca9bf5e0d7cd30952f5de0ab09ed57b41
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Fri Oct 10 10:11:49 2014 -0700
-
-    Runtime removal: refactor pipes and networking
-    
-    This patch continues the runtime removal by moving pipe and
-    networking-related code into `sys`.
-    
-    Because this eliminates APIs in `libnative` and `librustrt`, it is a:
-    
-    [breaking-change]
-    
-    This functionality is likely to be available publicly, in some form,
-    from `std` in the future.
-
-commit 0c1e1ff1e300868a29405a334e65eae690df971d
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Tue Sep 30 17:34:14 2014 -0700
-
-    Runtime removal: refactor fs
-    
-    This moves the filesystem implementation from libnative into the new
-    `sys` modules, refactoring along the way and hooking into `std::io::fs`.
-    
-    Because this eliminates APIs in `libnative` and `librustrt`, it is a:
-    
-    [breaking-change]
-    
-    This functionality is likely to be available publicly, in some form,
-    from `std` in the future.
-
-commit 16470cf01b688c576f47b93bdb4af88db33cf1e1
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Thu Oct 9 16:40:05 2014 -0700
-
-    Remove signal handling.
-    
-    Since signal handling was only implemented through librustuv, which is
-    now gone, there's no reason to even provide the API.
-    
-    [breaking-change]
 </pre></body></html>
