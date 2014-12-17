@@ -1,6 +1,33 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 4265e86844b6f328ed8a0d144d02a935706c35ee
+Merge: 42deaa5 769aa0a
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Wed Dec 17 02:42:57 2014 +0000
+
+    auto merge of #19761 : nick29581/rust/coerce-double, r=nikomatsakis
+    
+    Part of #18469
+    
+    [breaking-change]
+    
+    A receiver will only ever get a single auto-reference. Previously arrays and strings would get two, e.g., [T] would be auto-ref'ed to &amp;&amp;[T]. This is usually apparent when a trait is implemented for `&amp;[T]` and has a method takes self by reference. The usual solution is to implement the trait for `[T]` (the DST form).
+    
+    r? @nikomatsakis (or anyone else, really)
+
+commit 769aa0a7b378a7b71f5bcbec3485fe171ff4f3b9
+Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
+Date:   Fri Dec 12 13:23:21 2014 +1300
+
+    Remove the double auto-ref on arrays/strings as receivers
+    
+    Part of #18469
+    
+    [breaking-change]
+    
+    A receiver will only ever get a single auto-reference. Previously arrays and strings would get two, e.g., [T] would be auto-ref'ed to &amp;&amp;[T]. This is usually apparent when a trait is implemented for `&amp;[T]` and has a method takes self by reference. The usual solution is to implement the trait for `[T]` (the DST form).
+
 commit 0669a432a2e09ad08886cb2138dbe9f5d681fb7f
 Merge: 92e9e70 89d2061
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2270,41 +2297,6 @@ Date:   Thu Oct 9 16:40:05 2014 -0700
     
     Since signal handling was only implemented through librustuv, which is
     now gone, there's no reason to even provide the API.
-    
-    [breaking-change]
-
-commit a2f303ad098844351d08800038a4f99fa2ff0817
-Merge: 93c85eb cf4e53e
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Sun Nov 9 03:51:41 2014 +0000
-
-    auto merge of #18743 : nikomatsakis/rust/hrtb-refactor-2, r=pcwalton
-    
-    Various miscellaneous changes pushing towards HRTB support:
-    
-    1. Update parser and adjust ast to support `for&lt;'a,'b&gt;` syntax, both in closures and trait bounds. Warn on the old syntax (not error, for stage0).
-    2. Refactor TyTrait representation to include a TraitRef.
-    3. Purge `once_fns` feature gate and `once` keyword.
-    
-    r? @pcwalton
-    
-    This is a [breaking-change]:
-    
-    - The `once_fns` feature is now officially deprecated. Rewrite using normal closures or unboxed closures.
-    - The new `for`-based syntax now issues warnings (but not yet errors):
-      - `fn&lt;'a&gt;(T) -&gt; U` becomes `for&lt;'a&gt; fn(T) -&gt; U`
-      - `&lt;'a&gt; |T| -&gt; U` becomes `for&lt;'a&gt; |T| -&gt; U`
-
-commit 16c8cd931cd5ccc9c73b87cac488938556018019
-Author: gamazeps &lt;gamaz3ps@gmail.com&gt;
-Date:   Sat Nov 8 01:39:39 2014 +0100
-
-    Renamed Extendable to Extend
-    
-    In order to upgrade, simply rename the Extendable trait to Extend in
-    your code
-    
-    Part of #18424
     
     [breaking-change]
 </pre></body></html>
