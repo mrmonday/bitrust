@@ -1,6 +1,112 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit f9a48492a82f805aa40d8b6fea290badbab0d1b1
+Merge: c4d58ce ddb2466
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Thu Dec 18 17:32:07 2014 +0000
+
+    auto merge of #19984 : japaric/rust/macro-expressions, r=alexcrichton
+    
+    followed by a semicolon.
+    
+    This allows code like `vec![1i, 2, 3].len();` to work.
+    
+    This breaks code that uses macros as statements without putting
+    semicolons after them, such as:
+    
+        fn main() {
+            ...
+            assert!(a == b)
+            assert!(c == d)
+            println(...);
+        }
+    
+    It also breaks code that uses macros as items without semicolons:
+    
+        local_data_key!(foo)
+    
+        fn main() {
+            println("hello world")
+        }
+    
+    Add semicolons to fix this code. Those two examples can be fixed as
+    follows:
+    
+        fn main() {
+            ...
+            assert!(a == b);
+            assert!(c == d);
+            println(...);
+        }
+    
+        local_data_key!(foo);
+    
+        fn main() {
+            println("hello world")
+        }
+    
+    RFC #378.
+    
+    Closes #18635.
+    
+    [breaking-change]
+    
+    ---
+    
+    Rebased version of #18958
+    r? @alexcrichton
+    cc @pcwalton
+
+commit ddb2466f6a1bb66f22824334022a4cee61c73bdc
+Author: Patrick Walton &lt;pcwalton@mimiga.net&gt;
+Date:   Fri Nov 14 09:18:10 2014 -0800
+
+    librustc: Always parse `macro!()`/`macro![]` as expressions if not
+    followed by a semicolon.
+    
+    This allows code like `vec![1i, 2, 3].len();` to work.
+    
+    This breaks code that uses macros as statements without putting
+    semicolons after them, such as:
+    
+        fn main() {
+            ...
+            assert!(a == b)
+            assert!(c == d)
+            println(...);
+        }
+    
+    It also breaks code that uses macros as items without semicolons:
+    
+        local_data_key!(foo)
+    
+        fn main() {
+            println("hello world")
+        }
+    
+    Add semicolons to fix this code. Those two examples can be fixed as
+    follows:
+    
+        fn main() {
+            ...
+            assert!(a == b);
+            assert!(c == d);
+            println(...);
+        }
+    
+        local_data_key!(foo);
+    
+        fn main() {
+            println("hello world")
+        }
+    
+    RFC #378.
+    
+    Closes #18635.
+    
+    [breaking-change]
+
 commit 137a3dbffd5454874bf001e213f695644b78523a
 Merge: dea69e6 1fbca88
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2303,44 +2409,4 @@ Date:   Fri Nov 14 05:37:17 2014 +0000
     - The `core::num::{next_power_of_two, is_power_of_two, checked_next_power_of_two}` functions have been deprecated in favor of methods defined a new trait, `core::num::UnsignedInt`
     - `core::iter::{AdditiveIterator, MultiplicativeIterator}` are now only implemented for the built-in numeric types.
     - `core::iter::{range, range_inclusive, range_step, range_step_inclusive}` now require `core::num::Int` to be implemented for the type they a re parametrized over.
-
-commit 43fd6446add0bcf237f3fe15b7d715eceee2a08c
-Author: Ricky Taylor &lt;rickytaylor26@gmail.com&gt;
-Date:   Sat Nov 8 21:59:09 2014 +0000
-
-    Make std::io::Buffer object-safe.
-    
-    [breaking-change]
-    Any uses of Buffer::lines() and Buffer::chars() will need to use the new trait std::io::BufferPrelude.
-
-commit 82f383839c7cc0ce66d7cfbd400182b535029f0f
-Merge: f6c0250 e6e58e4
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Thu Nov 13 12:27:03 2014 +0000
-
-    auto merge of #18879 : pcwalton/rust/path-silliness, r=aturon
-    
-    This breaks code like:
-    
-        struct Foo {
-            x: int,
-        }
-    
-        let f: Foo = ...;
-        ... f.x::&lt;int&gt; ...
-    
-    Change this code to not contain an unused type parameter. For example:
-    
-        struct Foo {
-            x: int,
-        }
-    
-        let f: Foo = ...;
-        ... f.x ...
-    
-    Closes #18680.
-    
-    [breaking-change]
-    
-    r? @aturon
 </pre></body></html>
