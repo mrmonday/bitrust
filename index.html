@@ -1,6 +1,125 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 0efafac398ff7f28c5f0fe756c15b9008b3e0534
+Merge: 6bdce25 903c5a8
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Fri Dec 19 08:28:52 2014 +0000
+
+    auto merge of #19654 : aturon/rust/merge-rt, r=alexcrichton
+    
+    This PR substantially narrows the notion of a "runtime" in Rust, and allows calling into Rust code directly without any setup or teardown.
+    
+    After this PR, the basic "runtime support" in Rust will consist of:
+    
+    * Unwinding and backtrace support
+    * Stack guards
+    
+    Other support, such as helper threads for timers or the notion of a "current thread" are initialized automatically upon first use.
+    
+    When using Rust in an embedded context, it should now be possible to call a Rust function directly as a C function with absolutely no setup, though in that case panics will cause the process to abort. In this regard, the C/Rust interface will look much like the C/C++ interface.
+    
+    In more detail, this PR:
+    
+    * Merges `librustrt` back into `std::rt`, undoing the facade. While doing so, it removes a substantial amount of redundant functionality (such as mutexes defined in the `rt` module). Code using `librustrt` can now call into `std::rt` to e.g. start executing Rust code with unwinding support.
+    
+    * Allows all runtime data to be initialized lazily, including the "current thread", the "at_exit" infrastructure, and the "args" storage.
+    
+    * Deprecates and largely removes `std::task` along with the widespread requirement that there be a "current task" for many APIs in `std`. The entire task infrastructure is replaced with `std::thread`, which provides a more standard API for manipulating and creating native OS threads. In particular, it's possible to join on a created thread, and to get a handle to the currently-running thread. In addition, threads are equipped with some basic blocking support in the form of `park`/`unpark` operations (following a tradition in some OSes as well as the JVM). See the `std::thread` documentation for more details.
+    
+    * Channels are refactored to use a new internal blocking infrastructure that itself sits on top of `park`/`unpark`.
+    
+    One important change here is that a Rust program ends when its main thread does, following most threading models. On the other hand, threads will often be created with an RAII-style join handle that will re-institute blocking semantics naturally (and with finer control).
+    
+    This is very much a:
+    
+    [breaking-change]
+    
+    Closes #18000
+    r? @alexcrichton
+
+commit 903c5a8f69714382ec9fc22745f902c3e219cb68
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Thu Dec 18 23:29:30 2014 -0800
+
+    Disable at_exit handlers
+    
+    The [final step](https://github.com/rust-lang/rust/pull/19654) of
+    runtime removal changes the threading/process model so that the process
+    shuts down when the main thread exits. But several shared resources,
+    like the helper thread for timeouts, are shut down when the main thread
+    exits (but before the process ends), and they are not prepared to be
+    used after shut down, but other threads may try to access them during
+    the shutdown sequence of the main thread.
+    
+    As an interim solution, the `at_exit` cleanup routine is simply skipped.
+    
+    Ultimately, these resources should be made to safely handle asynchronous
+    shutdown, usually by panicking if called from a detached thread when the
+    main thread is ending.
+    
+    See issue for details https://github.com/rust-lang/rust/issues/20012
+    
+    This is a [breaking-change] for anyone relying on `at_exit`.
+
+commit a27fbac86849e07a0a6c746869d8f78319bd3a16
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Sun Dec 14 00:05:32 2014 -0800
+
+    Revise std::thread API to join by default
+    
+    This commit is part of a series that introduces a `std::thread` API to
+    replace `std::task`.
+    
+    In the new API, `spawn` returns a `JoinGuard`, which by default will
+    join the spawned thread when dropped. It can also be used to join
+    explicitly at any time, returning the thread's result. Alternatively,
+    the spawned thread can be explicitly detached (so no join takes place).
+    
+    As part of this change, Rust processes now terminate when the main
+    thread exits, even if other detached threads are still running, moving
+    Rust closer to standard threading models. This new behavior may break code
+    that was relying on the previously implicit join-all.
+    
+    In addition to the above, the new thread API also offers some built-in
+    support for building blocking abstractions in user space; see the module
+    doc for details.
+    
+    Closes #18000
+    
+    [breaking-change]
+
+commit 9b03b72d7fb82f07d35e7dcda02754c6da90ae58
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Mon Nov 24 17:33:37 2014 -0800
+
+    Remove rt::bookkeeping
+    
+    This commit removes the runtime bookkeeping previously used to ensure
+    that all Rust tasks were joined before the runtime was shut down.
+    
+    This functionality will be replaced by an RAII style `Thread` API, that
+    will also offer a detached mode.
+    
+    Since this changes the semantics of shutdown, it is a:
+    
+    [breaking-change]
+
+commit 2b3477d373603527d23cc578f3737857b7b253d7
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Sun Nov 23 19:21:17 2014 -0800
+
+    libs: merge librustrt into libstd
+    
+    This commit merges the `rustrt` crate into `std`, undoing part of the
+    facade. This merger continues the paring down of the runtime system.
+    
+    Code relying on the public API of `rustrt` will break; some of this API
+    is now available through `std::rt`, but is likely to change and/or be
+    removed very soon.
+    
+    [breaking-change]
+
 commit 6bdce25e155d846bb9252fa4a18baef7e74cf8bf
 Merge: 840de07 9b5de39
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2316,71 +2435,6 @@ Date:   Mon Nov 17 17:35:18 2014 +0800
         "ar".slice_shift_char()  =&gt; Some(('a', "r"))
         "r".slice_shift_char()   =&gt; Some(('r', ""))
         "".slice_shift_char()    =&gt; None
-    
-    [breaking-change]
-
-commit edfb83c9e28df2a8f326d688f3d5b1f6faa72db8
-Merge: 803aacd dfb7a81
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Mon Nov 17 09:26:57 2014 +0000
-
-    auto merge of #18914 : Gankro/rust/cloned, r=aturon
-    
-    Part of #18424. r? @aturon
-    
-    [breaking-change]
-
-commit aad75471fd327c0138f80aba46c650a7f9839d17
-Merge: 321488b 579c65d
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Sun Nov 16 18:27:10 2014 +0000
-
-    auto merge of #18994 : sfackler/rust/struct-variants-pt2, r=jakub-
-    
-    Struct variant field visibility is now inherited. Remove `pub` keywords
-    from declarations.
-    
-    Closes #18641
-    
-    [breaking-change]
-    
-    r? @alexcrichton
-
-commit eb01b17b06eb35542bb80ff7456043b0ed5572ba
-Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
-Date:   Sun Nov 9 16:14:15 2014 +0100
-
-    Complete the removal of ty_nil, ast::LitNil, ast::TyBot and ast::TyUniq
-    
-    [breaking-change]
-    
-    This will break any uses of macros that assumed () being a valid literal.
-
-commit cb51567e1911452f3da4b924a91e5360f5efe67c
-Merge: 7e43f41 43fd644
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Sun Nov 16 04:37:36 2014 +0000
-
-    auto merge of #18788 : ricky26/rust/master, r=aturon
-    
-    This moves chars() and lines() out of Buffer and into separate traits (CharsBuffer and LinesBuffer respectively) - this matches the pattern used for bytes() on Reader (with BytesReader).
-    
-    (I came across this when I wanted a trait object of a Buffer, so that I could use read_line(); rustc errors about std::io::Buffer not being object-safe.)
-    
-    [breaking-change]
-    Any uses of Buffer::lines() will need to use the new trait std::io::LinesBuffer.
-    The same is true for Buffer::chars() with std::io::CharsBuffer.
-
-commit 579c65da1babbcfa5f3fd1cb5a1062acbe5b61eb
-Author: Steven Fackler &lt;sfackler@gmail.com&gt;
-Date:   Sat Nov 15 17:57:54 2014 -0800
-
-    Un-feature gate struct variants
-    
-    Struct variant field visibility is now inherited. Remove `pub` keywords
-    from declarations.
-    
-    Closes #18641
     
     [breaking-change]
 </pre></body></html>
