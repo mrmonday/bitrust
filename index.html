@@ -1,6 +1,23 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 840de072085df360733c48396224e9966e2dc72c
+Merge: 99d6956 67d3823
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Fri Dec 19 02:52:01 2014 +0000
+
+    auto merge of #19955 : Gankro/rust/kill-all-code, r=aturon
+    
+    EnumSet lives on in libcollections so that librustc can still use it. This adds a direct dependency on libcollections to librustc and libserialize.
+    
+    Should not be merged until https://github.com/rust-lang/rfcs/pull/509 is accepted.
+    
+    All of these collections have already been moved to collect-rs where they will ideally be maintained and experimented with, or will be replaced by something better: https://github.com/Gankro/collect-rs/
+    
+    [breaking-change]
+    
+    r? @aturon @alexcrichton
+
 commit f9a48492a82f805aa40d8b6fea290badbab0d1b1
 Merge: c4d58ce ddb2466
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2387,26 +2404,4 @@ Date:   Thu Nov 13 18:04:28 2014 -0800
     If you used `init_fn_factory` in your code, and this change breaks for
     you, you can instead use an `AtomicUint` counter and a channel to
     move information into child tasks.
-
-commit 6f7081fad5889c7b41460103fc8abc98f3285c60
-Merge: a58fc68 c9e6bda
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Fri Nov 14 05:37:17 2014 +0000
-
-    auto merge of #18827 : bjz/rust/rfc369-numerics, r=alexcrichton
-    
-    This implements a considerable portion of rust-lang/rfcs#369 (tracked in #18640). Some interpretations had to be made in order to get this to work. The breaking changes are listed below:
-    
-    [breaking-change]
-    
-    - `core::num::{Num, Unsigned, Primitive}` have been deprecated and their re-exports removed from the `{std, core}::prelude`.
-    - `core::num::{Zero, One, Bounded}` have been deprecated. Use the static methods on `core::num::{Float, Int}` instead. There is no equivalent to `Zero::is_zero`. Use `(==)` with `{Float, Int}::zero` instead.
-    - `Signed::abs_sub` has been moved to `std::num::FloatMath`, and is no longer implemented for signed integers.
-    - `core::num::Signed` has been removed, and its methods have been moved to `core::num::Float` and a new trait, `core::num::SignedInt`. The methods now take the `self` parameter by value.
-    - `core::num::{Saturating, CheckedAdd, CheckedSub, CheckedMul, CheckedDiv}` have been removed, and their methods moved to `core::num::Int`. Their parameters are now taken by value. This means that
-    - `std::time::Duration` no longer implements `core::num::{Zero, CheckedAdd, CheckedSub}` instead defining the required methods non-polymorphically.
-    - `core::num::{zero, one, abs, signum}` have been deprecated. Use their respective methods instead.
-    - The `core::num::{next_power_of_two, is_power_of_two, checked_next_power_of_two}` functions have been deprecated in favor of methods defined a new trait, `core::num::UnsignedInt`
-    - `core::iter::{AdditiveIterator, MultiplicativeIterator}` are now only implemented for the built-in numeric types.
-    - `core::iter::{range, range_inclusive, range_step, range_step_inclusive}` now require `core::num::Int` to be implemented for the type they a re parametrized over.
 </pre></body></html>
