@@ -1,6 +1,24 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 6bdce25e155d846bb9252fa4a18baef7e74cf8bf
+Merge: 840de07 9b5de39
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Fri Dec 19 06:12:01 2014 +0000
+
+    auto merge of #19899 : japaric/rust/unops-by-value, r=nikomatsakis
+    
+    - The following operator traits now take their argument by value: `Neg`, `Not`. This breaks all existing implementations of these traits.
+    
+    - The unary operation `OP a` now "desugars" to `OpTrait::op_method(a)` and consumes its argument.
+    
+    [breaking-change]
+    
+    ---
+    
+    r? @nikomatsakis This PR is very similar to the binops-by-value PR
+    cc @aturon
+
 commit 840de072085df360733c48396224e9966e2dc72c
 Merge: 99d6956 67d3823
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2365,43 +2383,4 @@ Date:   Sat Nov 15 17:57:54 2014 -0800
     Closes #18641
     
     [breaking-change]
-
-commit 93c4942690753e982cbb4bf6667940da71c5d286
-Author: Jonathan Reem &lt;jonathan.reem@gmail.com&gt;
-Date:   Thu Nov 13 18:04:28 2014 -0800
-
-    Rewrite std::sync::TaskPool to be load balancing and panic-resistant
-    
-    The previous implementation was very likely to cause panics during
-    unwinding through this process:
-    
-    - child panics, drops its receiver
-    - taskpool comes back around and sends another job over to that child
-    - the child receiver has hung up, so the taskpool panics on send
-    - during unwinding, the taskpool attempts to send a quit message to
-      the child, causing a panic during unwinding
-    - panic during unwinding causes a process abort
-    
-    This meant that TaskPool upgraded any child panic to a full process
-    abort. This came up in Iron when it caused crashes in long-running
-    servers.
-    
-    This implementation uses a single channel to communicate between
-    spawned tasks and the TaskPool, which significantly reduces the complexity
-    of the implementation and cuts down on allocation. The TaskPool uses
-    the channel as a single-producer-multiple-consumer queue.
-    
-    Additionally, through the use of send_opt and recv_opt instead of
-    send and recv, this TaskPool is robust on the face of child panics,
-    both before, during, and after the TaskPool itself is dropped.
-    
-    Due to the TaskPool no longer using an `init_fn_factory`, this is a
-    
-    [breaking-change]
-    
-    otherwise, the API has not changed.
-    
-    If you used `init_fn_factory` in your code, and this change breaks for
-    you, you can instead use an `AtomicUint` counter and a channel to
-    move information into child tasks.
 </pre></body></html>
