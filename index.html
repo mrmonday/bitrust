@@ -1,6 +1,106 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 25f8051f2ebdc9444e0f75e91dc0cbb45d194181
+Merge: bc99ced 98af642
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Sun Dec 21 00:03:59 2014 -0800
+
+    rollup merge of #19842: frewsxcv/rm-reexports
+    
+    Remove most of the public reexports mentioned in #19253
+    
+    These are all leftovers from the enum namespacing transition
+    
+    In particular:
+    
+    * src/libstd/num/strconv.rs
+     * ExponentFormat
+     * SignificantDigits
+     * SignFormat
+    * src/libstd/path/windows.rs
+     * PathPrefix
+    * src/libstd/sys/windows/timer.rs
+     * Req
+    * src/libcollections/str.rs
+     * MaybeOwned
+    * src/libstd/collections/hash/map.rs
+     * Entry
+    * src/libstd/collections/hash/table.rs
+     * BucketState
+    * src/libstd/dynamic_lib.rs
+     * Rtld
+    * src/libstd/os.rs
+     * MemoryMapKind
+     * MapOption
+     * MapError
+    * src/libstd/sys/common/net.rs
+     * SocketStatus
+     * InAddr
+    * src/libstd/sys/unix/timer.rs
+     * Req
+    
+    [breaking-change]
+
+commit 98af642f5c8f60ae141a5d3ff92e8cc4e4317342
+Author: Corey Farwell &lt;coreyf@rwell.org&gt;
+Date:   Sat Dec 13 11:15:18 2014 -0500
+
+    Remove a ton of public reexports
+    
+    Remove most of the public reexports mentioned in #19253
+    
+    These are all leftovers from the enum namespacing transition
+    
+    In particular:
+    
+    * src/libstd/num/strconv.rs
+     * ExponentFormat
+     * SignificantDigits
+     * SignFormat
+    * src/libstd/path/windows.rs
+     * PathPrefix
+    * src/libstd/sys/windows/timer.rs
+     * Req
+    * src/libcollections/str.rs
+     * MaybeOwned
+    * src/libstd/collections/hash/map.rs
+     * Entry
+    * src/libstd/collections/hash/table.rs
+     * BucketState
+    * src/libstd/dynamic_lib.rs
+     * Rtld
+    * src/libstd/io/net/ip.rs
+     * IpAddr
+    * src/libstd/os.rs
+     * MemoryMapKind
+     * MapOption
+     * MapError
+    * src/libstd/sys/common/net.rs
+     * SocketStatus
+     * InAddr
+    * src/libstd/sys/unix/timer.rs
+     * Req
+    
+    [breaking-change]
+
+commit cf350ea5eb562fcfb67775ad4d847e441a8006a4
+Author: bluss &lt;bluss&gt;
+Date:   Fri Dec 19 21:54:50 2014 +0100
+
+    hashset: Clean up and rename the HashSet iterators
+    
+    This removes the type SetAlgebraItems and replaces it with the
+    structs Intersection and Difference.
+    
+    Rename the existing HashSet iterators according to RFC #344:
+    
+    * SetItems -&gt; Iter
+    * SetMoveItems -&gt; IntoIter
+    * Remaining set combination iterators renamed to Union and SymmetricDifference
+    
+    [breaking-change]
+
 commit 0efafac398ff7f28c5f0fe756c15b9008b3e0534
 Merge: 6bdce25 903c5a8
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2312,129 +2412,6 @@ Date:   Wed Nov 12 14:55:44 2014 -0800
     
     This commit generalizes methods like `get` and `remove` for `TreeMap`
     and `TreeSet` to use the new `std::borrow` infrastructure.
-    
-    [breaking-change]
-
-commit f09279395b6ca40f1398277971586197f949738a
-Merge: 88c743d 3dcd215
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Mon Nov 17 17:22:06 2014 +0000
-
-    auto merge of #18973 : sfackler/rust/enum-namespace-pt2, r=pcwalton
-    
-    This breaks code that referred to variant names in the same namespace as
-    their enum. Reexport the variants in the old location or alter code to
-    refer to the new locations:
-    
-    ```
-    pub enum Foo {
-        A,
-        B
-    }
-    
-    fn main() {
-        let a = A;
-    }
-    ```
-    =&gt;
-    ```
-    pub use self::Foo::{A, B};
-    
-    pub enum Foo {
-        A,
-        B
-    }
-    
-    fn main() {
-        let a = A;
-    }
-    ```
-    or
-    ```
-    pub enum Foo {
-        A,
-        B
-    }
-    
-    fn main() {
-        let a = Foo::A;
-    }
-    ```
-    
-    [breaking-change]
-
-commit 3dcd2157403163789aaf21a9ab3c4d30a7c6494d
-Author: Steven Fackler &lt;sfackler@gmail.com&gt;
-Date:   Thu Nov 6 00:05:53 2014 -0800
-
-    Switch to purely namespaced enums
-    
-    This breaks code that referred to variant names in the same namespace as
-    their enum. Reexport the variants in the old location or alter code to
-    refer to the new locations:
-    
-    ```
-    pub enum Foo {
-        A,
-        B
-    }
-    
-    fn main() {
-        let a = A;
-    }
-    ```
-    =&gt;
-    ```
-    pub use self::Foo::{A, B};
-    
-    pub enum Foo {
-        A,
-        B
-    }
-    
-    fn main() {
-        let a = A;
-    }
-    ```
-    or
-    ```
-    pub enum Foo {
-        A,
-        B
-    }
-    
-    fn main() {
-        let a = Foo::A;
-    }
-    ```
-    
-    [breaking-change]
-
-commit 197a0ac481ae6d154c0966b21849432f1b32c28f
-Author: Andrew Cann &lt;shum@canndrew.org&gt;
-Date:   Mon Nov 17 17:35:18 2014 +0800
-
-    change return type of slice_shift_char
-    
-    `slice_shift_char` splits a `str` into it's leading `char` and the remainder
-    of the `str`. Currently, it returns a `(Option&lt;char&gt;, &amp;str)` such that:
-    
-        "bar".slice_shift_char() =&gt; (Some('b'), "ar")
-        "ar".slice_shift_char()  =&gt; (Some('a'), "r")
-        "r".slice_shift_char()   =&gt; (Some('r'), "")
-        "".slice_shift_char()    =&gt; (None,      "")
-    
-    This is a little odd. Either a `str` can be split into both a head and a
-    tail or it cannot. So the return type should be `Option&lt;(char, &amp;str)&gt;`.
-    With the current behaviour, in the case of the empty string, the `str`
-    returned is meaningless - it is always the empty string.
-    
-    This commit changes slice_shift_char so that:
-    
-        "bar".slice_shift_char() =&gt; Some(('b', "ar"))
-        "ar".slice_shift_char()  =&gt; Some(('a', "r"))
-        "r".slice_shift_char()   =&gt; Some(('r', ""))
-        "".slice_shift_char()    =&gt; None
     
     [breaking-change]
 </pre></body></html>
