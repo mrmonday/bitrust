@@ -1,6 +1,197 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit fac17defcb8d0642c25bf8f791e1dc5b4e110be8
+Merge: ca441df 02feaf2
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 22 12:48:16 2014 -0800
+
+    rollup merge of #20140: frewsxcv/rm-reexports
+    
+    Part of #19253
+    
+    I would have removed this public reexport in #19842, but #19812 hadn't merged (and snapshotted) at the time
+    
+    In #19407, I changed the codebase to stop utilizing this reexport
+    
+    [breaking-change]
+
+commit 4baeacef5a539fa29b88c951d6eca996d6101148
+Merge: 7311b63 ee9de3b
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 22 12:47:31 2014 -0800
+
+    rollup merge of #20075: skade/remove-notrust
+    
+    Internally refactor all mentions of `notrust` to the
+    positive statement `rust`.
+    
+    [breaking-change] Change remaining `notrust` markers to
+    the thing they actually represent, e.g. `sh` or `plain`.
+    
+    This supersedes #19693 .
+
+commit 7311b6347de4205b71e8a221140a527e789fd353
+Merge: b04bc5c abf492d
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 22 12:47:11 2014 -0800
+
+    rollup merge of #20053: csouth3/misc-stab
+    
+    This pull request:
+    
+    *Renames `BinaryHeap::top` to `BinaryHeap::peek`
+    *Stabilizes `front/back/front_mut/back_mut` in `DList` and `RingBuf`
+    *Stabilizes `swap` in `RingBuf`
+    
+    in accordance with rust-lang/rfcs#509.
+    
+    Note that this PR does not address `Bitv::{get,set}` or HashMap's iterators, nor does it move `std::vec` to `std::collections::vec`, all of which still need to be done.
+    
+    Because of the method renaming, this is a [breaking-change].
+
+commit b04bc5cc49a398df712092a68ab9ad83019498ad
+Merge: 9b99436 a76a802
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 22 12:46:31 2014 -0800
+
+    rollup merge of #20033: alexcrichton/deprecate-serialise
+    
+    This commit completes the deprecation story for the in-tree serialization
+    library. The compiler will now emit a warning whenever it encounters
+    `deriving(Encodable)` or `deriving(Decodable)`, and the library itself is now
+    marked `#[unstable]` for when feature staging is enabled.
+    
+    All users of serialization can migrate to the `rustc-serialize` crate on
+    crates.io which provides the exact same interface as the libserialize library
+    in-tree. The new deriving modes are named `RustcEncodable` and `RustcDecodable`
+    and require `extern crate "rustc-serialize" as rustc_serialize` at the crate
+    root in order to expand correctly.
+    
+    To migrate all crates, add the following to your `Cargo.toml`:
+    
+        [dependencies]
+        rustc-serialize = "0.1.1"
+    
+    And then add the following to your crate root:
+    
+        extern crate "rustc-serialize" as rustc_serialize;
+    
+    Finally, rename `Encodable` and `Decodable` deriving modes to `RustcEncodable`
+    and `RustcDecodable`.
+    
+    [breaking-change]
+
+commit 2f55a9db0de8b2a2d72c7139eae38272d4d8cf41
+Merge: 34d6800 20d7a5f
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 22 12:45:52 2014 -0800
+
+    rollup merge of #19216: Gankro/bitv
+    
+    Part of #18424
+    
+    This commit changes the semantics of `reserve` and `capacity` for Bitv and BitvSet to match conventions. It also introduces the notion of `reserve_index` and `reserve_index_exact` for collections with maximum-index-based capacity semantics.
+    
+    Deprecates free function constructors in favour of functions on Bitv itself.
+    
+    Changes `Bitv::pop` to return an Option rather than panicking.
+    
+    Deprecates and renames several methods in favour of conventions.
+    
+    Marks several blessed methods as unstable.
+    
+    This commit also substantially refactors Bitv and BitvSet's implementations. The new implementation is simpler, cleaner, better documented, and more robust against overflows. It also reduces coupling between Bitv and BitvSet. Tests have been seperated into seperate submodules.
+    
+    Fixes #16958
+    
+    [breaking-change]
+
+commit 02feaf2a804e4e810d5a3adbedbcbe3905692286
+Author: Corey Farwell &lt;coreyf@rwell.org&gt;
+Date:   Mon Dec 22 11:09:55 2014 -0800
+
+    Remove cmp::Ordering::* public reexport
+    
+    Part of #19253
+    
+    I would have removed this public reexport in #19842, but #19812 hadn't merged (and snapshotted) at the time
+    
+    In #19407, I changed the codebase to stop utilizing this reexport
+    
+    [breaking-change]
+
+commit 22050e3ed44d9b4d79edced506b470a425e0d302
+Author: Florian Wilkens &lt;floya@live.de&gt;
+Date:   Sat Dec 20 15:28:20 2014 +0100
+
+    Added missing renames:
+    
+    libcollections:
+        AbsEntries -&gt; AbsIter, Entries -&gt; Iter, MoveEntries -&gt; IntoIter, MutEntries -&gt; IterMut
+        DifferenceItems -&gt; Difference, SymDifferenceItems -&gt; SymmetricDifference, IntersectionItems -&gt; Intersection, UnionItems -&gt; Union
+    
+    libstd/hash/{table, map}:
+        Entries -&gt; Iter, MoveItems -&gt; IntoIter, MutEntries -&gt; IterMut
+    
+    Also a [breaking-change].
+
+commit f8cfd2480b69a1cc266fc91d0b60c825a9dc18a7
+Author: Florian Wilkens &lt;floya@live.de&gt;
+Date:   Fri Dec 19 21:52:10 2014 +0100
+
+    Renaming of the Iter types as in RFC #344
+    
+    libcore: slice::Items -&gt; slice::Iter, slice::MutItems -&gt; slice::IterMut
+    libcollections: *::Items -&gt; *::Iter, *::MoveItems -&gt; *::IntoIter, *::MutItems -&gt; *::IterMut
+    
+    This is of course a [breaking-change].
+
+commit a76a80276852f05f30adaa4d2a8a2729b5fc0bfa
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Thu Dec 18 22:52:48 2014 -0800
+
+    serialize: Fully deprecate the library
+    
+    This commit completes the deprecation story for the in-tree serialization
+    library. The compiler will now emit a warning whenever it encounters
+    `deriving(Encodable)` or `deriving(Decodable)`, and the library itself is now
+    marked `#[unstable]` for when feature staging is enabled.
+    
+    All users of serialization can migrate to the `rustc-serialize` crate on
+    crates.io which provides the exact same interface as the libserialize library
+    in-tree. The new deriving modes are named `RustcEncodable` and `RustcDecodable`
+    and require `extern crate "rustc-serialize" as rustc_serialize` at the crate
+    root in order to expand correctly.
+    
+    To migrate all crates, add the following to your `Cargo.toml`:
+    
+        [dependencies]
+        rustc-serialize = "0.1.1"
+    
+    And then add the following to your crate root:
+    
+        extern crate "rustc-serialize" as rustc_serialize;
+    
+    Finally, rename `Encodable` and `Decodable` deriving modes to `RustcEncodable`
+    and `RustcDecodable`.
+    
+    [breaking-change]
+
+commit abf492d44f0a3b705be8c0920bfb4771f039b843
+Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
+Date:   Fri Dec 19 17:53:40 2014 -0600
+
+    Misc Stabilization for collections
+    
+    This commit:
+    
+    *Renames `BinaryHeap::top` to `BinaryHeap::peek`
+    *Stabilizes `front/back/front_mut/back_mut` in `DList` and `RingBuf`
+    *Stabilizes `swap` in `RingBuf`
+    
+    Because of the method renaming, this is a [breaking-change].
+
 commit 25f8051f2ebdc9444e0f75e91dc0cbb45d194181
 Merge: bc99ced 98af642
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -81,6 +272,30 @@ Date:   Sat Dec 13 11:15:18 2014 -0500
      * InAddr
     * src/libstd/sys/unix/timer.rs
      * Req
+    
+    [breaking-change]
+
+commit 9c5101542d2a4983ade627bc593e16c0bb5f23ba
+Author: Alexis Beingessner &lt;a.beingessner@gmail.com&gt;
+Date:   Fri Nov 21 20:47:40 2014 -0500
+
+    Conventions and cleanup for Bitv and BitvSet
+    
+    Part of #18424
+    
+    This commit changes the semantics of `reserve` and `capacity` for Bitv and BitvSet to match conventions. It also introduces the notion of `reserve_index` and `reserve_index_exact` for collections with maximum-index-based capacity semantics.
+    
+    Deprecates free function constructors in favour of functions on Bitv itself.
+    
+    Changes `Bitv::pop` to return an Option rather than panicking.
+    
+    Deprecates and renames several methods in favour of conventions.
+    
+    Marks several blessed methods as unstable.
+    
+    This commit also substantially refactors Bitv and BitvSet's implementations. The new implementation is simpler, cleaner, better documented, and more robust against overflows. It also reduces coupling between Bitv and BitvSet. Tests have been seperated into seperate submodules.
+    
+    Fixes #16958
     
     [breaking-change]
 
@@ -2206,212 +2421,6 @@ Date:   Wed Nov 19 22:39:12 2014 +0100
     Fixes #19069.
     
     These were never intended not to be feature-gated but this PR is nonetheless a...
-    
-    [breaking-change]
-
-commit a22f06db19851bc437aefefb5688eeb9dab79079
-Merge: 384f611 4af3494
-Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
-Date:   Wed Nov 19 22:38:26 2014 +0100
-
-    rollup merge of #19040: alexcrichton/issue-18904
-    
-    This commit applies the stabilization of std::fmt as outlined in [RFC 380][rfc].
-    There are a number of breaking changes as a part of this commit which will need
-    to be handled to migrated old code:
-    
-    * A number of formatting traits have been removed: String, Bool, Char, Unsigned,
-      Signed, and Float. It is recommended to instead use Show wherever possible or
-      to use adaptor structs to implement other methods of formatting.
-    
-    * The format specifier for Boolean has changed from `t` to `b`.
-    
-    * The enum `FormatError` has been renamed to `Error` as well as becoming a unit
-      struct instead of an enum. The `WriteError` variant no longer exists.
-    
-    * The `format_args_method!` macro has been removed with no replacement. Alter
-      code to use the `format_args!` macro instead.
-    
-    * The public fields of a `Formatter` have become read-only with no replacement.
-      Use a new formatting string to alter the formatting flags in combination with
-      the `write!` macro. The fields can be accessed through accessor methods on the
-      `Formatter` structure.
-    
-    Other than these breaking changes, the contents of std::fmt should now also all
-    contain stability markers. Most of them are still #[unstable] or #[experimental]
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0380-stabilize-std-fmt.md
-    [breaking-change]
-    
-    Closes #18904
-
-commit 4af3494bb02e80badc978faa65e59625ade0c675
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Mon Nov 17 11:29:38 2014 -0800
-
-    std: Stabilize std::fmt
-    
-    This commit applies the stabilization of std::fmt as outlined in [RFC 380][rfc].
-    There are a number of breaking changes as a part of this commit which will need
-    to be handled to migrated old code:
-    
-    * A number of formatting traits have been removed: String, Bool, Char, Unsigned,
-      Signed, and Float. It is recommended to instead use Show wherever possible or
-      to use adaptor structs to implement other methods of formatting.
-    
-    * The format specifier for Boolean has changed from `t` to `b`.
-    
-    * The enum `FormatError` has been renamed to `Error` as well as becoming a unit
-      struct instead of an enum. The `WriteError` variant no longer exists.
-    
-    * The `format_args_method!` macro has been removed with no replacement. Alter
-      code to use the `format_args!` macro instead.
-    
-    * The public fields of a `Formatter` have become read-only with no replacement.
-      Use a new formatting string to alter the formatting flags in combination with
-      the `write!` macro. The fields can be accessed through accessor methods on the
-      `Formatter` structure.
-    
-    Other than these breaking changes, the contents of std::fmt should now also all
-    contain stability markers. Most of them are still #[unstable] or #[experimental]
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0380-stabilize-std-fmt.md
-    [breaking-change]
-    
-    Closes #18904
-
-commit bdbc09ad484847378b87ee8d60096cd39d8fb47a
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Sat Nov 15 22:03:34 2014 -0800
-
-    libs: stabilize most numerics after RFC changes
-    
-    This commit adds stability markers for the APIs that have recently been
-    aligned with [numerics
-    reform](https://github.com/rust-lang/rfcs/pull/369). For APIs that were
-    changed as part of that reform, `#[unstable]` is used to reflect the
-    recency, but the APIs will become `#[stable]` in a follow-up pass.
-    
-    In addition, a few aspects of the APIs not explicitly covered by the RFC
-    are marked here -- in particular, constants for floats.
-    
-    This commit does not mark the `uint` or `int` modules as `#[stable]`,
-    given the ongoing debate out the names and roles of these types.
-    
-    Due to some deprecation (see the RFC for details), this is a:
-    
-    [breaking-change]
-
-commit 5de56b3ca1defd9206db8364ecef5f3fd8cc5b38
-Author: Barosl Lee &lt;vcs@barosl.com&gt;
-Date:   Tue Nov 11 17:13:10 2014 +0900
-
-    Make os::change_dir() return IoResult&lt;()&gt;
-    
-    os::change_dir() returns bool, without a meaningful error message.
-    Change it to return IoResult&lt;()&gt; to indicate what IoError caused the
-    failure.
-    
-    Fixes #16315.
-    
-    [breaking-change]
-
-commit 6f422c4c05f4d108ba6429a174aa0c2ef3b183fa
-Author: Barosl Lee &lt;vcs@barosl.com&gt;
-Date:   Tue Nov 11 14:38:20 2014 +0900
-
-    Make os::getcwd() return IoResult&lt;Path&gt;
-    
-    os::getcwd() panics if the current directory is not available. According
-    to getcwd(3), there are three cases:
-    
-    - EACCES: Permission denied.
-    - ENOENT: The current working directory has been removed.
-    - ERANGE: The buffer size is less than the actual absolute path.
-    
-    This commit makes os::getcwd() return IoResult&lt;Path&gt;, not just Path,
-    preventing it from panicking.
-    
-    As os::make_absolute() depends on os::getcwd(), it is also modified to
-    return IoResult&lt;Path&gt;.
-    
-    Fixes #16946.
-    
-    [breaking-change]
-
-commit c8d6e3b2c2a780eff92299da5d1c02e081617088
-Merge: 09e2ad1 6866bf3
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Tue Nov 18 19:11:43 2014 +0000
-
-    auto merge of #18993 : nikomatsakis/rust/hrtb-5, r=pcwalton
-    
-    Enough said.
-    
-    Fixes #18639.
-    
-    r? @pcwalton (or someone else?)
-    
-    This is a [breaking-change]. In particular, several feature gates related to unboxed closures were consolidated into one (`overloaded_calls`, `unboxed_closure_sugar` =&gt; `unboxed_closures`). Otherwise, I think everything that worked before should still work. File a bug and cc @nikomatsakis if you find otherwise. :)
-
-commit d7a29d87ba6bfca0bfe6207a99c7ec2b7ce869b9
-Merge: 516ece6 3fcf284
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Tue Nov 18 13:41:38 2014 +0000
-
-    auto merge of #19031 : nodakai/rust/libcore-pow-and-sq, r=bjz
-    
-    [breaking-change]
-    
-    Deprecates `core::num::pow` in favor of `Int::pow`.
-
-commit 7137c2cc83526e1f74af472380e625fc7c552826
-Merge: fcf9fb6 46be8eb
-Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
-Date:   Tue Nov 18 00:23:53 2014 +0100
-
-    rollup merge of #18910: aturon/borrow-traits
-    
-    Following [the collections reform RFC](https://github.com/rust-lang/rfcs/pull/235), this PR:
-    
-    * Adds a new `borrow` module to libcore. The module contains traits for borrowing data (`BorrowFrom` and `BorrowFromMut`), generalized cloning (`ToOwned`), and a clone-on-write smartpointer (`Cow`).
-    
-    * Deprecates the `_equiv` family of methods on `HashMap` and `HashSet` by instead generalizing the "normal" methods like `get` and `remove` to use the new `std::borrow` infrastructure.
-    
-    * Generalizes `TreeMap`, `TreeSet`, `BTreeMap` and `BTreeSet` to use the new `std::borrow` infrastructure for lookups.
-    
-    [breaking-change]
-
-commit 85914df05a95b1d14e483b69d9c4f0eba44b5d25
-Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
-Date:   Tue Nov 4 14:42:24 2014 +1300
-
-    Disallow coercions from [T, ..n] to &amp;[T]or *[T]
-    
-    [breaking-change]
-    
-    Insert an `&amp;` to fix
-
-commit 80a2867ea736007397aa2fbaa0e4c539c80e162c
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Wed Nov 12 14:55:51 2014 -0800
-
-    libstd: Deprecate _equiv methods
-    
-    This commit deprecates the `_equiv` family of methods on `HashMap` and
-    `HashSet` by instead generalizing the "normal" methods like `get` and
-    `remove` to use the new `std::borrow` infrastructure.
-    
-    [breaking-change]
-
-commit 5eec666c8c4be3706a79755e6cb1119990390c79
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Wed Nov 12 14:55:44 2014 -0800
-
-    libcollections: use BorrowFrom in TreeSet, Map
-    
-    This commit generalizes methods like `get` and `remove` for `TreeMap`
-    and `TreeSet` to use the new `std::borrow` infrastructure.
     
     [breaking-change]
 </pre></body></html>
