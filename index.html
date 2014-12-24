@@ -1,6 +1,21 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 7e11b22713aebd28ceaaa2ecef937c9b9d247c2f
+Merge: 14597f9 85c1a4b
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Wed Dec 24 20:47:12 2014 +0000
+
+    auto merge of #20117 : lfairy/rust/rename-include-bin, r=alexcrichton
+    
+    According to [RFC 344][], methods that return `&amp;[u8]` should have names ending in `bytes`. Though `include_bin!` is a macro not a method, it seems reasonable to follow the convention anyway.
+    
+    We keep the old name around for now, but trigger a deprecation warning when it is used.
+    
+    [RFC 344]: https://github.com/rust-lang/rfcs/blob/master/text/0344-conventions-galore.md
+    
+    [breaking-change]
+
 commit 96a3c7c6a051ab2f5fc01fe9e686f7fffcc87c61
 Merge: d10642e 16f01cc
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -31,6 +46,23 @@ Date:   Mon Dec 22 22:50:57 2014 +0100
     ```
     
     In the following code you can use the constants `Fp::Nan`, `Fp::Normal`, etc.
+
+commit 85c1a4b1ba09dae786b3554e0ab596814efabe0e
+Author: Chris Wong &lt;lambda.fairy@gmail.com&gt;
+Date:   Mon Dec 22 10:57:09 2014 +1300
+
+    Rename include_bin! to include_bytes!
+    
+    According to [RFC 344][], methods that return `&amp;[u8]` should have names
+    ending in `bytes`. Though `include_bin!` is a macro not a method, it
+    seems reasonable to follow the convention anyway.
+    
+    We keep the old name around for now, but trigger a deprecation warning
+    when it is used.
+    
+    [RFC 344]: https://github.com/rust-lang/rfcs/blob/master/text/0344-conventions-galore.md
+    
+    [breaking-change]
 
 commit fac17defcb8d0642c25bf8f791e1dc5b4e110be8
 Merge: ca441df 02feaf2
@@ -2385,47 +2417,4 @@ Date:   Tue Nov 18 23:03:58 2014 +1100
     Closes rust-lang/rfcs#467.
     
     [breaking-change]
-
-commit 004db80afe08b28d79741c486ceb8398e6725829
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Tue Nov 4 15:31:46 2014 -0800
-
-    libcore: DST-ify AsSlice
-    
-    This commit changes `AsSlice` to work on unsized types, and changes the
-    `impl` for `&amp;[T]` to `[T]`. Aside from making the trait more general,
-    this also helps some ongoing work with method resolution changes.
-    
-    This is a breaking change: code that uses generics bounded by `AsSlice`
-    will have to change. In particular, such code previously often took
-    arguments of type `V` where `V: AsSlice&lt;T&gt;` by value. These should now
-    be taken by reference:
-    
-    ```rust
-    fn foo&lt;Sized? V: AsSlice&lt;T&gt;&gt;(v: &amp;V) { .. }
-    ```
-    
-    A few std lib functions have been changed accordingly.
-    
-    [breaking-change]
-
-commit 793624261a221aa4592381fa8067e1f597b90c22
-Merge: 399ff25 e7fab22
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Thu Nov 20 02:31:31 2014 +0000
-
-    auto merge of #18999 : aturon/rust/stab-floats, r=alexcrichton,alexcrichton
-    
-    This commit adds stability markers for the APIs that have recently been aligned with [numerics reform](https://github.com/rust-lang/rfcs/pull/369). For APIs that were changed as part of that reform, `#[unstable]` is used to reflect the recency, but the APIs will become `#[stable]` in a follow-up pass.
-    
-    In addition, a few aspects of the APIs not explicitly covered by the RFC are marked here -- in particular, constants for floats.
-    
-    This commit does not mark the `uint` or `int` modules as `#[stable]`, given the ongoing debate out the names and roles of these types.
-    
-    Due to some deprecation (see the RFC for details), this is a:
-    
-    [breaking-change]
-    
-    r? @alexcrichton
-    cc @bjz
 </pre></body></html>
