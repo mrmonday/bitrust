@@ -1,6 +1,37 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 96a3c7c6a051ab2f5fc01fe9e686f7fffcc87c61
+Merge: d10642e 16f01cc
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Tue Dec 23 22:21:10 2014 +0000
+
+    auto merge of #19758 : tbu-/rust/pr_fp_name, r=alexcrichton
+    
+    This is a [breaking-change].
+
+commit 16f01cc13f6a092873096c44eed546561b88d245
+Author: Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
+Date:   Mon Dec 22 22:50:57 2014 +0100
+
+    Rename and namespace `FPCategory`
+    
+    Rename `FPCategory` to `FpCategory` and `Fp* to `*` in order to adhere to the
+    naming convention
+    
+    This is a [breaking-change].
+    
+    Existing code like this:
+    ```
+    use std::num::{FPCategory, FPNaN};
+    ```
+    should be adjusted to this:
+    ```
+    use std::num::FpCategory as Fp
+    ```
+    
+    In the following code you can use the constants `Fp::Nan`, `Fp::Normal`, etc.
+
 commit fac17defcb8d0642c25bf8f791e1dc5b4e110be8
 Merge: ca441df 02feaf2
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2397,30 +2428,4 @@ Date:   Thu Nov 20 02:31:31 2014 +0000
     
     r? @alexcrichton
     cc @bjz
-
-commit 7884dd9cec832e667594aaeed1144a2a9bab3800
-Merge: 9b5ec0e 1b5cbd0
-Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
-Date:   Wed Nov 19 22:39:29 2014 +0100
-
-    rollup merge of #19087: jakub-/issue-19086
-    
-    Fixes #19086.
-    
-    Whilst the code that this PR renders invalid was never meant to be valid, this is still a...
-    
-    [breaking-change]
-
-commit 1faa09615e02d0d2739ea091cb49c040a5c9c41b
-Merge: 8997b09 bde225e
-Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
-Date:   Wed Nov 19 22:39:12 2014 +0100
-
-    rollup merge of #19073: jakub-/issue-19069
-    
-    Fixes #19069.
-    
-    These were never intended not to be feature-gated but this PR is nonetheless a...
-    
-    [breaking-change]
 </pre></body></html>
