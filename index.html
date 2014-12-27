@@ -1,6 +1,18 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit df0c6d93852c51b6936d4b72b6b4be5f1932fb8a
+Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
+Date:   Sun Nov 23 22:29:41 2014 +1300
+
+    save-analysis: emit names of items that a glob import actually imports.
+    
+    There is also some work here to make resolve a bit more stable - it no longer overwrites a specific import with a glob import.
+    
+    [breaking-change]
+    
+    Import shadowing of single/list imports by globs is now forbidden. An interesting case is where a glob import imports a re-export (`pub use`) of a single import. This still counts as a single import for the purposes of shadowing .You can usually fix any bustage by re-ordering such imports. A single import may still shadow (override) a glob import or the prelude.
+
 commit 7e11b22713aebd28ceaaa2ecef937c9b9d247c2f
 Merge: 14597f9 85c1a4b
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2404,17 +2416,4 @@ Date:   Thu Nov 20 10:01:42 2014 +0000
     
     r? @nikomatsakis
     cc @japaric
-
-commit 3f3b2d6b7ef68d3a3817804fa4dba849a74e6878
-Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-Date:   Tue Nov 18 23:03:58 2014 +1100
-
-    Rename `col!` to `column!`.
-    
-    This macro is very rarely used, so there is no need (and it is better)
-    for it to avoid the abbreviation.
-    
-    Closes rust-lang/rfcs#467.
-    
-    [breaking-change]
 </pre></body></html>
