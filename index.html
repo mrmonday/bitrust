@@ -1,6 +1,28 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 3e6b29f8ad1ddfcb134d743a66ee5f467e16c350
+Merge: 070ab63 647e54d
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Sun Dec 28 03:11:48 2014 +0000
+
+    auto merge of #20136 : eddyb/rust/format-args, r=alexcrichton
+    
+    We have the technology: no longer do you need to write closures to use `format_args!`.
+    This is a `[breaking-change]`, as it forces you to clean up old hacks - if you had code like this:
+    ```rust
+    format_args!(fmt::format, "{} {} {}", a, b, c)
+    format_args!(|args| { w.write_fmt(args) }, "{} {} {}", x, y, z)
+    ```
+    change it to this:
+    ```rust
+    fmt::format(format_args!("{} {} {}", a, b, c))
+    w.write_fmt(format_args!("{} {} {}", x, y, z))
+    ```
+    To allow them to be called with `format_args!(...)` directly, several functions were modified to
+    take `fmt::Arguments` by value instead of by reference. Also, `fmt::Arguments` derives `Copy`
+    now in order to preserve all usecases that were previously possible.
+
 commit 070ab63807dc80fa6a6c5ee80531284761ab42de
 Merge: 0201334 12e6071
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2379,17 +2401,6 @@ Date:   Fri Nov 14 16:30:16 2014 -0800
     that is neither necessary nor desirable. This commit hides most of the
     module, using librustrt directly as needed. The arrangement will need to
     be revisited when rustrt is pulled into std.
-    
-    [breaking-change]
-
-commit 91a2c0d51241677d71b8c0abc80535e580fe3939
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Fri Nov 14 13:56:15 2014 -0800
-
-    Remove libgreen
-    
-    With runtime removal complete, there is no longer any reason to provide
-    libgreen.
     
     [breaking-change]
 </pre></body></html>
