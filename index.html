@@ -1,6 +1,27 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 19f73b4ef6fb1d24f19738a8665889396fc1b0c8
+Merge: 3dcc409 c1f3aca
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Mon Dec 29 18:02:30 2014 +0000
+
+    auto merge of #20058 : Kimundi/rust/str_pattern_pre, r=alexcrichton
+    
+    This stabilizes most methods on `&amp;str` working with patterns in a way that is forwards-compatible with a generic string pattern matching API:
+    - Methods that are using the primary name for their operation are marked as `#[stable]`, as they can be upgraded to a full `Pattern` API later without existing code breaking. Example: `contains(&amp;str)`
+    - Methods that are using a more specific name in order to not clash with the primary one are marked as `#[unstable]`, as they will likely be removed once their functionality is merged into the primary one. Example: `contains_char&lt;C: CharEq&gt;(C)`
+    - The method docs got changed to consistently refer to the pattern types as a pattern.
+    - Methods whose names do not match in the context of the more generic API got renamed. Example: `trim_chars -&gt; trim_matches`
+    
+    Additionally, all methods returning iterators got changed to return unique new types with changed names in accordance with the new naming guidelines.
+    
+    See also https://github.com/rust-lang/rfcs/pull/528
+    
+    Due to some deprecations and type changes, this is a
+    
+    [breaking-change]
+
 commit 3e6b29f8ad1ddfcb134d743a66ee5f467e16c350
 Merge: 070ab63 647e54d
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2390,17 +2411,4 @@ Date:   Fri Nov 21 03:41:45 2014 +0000
     [breaking-change]
     
     r? @alexcrichton
-
-commit 6987ad22e46f55b12d8749be7522f4578d227c62
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Fri Nov 14 16:30:16 2014 -0800
-
-    Make most of std::rt private
-    
-    Previously, the entire runtime API surface was publicly exposed, but
-    that is neither necessary nor desirable. This commit hides most of the
-    module, using librustrt directly as needed. The arrangement will need to
-    be revisited when rustrt is pulled into std.
-    
-    [breaking-change]
 </pre></body></html>
