@@ -1,6 +1,102 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 79db01a30d22950ad1597d495b76d2f58da859dc
+Merge: 806cb35 b26daf3
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 29 16:36:52 2014 -0800
+
+    rollup merge of #20306: alexcrichton/second-pass-string
+    
+    This commit performs a second pass over the `std::string` module, performing the
+    following actions:
+    
+    * The name `std::string` is now stable.
+    * The `String::from_utf8` function is now stable after having been altered to
+      return a new `FromUtf8Error` structure. The `FromUtf8Error` structure is now
+      stable as well as its `into_bytes` and `utf8_error` methods.
+    * The `String::from_utf8_lossy` function is now stable.
+    * The `String::from_chars` method is now deprecated in favor of `.collect()`
+    * The `String::from_raw_parts` method is now stable
+    * The `String::from_str` function remains experimental
+    * The `String::from_raw_buf` function remains experimental
+    * The `String::from_raw_buf_len` function remains experimental
+    * The `String::from_utf8_unchecked` function is now stable
+    * The `String::from_char` function is now deprecated in favor of
+      `repeat(c).take(n).collect()`
+    * The `String::grow` function is now deprecated in favor of
+      `.extend(repeat(c).take(n)`
+    * The `String::capacity` method is now stable
+    * The `String::reserve` method is now stable
+    * The `String::reserve_exact` method is now stable
+    * The `String::shrink_to_fit` method is now stable
+    * The `String::pop` method is now stable
+    * The `String::as_mut_vec` method is now stable
+    * The `String::is_empty` method is now stable
+    * The `IntoString` trait is now deprecated (there are no implementors)
+    * The `String::truncate` method is now stable
+    * The `String::insert` method is now stable
+    * The `String::remove` method is now stable
+    * The `String::push` method is now stable
+    * The `String::push_str` method is now stable
+    * The `String::from_utf16` function is now stable after its error type has now
+      become an opaque structure to carry more semantic information in the future.
+    
+    A number of these changes are breaking changes, but the migrations should be
+    fairly straightforward on a case-by-case basis (outlined above where possible).
+    
+    [breaking-change]
+
+commit 748440c5b3bad8a837918400973e9d6cbb58fa7a
+Merge: 9f6eb29 6256973
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 29 16:36:06 2014 -0800
+
+    rollup merge of #20215: csouth3/hashmap-rename
+    
+    Rename struct `Entries` to `Iter` in hash/table.rs and hash/map.rs, to match the naming convention of rust-lang/rfcs#344.
+    
+    This is a [breaking-change].
+
+commit cc20d6009ebf46b7ec75020ebfe35ff0ef064d1b
+Merge: 94d82c1 35e63e3
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 29 16:35:50 2014 -0800
+
+    rollup merge of #19661: alexcrichton/mutex-result
+    
+    All of the current std::sync primitives have poisoning enable which means that
+    when a task fails inside of a write-access lock then all future attempts to
+    acquire the lock will fail. This strategy ensures that stale data whose
+    invariants are possibly not upheld are never viewed by other tasks to help
+    propagate unexpected panics (bugs in a program) among tasks.
+    
+    Currently there is no way to test whether a mutex or rwlock is poisoned. One
+    method would be to duplicate all the methods with a sister foo_catch function,
+    for example. This pattern is, however, against our [error guidelines][errors].
+    As a result, this commit exposes the fact that a task has failed internally
+    through the return value of a `Result`.
+    
+    [errors]: https://github.com/rust-lang/rfcs/blob/master/text/0236-error-conventions.md#do-not-provide-both-result-and-fail-variants
+    
+    All methods now return a `LockResult&lt;T&gt;` or a `TryLockResult&lt;T&gt;` which
+    communicates whether the lock was poisoned or not. In a `LockResult`, both the
+    `Ok` and `Err` variants contains the `MutexGuard&lt;T&gt;` that is being returned in
+    order to allow access to the data if poisoning is not desired. This also means
+    that the lock is *always* held upon returning from `.lock()`.
+    
+    A new type, `PoisonError`, was added with one method `into_guard` which can
+    consume the assertion that a lock is poisoned to gain access to the underlying
+    data.
+    
+    This is a breaking change because the signatures of these methods have changed,
+    often incompatible ways. One major difference is that the `wait` methods on a
+    condition variable now consume the guard and return it in as a `LockResult` to
+    indicate whether the lock was poisoned while waiting. Most code can be updated
+    by calling `.unwrap()` on the return value of `.lock()`.
+    
+    [breaking-change]
+
 commit 4e2afb0052618ca3d758fffd0cf50559be774391
 Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
 Date:   Fri Dec 19 11:47:48 2014 +1300
@@ -10,6 +106,51 @@ Date:   Fri Dec 19 11:47:48 2014 +1300
     [breaking-change]
     
     The `mut` in slices is now redundant. Mutability is 'inferred' from position. This means that if mutability is only obvious from the type, you will need to use explicit calls to the slicing methods.
+
+commit b26daf3a67a4e283a5e2c49227b60a2321434de0
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Sun Dec 28 10:29:56 2014 -0800
+
+    std: Second pass stabilization for `string`
+    
+    This commit performs a second pass over the `std::string` module, performing the
+    following actions:
+    
+    * The name `std::string` is now stable.
+    * The `String::from_utf8` function is now stable after having been altered to
+      return a new `FromUtf8Error` structure. The `FromUtf8Error` structure is now
+      stable as well as its `into_bytes` and `utf8_error` methods.
+    * The `String::from_utf8_lossy` function is now stable.
+    * The `String::from_chars` method is now deprecated in favor of `.collect()`
+    * The `String::from_raw_parts` method is now stable
+    * The `String::from_str` function remains experimental
+    * The `String::from_raw_buf` function remains experimental
+    * The `String::from_raw_buf_len` function remains experimental
+    * The `String::from_utf8_unchecked` function is now stable
+    * The `String::from_char` function is now deprecated in favor of
+      `repeat(c).take(n).collect()`
+    * The `String::grow` function is now deprecated in favor of
+      `.extend(repeat(c).take(n)`
+    * The `String::capacity` method is now stable
+    * The `String::reserve` method is now stable
+    * The `String::reserve_exact` method is now stable
+    * The `String::shrink_to_fit` method is now stable
+    * The `String::pop` method is now stable
+    * The `String::as_mut_vec` method is now stable
+    * The `String::is_empty` method is now stable
+    * The `IntoString` trait is now deprecated (there are no implementors)
+    * The `String::truncate` method is now stable
+    * The `String::insert` method is now stable
+    * The `String::remove` method is now stable
+    * The `String::push` method is now stable
+    * The `String::push_str` method is now stable
+    * The `String::from_utf16` function is now stable after its error type has now
+      become an opaque structure to carry more semantic information in the future.
+    
+    A number of these changes are breaking changes, but the migrations should be
+    fairly straightforward on a case-by-case basis (outlined above where possible).
+    
+    [breaking-change]
 
 commit 19f73b4ef6fb1d24f19738a8665889396fc1b0c8
 Merge: 3dcc409 c1f3aca
@@ -29,6 +170,71 @@ Date:   Mon Dec 29 18:02:30 2014 +0000
     See also https://github.com/rust-lang/rfcs/pull/528
     
     Due to some deprecations and type changes, this is a
+    
+    [breaking-change]
+
+commit 76e5ed655c762b812c3da4749a55f1bb1b52c787
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 8 20:20:03 2014 -0800
+
+    std: Return Result from RWLock/Mutex methods
+    
+    All of the current std::sync primitives have poisoning enable which means that
+    when a task fails inside of a write-access lock then all future attempts to
+    acquire the lock will fail. This strategy ensures that stale data whose
+    invariants are possibly not upheld are never viewed by other tasks to help
+    propagate unexpected panics (bugs in a program) among tasks.
+    
+    Currently there is no way to test whether a mutex or rwlock is poisoned. One
+    method would be to duplicate all the methods with a sister foo_catch function,
+    for example. This pattern is, however, against our [error guidelines][errors].
+    As a result, this commit exposes the fact that a task has failed internally
+    through the return value of a `Result`.
+    
+    [errors]: https://github.com/rust-lang/rfcs/blob/master/text/0236-error-conventions.md#do-not-provide-both-result-and-fail-variants
+    
+    All methods now return a `LockResult&lt;T&gt;` or a `TryLockResult&lt;T&gt;` which
+    communicates whether the lock was poisoned or not. In a `LockResult`, both the
+    `Ok` and `Err` variants contains the `MutexGuard&lt;T&gt;` that is being returned in
+    order to allow access to the data if poisoning is not desired. This also means
+    that the lock is *always* held upon returning from `.lock()`.
+    
+    A new type, `PoisonError`, was added with one method `into_guard` which can
+    consume the assertion that a lock is poisoned to gain access to the underlying
+    data.
+    
+    This is a breaking change because the signatures of these methods have changed,
+    often incompatible ways. One major difference is that the `wait` methods on a
+    condition variable now consume the guard and return it in as a `LockResult` to
+    indicate whether the lock was poisoned while waiting. Most code can be updated
+    by calling `.unwrap()` on the return value of `.lock()`.
+    
+    [breaking-change]
+
+commit f53314cd70dd194ea40c55a5d8ceae7b94409aea
+Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
+Date:   Mon Dec 29 09:33:25 2014 +1300
+
+    Remove the glob/shadowing exception bug
+    
+    [breaking-change]
+    
+    This and the other commit in this PR change the rules for shadowing and globs to be
+    stricter. There were previously bugs where some glob imports would not be checked
+    for shadowing. Those are now fixed and you may have to adjust your imports to use
+    fewer globs.
+
+commit 1e89bbcb67020892bc0af5af218c35f0fd453fa4
+Author: Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
+Date:   Sun Dec 28 02:20:47 2014 +0200
+
+    Rename TaskRng to ThreadRng
+    
+    Since runtime is removed, rust has no tasks anymore and everything is moving
+    from being task-* to thread-*. Let’s rename TaskRng as well!
+    
+    * Rename TaskRng to ThreadRng
+    * Rename task_rng to thread_rng
     
     [breaking-change]
 
@@ -90,6 +296,15 @@ Date:   Sun Dec 7 01:55:34 2014 +0000
     As a replacement, add is_ascii() to AsciiExt, and implement AsciiExt for u8 and char.
     
     [breaking-change]
+
+commit 625697354db8a13450f6d56c7a384c202a79c9db
+Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
+Date:   Wed Dec 24 20:19:48 2014 -0600
+
+    Rename remaining hashmap and hashtable iterators to match naming
+    conventions.
+    
+    This is a [breaking-change].
 
 commit 7e11b22713aebd28ceaaa2ecef937c9b9d247c2f
 Merge: 14597f9 85c1a4b
@@ -2237,158 +2452,6 @@ Date:   Sun Nov 23 14:11:51 2014 -0500
     The stabilization of the (rather large!) set of extension traits is left
     to a follow-up pass, because we hope to land some more general machinery
     that will provide the same functionality without custom traits.
-    
-    [breaking-change]
-
-commit 9a857b4472142b6d0bf65e9185c4c2619e722fb0
-Author: Adolfo Ochagavía &lt;aochagavia92@gmail.com&gt;
-Date:   Sat Nov 22 16:02:49 2014 +0100
-
-    libsyntax: Forbid type parameters in tuple indices
-    
-    This breaks code like
-    
-    ```
-    let t = (42i, 42i);
-    ... t.0::&lt;int&gt; ...;
-    ```
-    
-    Change this code to not contain an unused type parameter. For example:
-    
-    ```
-    let t = (42i, 42i);
-    ... t.0 ...;
-    ```
-    
-    Closes https://github.com/rust-lang/rust/issues/19096
-    
-    [breaking-change]
-
-commit 641e2a110de4bb1b2c2b596ef1168ae7865aa529
-Merge: 529f8bc 8ca27a6
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Sun Nov 23 05:46:52 2014 +0000
-
-    auto merge of #19152 : alexcrichton/rust/issue-17863, r=aturon
-    
-    This commit is an implementation of [RFC 240][rfc] when applied to the standard
-    library. It primarily deprecates the entirety of `string::raw`, `vec::raw`,
-    `slice::raw`, and `str::raw` in favor of associated functions, methods, and
-    other free functions. The detailed renaming is:
-    
-    * slice::raw::buf_as_slice =&gt; slice::from_raw_buf
-    * slice::raw::mut_buf_as_slice =&gt; slice::from_raw_mut_buf
-    * slice::shift_ptr =&gt; deprecated with no replacement
-    * slice::pop_ptr =&gt; deprecated with no replacement
-    * str::raw::from_utf8 =&gt; str::from_utf8_unchecked
-    * str::raw::c_str_to_static_slice =&gt; str::from_c_str
-    * str::raw::slice_bytes =&gt; deprecated for slice_unchecked (slight semantic diff)
-    * str::raw::slice_unchecked =&gt; str.slice_unchecked
-    * string::raw::from_parts =&gt; String::from_raw_parts
-    * string::raw::from_buf_len =&gt; String::from_raw_buf_len
-    * string::raw::from_buf =&gt; String::from_raw_buf
-    * string::raw::from_utf8 =&gt; String::from_utf8_unchecked
-    * vec::raw::from_buf =&gt; Vec::from_raw_buf
-    
-    All previous functions exist in their `#[deprecated]` form, and the deprecation
-    messages indicate how to migrate to the newer variants.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0240-unsafe-api-location.md
-    [breaking-change]
-    
-    Closes #17863
-
-commit 8ca27a633ed393438a12bbf074b4f2e6063baa6f
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Thu Nov 20 10:11:15 2014 -0800
-
-    std: Align `raw` modules with unsafe conventions
-    
-    This commit is an implementation of [RFC 240][rfc] when applied to the standard
-    library. It primarily deprecates the entirety of `string::raw`, `vec::raw`,
-    `slice::raw`, and `str::raw` in favor of associated functions, methods, and
-    other free functions. The detailed renaming is:
-    
-    * slice::raw::buf_as_slice =&gt; slice::with_raw_buf
-    * slice::raw::mut_buf_as_slice =&gt; slice::with_raw_mut_buf
-    * slice::shift_ptr =&gt; deprecated with no replacement
-    * slice::pop_ptr =&gt; deprecated with no replacement
-    * str::raw::from_utf8 =&gt; str::from_utf8_unchecked
-    * str::raw::c_str_to_static_slice =&gt; str::from_c_str
-    * str::raw::slice_bytes =&gt; deprecated for slice_unchecked (slight semantic diff)
-    * str::raw::slice_unchecked =&gt; str.slice_unchecked
-    * string::raw::from_parts =&gt; String::from_raw_parts
-    * string::raw::from_buf_len =&gt; String::from_raw_buf_len
-    * string::raw::from_buf =&gt; String::from_raw_buf
-    * string::raw::from_utf8 =&gt; String::from_utf8_unchecked
-    * vec::raw::from_buf =&gt; Vec::from_raw_buf
-    
-    All previous functions exist in their `#[deprecated]` form, and the deprecation
-    messages indicate how to migrate to the newer variants.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0240-unsafe-api-location.md
-    [breaking-change]
-    
-    Closes #17863
-
-commit 7ce2d9c3fa3d36ae79b9790e3646e5e746e64cf4
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Fri Nov 21 12:00:05 2014 -0800
-
-    libs: stabilize ascii module
-    
-    This is an initial API stabilization pass for `std::ascii`. Aside from
-    some renaming to match conversion conventions, and deprecations in favor
-    of using iterators directly, almost nothing is changed here. However,
-    the static case conversion tables that were previously public are now private.
-    
-    The stabilization of the (rather large!) set of extension traits is left
-    to a follow-up pass, because we hope to land some more general machinery
-    that will provide the same functionality without custom traits.
-    
-    [breaking-change]
-
-commit d6ee804b632ee03679d6de682841fc7785ef4fbb
-Author: Brian Anderson &lt;banderson@mozilla.com&gt;
-Date:   Mon Nov 3 10:26:22 2014 -0800
-
-    unicode: Convert UnicodeChar methods to by-value
-    
-    Extension traits for primitive types should be by-value.
-    
-    [breaking-change]
-
-commit aad246160451aacc2f7a707c028bdf44e77ad38d
-Author: Brian Anderson &lt;banderson@mozilla.com&gt;
-Date:   Fri Oct 31 16:20:41 2014 -0700
-
-    core: Convert Char::escape_default, escape_unicode to iterators
-    
-    [breaking-change]
-
-commit ca1820b1fce5aa803ccc757e79dd659f599d1516
-Author: Brian Anderson &lt;banderson@mozilla.com&gt;
-Date:   Tue Oct 14 13:08:54 2014 -0700
-
-    core: Convert Char methods to by-val self
-    
-    Methods on primitmive Copy types generally should take `self`.
-    
-    [breaking-change]
-
-commit c2aff692fa88235d356725f98184a5ea5b52eb88
-Author: Brian Anderson &lt;banderson@mozilla.com&gt;
-Date:   Wed Oct 8 17:15:27 2014 -0700
-
-    unicode: Rename UnicodeChar::is_digit to is_numeric
-    
-    'Numeric' is the proper name of the unicode character class,
-    and this frees up the word 'digit' for ascii use in libcore.
-    
-    Since I'm going to rename `Char::is_digit_radix` to
-    `is_digit`, I am not leaving a deprecated method in place,
-    because that would just cause name clashes, as both
-    `Char` and `UnicodeChar` are in the prelude.
     
     [breaking-change]
 </pre></body></html>
