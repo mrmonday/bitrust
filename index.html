@@ -1,6 +1,16 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 4e2afb0052618ca3d758fffd0cf50559be774391
+Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
+Date:   Fri Dec 19 11:47:48 2014 +1300
+
+    Remove ExprSlice by hacking the compiler
+    
+    [breaking-change]
+    
+    The `mut` in slices is now redundant. Mutability is 'inferred' from position. This means that if mutability is only obvious from the type, you will need to use explicit calls to the slicing methods.
+
 commit 19f73b4ef6fb1d24f19738a8665889396fc1b0c8
 Merge: 3dcc409 c1f3aca
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2381,34 +2391,4 @@ Date:   Wed Oct 8 17:15:27 2014 -0700
     `Char` and `UnicodeChar` are in the prelude.
     
     [breaking-change]
-
-commit c9f6d696420107f82304b992cf623b806995fe18
-Merge: 9830051 32c3d02
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Fri Nov 21 03:41:45 2014 +0000
-
-    auto merge of #18967 : aturon/rust/remove-runtime, r=alexcrichton
-    
-    This PR completes the removal of the runtime system and green-threaded abstractions as part of implementing [RFC 230](https://github.com/rust-lang/rfcs/pull/230).
-    
-    Specifically:
-    
-    * It removes the `Runtime` trait, welding the scheduling infrastructure directly to native threads.
-    
-    * It removes `libgreen` and `libnative` entirely.
-    
-    * It rewrites `sync::mutex` as a trivial layer on top of native mutexes. Eventually, the two modules will be merged.
-    
-    * It hides the vast majority of `std::rt`.
-    
-    This completes the basic task of removing the runtime system (I/O and scheduling) and components that depend on it.
-    
-    After this lands, a follow-up PR will pull the `rustrt` crate back into `std`, turn `std::task` into `std::thread` (with API changes to go along with it), and completely cut out the remaining startup/teardown sequence. Other changes, including new [TLS](https://github.com/rust-lang/rfcs/pull/461) and synchronization are in the RFC or pre-RFC phase.
-    
-    Closes #17325
-    Closes #18687
-    
-    [breaking-change]
-    
-    r? @alexcrichton
 </pre></body></html>
