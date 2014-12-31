@@ -1,6 +1,154 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 38f9805f11721d854a59818e0ad7b8a0b6282301
+Merge: 04f4221 1d26fb9
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Tue Dec 30 16:26:22 2014 -0800
+
+    rollup merge of #20348: frewsxcv/rm-reexports
+    
+    Part of #19253
+    
+    [breaking-change]
+
+commit b94bcbf56eab163517e8ffc93888284b8dbb6238
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Tue Dec 30 14:44:26 2014 -0800
+
+    Stabilize cmp
+    
+    This patch marks `PartialEq`, `Eq`, `PartialOrd`, and `Ord` as
+    `#[stable]`, as well as the majorify of manual implementaitons of these
+    traits. The traits match the [reform
+    RFC](https://github.com/rust-lang/rfcs/pull/439).
+    
+    Along the way, two changes are made:
+    
+    * The recently-added type parameters for `Ord` and `Eq` are
+      removed. These were mistakenly added while adding them to `PartialOrd`
+      and `PartialEq`, but they don't make sense given the laws that are
+      required for (and use cases for) `Ord` and `Eq`.
+    
+    * More explicit laws are added for `PartialEq` and `PartialOrd`,
+      connecting them to their associated mathematical concepts.
+    
+    In the future, many of the impls should be generalized; see
+    since generalizing later is not a breaking change.
+    
+    [breaking-change]
+
+commit e91d810b9b36d6bb163970cd0e8bbf4692f704bb
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Sun Nov 2 20:27:46 2014 -0800
+
+    Libs: Unify concat and concat_vec
+    
+    We've long had traits `StrVector` and `VectorVector` providing
+    `concat`/`connect` and `concat_vec`/`connect_vec` respectively. The
+    reason for the distinction is that coherence rules did not used to be
+    robust enough to allow impls on e.g. `Vec&lt;String&gt;` versus `Vec&lt;&amp;[T]&gt;`.
+    
+    This commit consolidates the traits into a single `SliceConcatExt` trait
+    provided by `slice` and the preldue (where it replaces `StrVector`,
+    which is removed.)
+    
+    [breaking-change]
+
+commit 4f863a338e0a7c33f81a8ac138103f1a0e8b33c5
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Wed Dec 17 20:50:16 2014 -0800
+
+    Second pass stabilization: slice
+    
+    This commit takes a second pass through the `slice` module to
+    stabilize its API. The changes are as follows:
+    
+    **Stable**:
+    
+    * `as_mut_slice`
+    * `as_ptr`, `as_mut_ptr`
+    * `binary_search_by` (was: `binary_search`)
+    * `binary_search` (was: `binary_search_elem`)
+    * `chunks`, `chunks_mut`
+    * `contains`
+    * `ends_with`
+    * `first`, `first_mut` (was: `head`)
+    * `get_unchecked`, `get_unchecked_mut` (was: `unsafe_get`)
+    * `get`
+    * `is_empty`
+    * `iter`, `iter_mut`
+    * `len`
+    * `reverse`
+    * `sort_by`
+    * `sort`
+    * `split_at`, `split_at_mut`
+    * `split_mut`, `splitn_mut`, `rsplitn_mut`
+    * `split`, `splitn`, `rsplitn`
+    * `starts_with`
+    * `swap`
+    * `to_vec`
+    * `windows`
+    
+    **Deprecated**:
+    
+    * `head`, `head_mut` (renamed as above)
+    * `unsafe_get`, `unsafe_mut` (renamed as above)
+    * `binary_search_elem` (renamed as above)
+    * `partitioned`, deprecated in favor of a new, more
+      general iterator consumer called `partition`.
+    * `BinarySearchResult`, deprecated in favor of `Result&lt;uint, uint&gt;`
+    
+    [breaking-change]
+
+commit 9d919d2302b5df42e3bf8979560e0da21f4b2bad
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Tue Dec 16 23:44:43 2014 -0800
+
+    Second pass stabilization: vec
+    
+    This commit takes a second pass through the `vec` module to
+    stabilize its API. The changes are as follows:
+    
+    **Stable**:
+    
+    * `dedup`
+    * `from_raw_parts`
+    * `insert`
+    * `into_iter`
+    * `is_empty`
+    * `remove`
+    * `reserve_exact`
+    * `reserve`
+    * `retain`
+    * `swap_remove`
+    * `truncate`
+    
+    **Deprecated**:
+    
+    * `from_fn`, `from_elem`, `grow_fn` and `grow`, all deprecated in
+      favor of iterators. See https://github.com/rust-lang/rfcs/pull/509
+    
+    * `partition`, `partitioned`, deprecated in favor of a new, more
+      general iterator consumer called `partition`.
+    
+    * `unzip`, deprecated in favor of a new, more general iterator
+      consumer called `unzip`.
+    
+    A few remaining methods are left at experimental status.
+    
+    [breaking-change]
+
+commit 1d26fb9e07e664b312ca9d7b666f6d1dd52285ed
+Author: Corey Farwell &lt;coreyf@rwell.org&gt;
+Date:   Tue Dec 30 10:19:20 2014 -0800
+
+    Remove core::atomic::Ordering::* public reexport
+    
+    Part of #19253
+    
+    [breaking-change]
+
 commit 79db01a30d22950ad1597d495b76d2f58da859dc
 Merge: 806cb35 b26daf3
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2315,143 +2463,6 @@ Date:   Mon Nov 24 19:04:54 2014 +0000
     All of the enum components had a redundant 'Type' specifier: TypeSymlink, TypeDirectory, TypeFile. This change removes them, replacing them with a namespace: FileType::Symlink, FileType::Directory, and FileType::RegularFile.
     
     RegularFile is used instead of just File, as File by itself could be mistakenly thought of as referring to the struct.
-    
-    [breaking-change]
-
-commit 985acfdb67d550d0259fcdcfbeed0a86ec3da9d0
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Sun Nov 23 12:52:37 2014 -0800
-
-    Merge libsync into libstd
-    
-    This patch merges the `libsync` crate into `libstd`, undoing part of the
-    facade. This is in preparation for ultimately merging `librustrt`, as
-    well as the upcoming rewrite of `sync`.
-    
-    Because this removes the `libsync` crate, it is a:
-    
-    [breaking-change]
-    
-    However, all uses of `libsync` should be able to reroute through
-    `std::sync` and `std::comm` instead.
-
-commit bad1062caaaefe0963d7b8513786c8283e74f1e7
-Merge: f5b92b4 a9c1152
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Mon Nov 24 09:56:34 2014 +0000
-
-    auto merge of #19094 : alexcrichton/rust/rm-std-local-data, r=aturon
-    
-    This commit removes the `std::local_data` module in favor of a new `std::thread_local`
-    module providing thread local storage. The module provides two variants of TLS:
-    one which owns its contents and one which is based on scoped references. Each
-    implementation has pros and cons listed in the documentation.
-    
-    Both flavors have accessors through a function called `with` which yield a
-    reference to a closure provided. Both flavors also panic if a reference cannot
-    be yielded and provide a function to test whether an access would panic or not.
-    This is an implementation of [RFC 461][rfc] and full details can be found in
-    that RFC.
-    
-    This is a breaking change due to the removal of the `std::local_data` module.
-    All users can migrate to the new tls system like so:
-    
-        thread_local!(static FOO: Rc&lt;RefCell&lt;Option&lt;T&gt;&gt;&gt; = Rc::new(RefCell::new(None)))
-    
-    The old `local_data` module inherently contained the `Rc&lt;RefCell&lt;Option&lt;T&gt;&gt;&gt;` as
-    an implementation detail which must now be explicitly stated by users.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/pull/461
-    [breaking-change]
-
-commit a9c1152c4bf72132806cb76045b3464d59db07da
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Fri Nov 14 14:20:57 2014 -0800
-
-    std: Add a new top-level thread_local module
-    
-    This commit removes the `std::local_data` module in favor of a new
-    `std::thread_local` module providing thread local storage. The module provides
-    two variants of TLS: one which owns its contents and one which is based on
-    scoped references. Each implementation has pros and cons listed in the
-    documentation.
-    
-    Both flavors have accessors through a function called `with` which yield a
-    reference to a closure provided. Both flavors also panic if a reference cannot
-    be yielded and provide a function to test whether an access would panic or not.
-    This is an implementation of [RFC 461][rfc] and full details can be found in
-    that RFC.
-    
-    This is a breaking change due to the removal of the `std::local_data` module.
-    All users can migrate to the new thread local system like so:
-    
-        thread_local!(static FOO: Rc&lt;RefCell&lt;Option&lt;T&gt;&gt;&gt; = Rc::new(RefCell::new(None)))
-    
-    The old `local_data` module inherently contained the `Rc&lt;RefCell&lt;Option&lt;T&gt;&gt;&gt;` as
-    an implementation detail which must now be explicitly stated by users.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/pull/461
-    [breaking-change]
-
-commit f1f6c1286f24f6f762a9b195ac678b55d20c9a9b
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Thu Nov 20 09:23:43 2014 -0800
-
-    Rename unwrap functions to into_inner
-    
-    This change applies the conventions to unwrap listed in [RFC 430][rfc] to rename
-    non-failing `unwrap` methods to `into_inner`. This is a breaking change, but all
-    `unwrap` methods are retained as `#[deprecated]` for the near future. To update
-    code rename `unwrap` method calls to `into_inner`.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/pull/430
-    [breaking-change]
-    
-    Closes #13159
-    cc #19091
-
-commit 3594c588bb735117621f6a168116d9e1d086654a
-Merge: 5ad1512 40e1f8f
-Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
-Date:   Sun Nov 23 14:11:56 2014 -0500
-
-    rollup merge of #19211: aochagavia/tuple-index
-    
-    This breaks code like
-    
-    ```
-    let t = (42i, 42i);
-    ... t.0::&lt;int&gt; ...;
-    ```
-    
-    Change this code to not contain an unused type parameter. For example:
-    
-    ```
-    let t = (42i, 42i);
-    ... t.0 ...;
-    ```
-    
-    Closes https://github.com/rust-lang/rust/issues/19096
-    
-    [breaking-change]
-    
-    r? @aturon
-
-commit b21b48062f114317025c986fe35af21b15c675d9
-Merge: 77d1f0b 6733d8b
-Author: Jakub Bukaj &lt;jakub@jakub.cc&gt;
-Date:   Sun Nov 23 14:11:51 2014 -0500
-
-    rollup merge of #19194: aturon/stab-ascii
-    
-    This is an initial API stabilization pass for `std::ascii`. Aside from
-    some renaming to match conversion conventions, and deprecations in favor
-    of using iterators directly, almost nothing is changed here. However,
-    the static case conversion tables that were previously public are now private.
-    
-    The stabilization of the (rather large!) set of extension traits is left
-    to a follow-up pass, because we hope to land some more general machinery
-    that will provide the same functionality without custom traits.
     
     [breaking-change]
 </pre></body></html>
