@@ -1,6 +1,32 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 47b8479e73e40395f1b1b2d0c6281f28f80301e4
+Merge: 7d4f487 10bbf69
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Thu Jan 1 04:01:02 2015 +0000
+
+    auto merge of #20363 : japaric/rust/moar-uc, r=nmatsakis
+    
+    The the last argument of the `ItemDecorator::expand` method has changed to `Box&lt;FnMut&gt;`. Syntax extensions will break.
+    
+    [breaking-change]
+    
+    ---
+    
+    This PR removes pretty much all the remaining uses of boxed closures from the libraries. There are still boxed closures under the `test` directory, but I think those should be removed or replaced with unboxed closures at the same time we remove boxed closures from the language.
+    
+    In a few places I had to do some contortions (see the first commit for an example) to work around issue #19596. I have marked those workarounds with FIXMEs. In the future when `&amp;mut F where F: FnMut` implements the `FnMut` trait, we should be able to remove those workarounds. I've take care to avoid placing the workaround functions in the public API.
+    
+    Since `let f = || {}` always gets type checked as a boxed closure, I have explictly annotated those closures (with e.g. `|&amp;:| {}`) to force the compiler to type check them as unboxed closures.
+    
+    Instead of removing the type aliases (like `GetCrateDataCb`), I could have replaced them with newtypes. But this seemed like overcomplicating things for little to no gain.
+    
+    I think we should be able to remove the boxed closures from the languge after this PR lands. (I'm being optimistic here)
+    
+    r? @alexcrichton or @aturon
+    cc @nikomatsakis
+
 commit 38f9805f11721d854a59818e0ad7b8a0b6282301
 Merge: 04f4221 1d26fb9
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2453,16 +2479,4 @@ Date:   Mon Nov 24 15:54:14 2014 -0800
     
     [breaking-change]
     Closes #19272
-
-commit 3b9dfd6af04ca008a4c2ef13b7fd2e8433dc473f
-Author: Ben S &lt;ogham@bsago.me&gt;
-Date:   Mon Nov 24 19:04:54 2014 +0000
-
-    Clean up FileType enum following enum namespacing
-    
-    All of the enum components had a redundant 'Type' specifier: TypeSymlink, TypeDirectory, TypeFile. This change removes them, replacing them with a namespace: FileType::Symlink, FileType::Directory, and FileType::RegularFile.
-    
-    RegularFile is used instead of just File, as File by itself could be mistakenly thought of as referring to the struct.
-    
-    [breaking-change]
 </pre></body></html>
