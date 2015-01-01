@@ -1,6 +1,44 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 39d74026663597a8d4ad0ab04e6d117bf9fd6ad4
+Merge: c594959 41da99d
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Thu Jan 1 15:51:08 2015 +0000
+
+    auto merge of #20190 : cmr/rust/gate-macro-args, r=alexcrichton
+    
+    Uses the same approach as https://github.com/rust-lang/rust/pull/17286 (and
+    subsequent changes making it more correct), where the visitor will skip any
+    pieces of the AST that are from "foreign code", where the spans don't line up,
+    indicating that that piece of code is due to a macro expansion.
+    
+    If this breaks your code, read the error message to determine which feature
+    gate you should add to your crate.
+    
+    Closes #18102
+    
+    [breaking-change]
+
+commit 41da99dff417eadf8f296a93529d9810f79e1d1b
+Author: Corey Richardson &lt;corey@octayn.net&gt;
+Date:   Wed Dec 24 00:44:13 2014 -0500
+
+    Feature gate macro arguments
+    
+    Uses the same approach as https://github.com/rust-lang/rust/pull/17286 (and
+    subsequent changes making it more correct), where the visitor will skip any
+    pieces of the AST that are from "foreign code", where the spans don't line up,
+    indicating that that piece of code is due to a macro expansion.
+    
+    If this breaks your code, read the error message to determine which feature
+    gate you should add to your crate, and bask in the knowledge that your code
+    won't mysteriously break should you try to use the 1.0 release.
+    
+    Closes #18102
+    
+    [breaking-change]
+
 commit 47b8479e73e40395f1b1b2d0c6281f28f80301e4
 Merge: 7d4f487 10bbf69
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2448,35 +2486,4 @@ Date:   Tue Nov 25 20:32:20 2014 +0000
     `std::sync` and `std::comm` instead.
     
     r? @alexcrichton
-
-commit f6cb58caeedf509cc80dd376bbb2541a0446046b
-Merge: 0c1d853 f1f6c12
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Tue Nov 25 09:21:45 2014 +0000
-
-    auto merge of #19149 : alexcrichton/rust/issue-19091, r=aturon
-    
-    This change applies the conventions to unwrap listed in [RFC 430][rfc] to rename
-    non-failing `unwrap` methods to `into_inner`. This is a breaking change, but all
-    `unwrap` methods are retained as `#[deprecated]` for the near future. To update
-    code rename `unwrap` method calls to `into_inner`.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/pull/430
-    [breaking-change]
-    
-    cc #19091
-
-commit 36372b929e9d44c7421827b160505854ceeb9a83
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Mon Nov 24 15:54:14 2014 -0800
-
-    std: Export BinarySearchResult
-    
-    At the same time remove the `pub use` of the variants in favor of accessing
-    through the enum type itself. This is a breaking change as the `Found` and
-    `NotFound` variants must now be imported through `BinarySearchResult` instead of
-    just `std::slice`.
-    
-    [breaking-change]
-    Closes #19272
 </pre></body></html>
