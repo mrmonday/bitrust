@@ -1,6 +1,42 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 9ca8076cb77a7d7738162c80e1d240ef2ad0b73a
+Merge: 073fd5b f9ce6f5
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Fri Jan 2 09:22:37 2015 -0800
+
+    rollup merge of #20386: frewsxcv/rm-reexports
+    
+    Part of #19253
+    
+    [breaking-change]
+
+commit 56290a004493a5d2e211f056601533253497df60
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 22 09:04:23 2014 -0800
+
+    std: Stabilize the prelude module
+    
+    This commit is an implementation of [RFC 503][rfc] which is a stabilization
+    story for the prelude. Most of the RFC was directly applied, removing reexports.
+    Some reexports are kept around, however:
+    
+    * `range` remains until range syntax has landed to reduce churn.
+    * `Path` and `GenericPath` remain until path reform lands. This is done to
+      prevent many imports of `GenericPath` which will soon be removed.
+    * All `io` traits remain until I/O reform lands so imports can be rewritten all
+      at once to `std::io::prelude::*`.
+    
+    This is a breaking change because many prelude reexports have been removed, and
+    the RFC can be consulted for the exact list of removed reexports, as well as to
+    find the locations of where to import them.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0503-prelude-stabilization.md
+    [breaking-change]
+    
+    Closes #20068
+
 commit 71b46b18a274edc7f7fb60b490e5ebbb9c911462
 Merge: 1f887c8 8dbaa71
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -51,6 +87,159 @@ Date:   Wed Dec 31 17:24:42 2014 +1300
     [breaking-change]
     
     `mod` is still accepted, but gives a deprecated warning
+
+commit c61a0092bc236c4be4cb691fcd50ff50e91ab0d6
+Author: Niko Matsakis &lt;niko@alum.mit.edu&gt;
+Date:   Fri Dec 26 03:30:51 2014 -0500
+
+    Fix orphan checking (cc #19470). (This is not a complete fix of #19470 because of the backwards compatibility feature gate.)
+    
+    This is a [breaking-change]. The new rules require that, for an impl of a trait defined
+    in some other crate, two conditions must hold:
+    
+    1. Some type must be local.
+    2. Every type parameter must appear "under" some local type.
+    
+    Here are some examples that are legal:
+    
+    ```rust
+    struct MyStruct&lt;T&gt; { ... }
+    
+    // Here `T` appears "under' `MyStruct`.
+    impl&lt;T&gt; Clone for MyStruct&lt;T&gt; { }
+    
+    // Here `T` appears "under' `MyStruct` as well. Note that it also appears
+    // elsewhere.
+    impl&lt;T&gt; Iterator&lt;T&gt; for MyStruct&lt;T&gt; { }
+    ```
+    
+    Here is an illegal example:
+    
+    ```rust
+    // Here `U` does not appear "under" `MyStruct` or any other local type.
+    // We call `U` "uncovered".
+    impl&lt;T,U&gt; Iterator&lt;U&gt; for MyStruct&lt;T&gt; { }
+    ```
+    
+    There are a couple of ways to rewrite this last example so that it is
+    legal:
+    
+    1. In some cases, the uncovered type parameter (here, `U`) should be converted
+       into an associated type. This is however a non-local change that requires access
+       to the original trait. Also, associated types are not fully baked.
+    2. Add `U` as a type parameter of `MyStruct`:
+       ```rust
+       struct MyStruct&lt;T,U&gt; { ... }
+       impl&lt;T,U&gt; Iterator&lt;U&gt; for MyStruct&lt;T,U&gt; { }
+       ```
+    3. Create a newtype wrapper for `U`
+       ```rust
+       impl&lt;T,U&gt; Iterator&lt;Wrapper&lt;U&gt;&gt; for MyStruct&lt;T,U&gt; { }
+       ```
+    
+    Because associated types are not fully baked, which in the case of the
+    `Hash` trait makes adhering to this rule impossible, you can
+    temporarily disable this rule in your crate by using
+    `#![feature(old_orphan_check)]`. Note that the `old_orphan_check`
+    feature will be removed before 1.0 is released.
+
+commit f2ccdfd8914b7b8f8f8f2053f9ecd98d54ef95a6
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Thu Jan 1 22:24:06 2015 -0800
+
+    std: Second pass stabilization for `boxed`
+    
+    This commit performs a second pass over the `std::boxed` module, taking the
+    following actions:
+    
+    * `boxed` is now stable
+    * `Box` is now stable
+    * `BoxAny` is removed in favor of a direct `impl Box&lt;Any&gt;`
+    * `Box::downcast` remains unstable while the name of the `downcast` family of
+      methods is determined.
+    
+    This is a breaking change due to the removal of the `BoxAny` trait (note that
+    the `downcast` method still exists), and existing consumers of `BoxAny` simply
+    need to remove the import in their modules.
+    
+    [breaking-change]
+
+commit e423fcf0e0166da55f88233e0be5eacba55bc0bc
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Fri Dec 12 10:59:41 2014 -0800
+
+    std: Enforce Unicode in fmt::Writer
+    
+    This commit is an implementation of [RFC 526][rfc] which is a change to alter
+    the definition of the old `fmt::FormatWriter`. The new trait, renamed to
+    `Writer`, now only exposes one method `write_str` in order to guarantee that all
+    implementations of the formatting traits can only produce valid Unicode.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0526-fmt-text-writer.md
+    
+    One of the primary improvements of this patch is the performance of the
+    `.to_string()` method by avoiding an almost-always redundant UTF-8 check. This
+    is a breaking change due to the renaming of the trait as well as the loss of the
+    `write` method, but migration paths should be relatively easy:
+    
+    * All usage of `write` should move to `write_str`. If truly binary data was
+      being written in an implementation of `Show`, then it will need to use a
+      different trait or an altogether different code path.
+    
+    * All usage of `write!` should continue to work as-is with no modifications.
+    
+    * All usage of `Show` where implementations just delegate to another should
+      continue to work as-is.
+    
+    [breaking-change]
+    
+    Closes #20352
+
+commit f3a7ec7028c76b3a1c6051131328f372b068e33a
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 29 15:03:01 2014 -0800
+
+    std: Second pass stabilization of sync
+    
+    This pass performs a second pass of stabilization through the `std::sync`
+    module, avoiding modules/types that are being handled in other PRs (e.g.
+    mutexes, rwlocks, condvars, and channels).
+    
+    The following items are now stable
+    
+    * `sync::atomic`
+    * `sync::atomic::ATOMIC_BOOL_INIT` (was `INIT_ATOMIC_BOOL`)
+    * `sync::atomic::ATOMIC_INT_INIT` (was `INIT_ATOMIC_INT`)
+    * `sync::atomic::ATOMIC_UINT_INIT` (was `INIT_ATOMIC_UINT`)
+    * `sync::Once`
+    * `sync::ONCE_INIT`
+    * `sync::Once::call_once` (was `doit`)
+      * C == `pthread_once(..)`
+      * Boost == `call_once(..)`
+      * Windows == `InitOnceExecuteOnce`
+    * `sync::Barrier`
+    * `sync::Barrier::new`
+    * `sync::Barrier::wait` (now returns a `bool`)
+    * `sync::Semaphore::new`
+    * `sync::Semaphore::acquire`
+    * `sync::Semaphore::release`
+    
+    The following items remain unstable
+    
+    * `sync::SemaphoreGuard`
+    * `sync::Semaphore::access` - it's unclear how this relates to the poisoning
+                                  story of mutexes.
+    * `sync::TaskPool` - the semantics of a failing task and whether a thread is
+                         re-attached to a thread pool are somewhat unclear, and the
+                         utility of this type in `sync` is question with respect to
+                         the jobs of other primitives. This type will likely become
+                         stable or move out of the standard library over time.
+    * `sync::Future` - futures as-is have yet to be deeply re-evaluated with the
+                       recent core changes to Rust's synchronization story, and will
+                       likely become stable in the future but are unstable until
+                       that time comes.
+    
+    [breaking-change]
 
 commit d45b5d2ed9b43b3ad573482fb8820a382f20289e
 Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
@@ -127,6 +316,40 @@ Date:   Thu Jan 1 04:01:02 2015 +0000
     
     r? @alexcrichton or @aturon
     cc @nikomatsakis
+
+commit f9ce6f5ba458d6a3d4e63b282bac43a18e90aeb0
+Author: Corey Farwell &lt;coreyf@rwell.org&gt;
+Date:   Wed Dec 31 19:10:43 2014 -0800
+
+    Remove core::iter::MinMaxResult::* public reexport
+    
+    Part of #19253
+    
+    [breaking-change]
+
+commit a6f5b980cc44621efeed847e8d359f3b90c29080
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Wed Dec 31 15:10:45 2014 -0800
+
+    rustc: Re-jigger -L and -l for MSYS compatibility
+    
+    As discovered in #20376, the MSYS shell will silently rewrite arguemnts that
+    look like unix paths into their windows path counterparts for compatibility, but
+    the recently added `:kind` syntax added to the `-L` flag does not allow for this
+    form of rewriting. This means that the syntax can be difficult to use at an MSYS
+    prompt, as well as causing tests to fail when run manuall right now.
+    
+    This commit takes the other option presented in the original issue to prefix the
+    path with `kind=` instead of suffixing it with `:kind`. For consistence, the
+    `-l` flag is also now migrating to `kind=name`.
+    
+    This is a breaking change due to the *removal* of behavior with `-L`. All code
+    using `:kind` should now pass `kind=` for `-L` arguments. This is not currently,
+    but will become, a breaking change for `-l` flags. The old `name:kind` syntax is
+    still accepted, but all code should update to `kind=name`.
+    
+    [breaking-change]
+    Closes #20376
 
 commit 38f9805f11721d854a59818e0ad7b8a0b6282301
 Merge: 04f4221 1d26fb9
@@ -427,6 +650,63 @@ Date:   Sun Dec 28 10:29:56 2014 -0800
     
     [breaking-change]
 
+commit bc83a009f655dd3896be4a7cd33cac8032a605f2
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Tue Dec 23 11:53:35 2014 -0800
+
+    std: Second pass stabilization for `comm`
+    
+    This commit is a second pass stabilization for the `std::comm` module,
+    performing the following actions:
+    
+    * The entire `std::comm` module was moved under `std::sync::mpsc`. This movement
+      reflects that channels are just yet another synchronization primitive, and
+      they don't necessarily deserve a special place outside of the other
+      concurrency primitives that the standard library offers.
+    * The `send` and `recv` methods have all been removed.
+    * The `send_opt` and `recv_opt` methods have been renamed to `send` and `recv`.
+      This means that all send/receive operations return a `Result` now indicating
+      whether the operation was successful or not.
+    * The error type of `send` is now a `SendError` to implement a custom error
+      message and allow for `unwrap()`. The error type contains an `into_inner`
+      method to extract the value.
+    * The error type of `recv` is now `RecvError` for the same reasons as `send`.
+    * The `TryRecvError` and `TrySendError` types have had public reexports removed
+      of their variants and the variant names have been tweaked with enum
+      namespacing rules.
+    * The `Messages` iterator is renamed to `Iter`
+    
+    This functionality is now all `#[stable]`:
+    
+    * `Sender`
+    * `SyncSender`
+    * `Receiver`
+    * `std::sync::mpsc`
+    * `channel`
+    * `sync_channel`
+    * `Iter`
+    * `Sender::send`
+    * `Sender::clone`
+    * `SyncSender::send`
+    * `SyncSender::try_send`
+    * `SyncSender::clone`
+    * `Receiver::recv`
+    * `Receiver::try_recv`
+    * `Receiver::iter`
+    * `SendError`
+    * `RecvError`
+    * `TrySendError::{mod, Full, Disconnected}`
+    * `TryRecvError::{mod, Empty, Disconnected}`
+    * `SendError::into_inner`
+    * `TrySendError::into_inner`
+    
+    This is a breaking change due to the modification of where this module is
+    located, as well as the changing of the semantics of `send` and `recv`. Most
+    programs just need to rename imports of `std::comm` to `std::sync::mpsc` and
+    add calls to `unwrap` after a send or a receive operation.
+    
+    [breaking-change]
+
 commit 19f73b4ef6fb1d24f19738a8665889396fc1b0c8
 Merge: 3dcc409 c1f3aca
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -485,6 +765,31 @@ Date:   Mon Dec 8 20:20:03 2014 -0800
     by calling `.unwrap()` on the return value of `.lock()`.
     
     [breaking-change]
+
+commit c32d03f4172580e3f33e4844ed3c01234dca2d53
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Dec 22 09:04:23 2014 -0800
+
+    std: Stabilize the prelude module
+    
+    This commit is an implementation of [RFC 503][rfc] which is a stabilization
+    story for the prelude. Most of the RFC was directly applied, removing reexports.
+    Some reexports are kept around, however:
+    
+    * `range` remains until range syntax has landed to reduce churn.
+    * `Path` and `GenericPath` remain until path reform lands. This is done to
+      prevent many imports of `GenericPath` which will soon be removed.
+    * All `io` traits remain until I/O reform lands so imports can be rewritten all
+      at once to `std::io::prelude::*`.
+    
+    This is a breaking change because many prelude reexports have been removed, and
+    the RFC can be consulted for the exact list of removed reexports, as well as to
+    find the locations of where to import them.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0503-prelude-stabilization.md
+    [breaking-change]
+    
+    Closes #20068
 
 commit f53314cd70dd194ea40c55a5d8ceae7b94409aea
 Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
@@ -2127,307 +2432,6 @@ Author: Erick Tryzelaar &lt;erick.tryzelaar@gmail.com&gt;
 Date:   Fri Dec 5 09:04:55 2014 -0800
 
     test: expose boxplot and the extra stats test keeps track of
-    
-    [breaking-change]
-
-commit 71d4e77db8ad4b6d821da7e5d5300134ac95974e
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Mon Nov 24 11:16:40 2014 -0800
-
-    std: Rewrite the `sync` module
-    
-    This commit is a reimplementation of `std::sync` to be based on the
-    system-provided primitives wherever possible. The previous implementation was
-    fundamentally built on top of channels, and as part of the runtime reform it has
-    become clear that this is not the level of abstraction that the standard level
-    should be providing. This rewrite aims to provide as thin of a shim as possible
-    on top of the system primitives in order to make them safe.
-    
-    The overall interface of the `std::sync` module has in general not changed, but
-    there are a few important distinctions, highlighted below:
-    
-    * The condition variable type, `Condvar`, has been separated out of a `Mutex`.
-      A condition variable is now an entirely separate type. This separation
-      benefits users who only use one mutex, and provides a clearer distinction of
-      who's responsible for managing condition variables (the application).
-    
-    * All of `Condvar`, `Mutex`, and `RWLock` are now directly built on top of
-      system primitives rather than using a custom implementation. The `Once`,
-      `Barrier`, and `Semaphore` types are still built upon these abstractions of
-      the system primitives.
-    
-    * The `Condvar`, `Mutex`, and `RWLock` types all have a new static type and
-      constant initializer corresponding to them. These are provided primarily for C
-      FFI interoperation, but are often useful to otherwise simply have a global
-      lock. The types, however, will leak memory unless `destroy()` is called on
-      them, which is clearly documented.
-    
-    * The `Condvar` implementation for an `RWLock` write lock has been removed. This
-      may be added back in the future with a userspace implementation, but this
-      commit is focused on exposing the system primitives first.
-    
-    * The fundamental architecture of this design is to provide two separate layers.
-      The first layer is that exposed by `sys_common` which is a cross-platform
-      bare-metal abstraction of the system synchronization primitives. No attempt is
-      made at making this layer safe, and it is quite unsafe to use! It is currently
-      not exported as part of the API of the standard library, but the stabilization
-      of the `sys` module will ensure that these will be exposed in time. The
-      purpose of this layer is to provide the core cross-platform abstractions if
-      necessary to implementors.
-    
-      The second layer is the layer provided by `std::sync` which is intended to be
-      the thinnest possible layer on top of `sys_common` which is entirely safe to
-      use. There are a few concerns which need to be addressed when making these
-      system primitives safe:
-    
-        * Once used, the OS primitives can never be **moved**. This means that they
-          essentially need to have a stable address. The static primitives use
-          `&amp;'static self` to enforce this, and the non-static primitives all use a
-          `Box` to provide this guarantee.
-    
-        * Poisoning is leveraged to ensure that invalid data is not accessible from
-          other tasks after one has panicked.
-    
-      In addition to these overall blanket safety limitations, each primitive has a
-      few restrictions of its own:
-    
-        * Mutexes and rwlocks can only be unlocked from the same thread that they
-          were locked by. This is achieved through RAII lock guards which cannot be
-          sent across threads.
-    
-        * Mutexes and rwlocks can only be unlocked if they were previously locked.
-          This is achieved by not exposing an unlocking method.
-    
-        * A condition variable can only be waited on with a locked mutex. This is
-          achieved by requiring a `MutexGuard` in the `wait()` method.
-    
-        * A condition variable cannot be used concurrently with more than one mutex.
-          This is guaranteed by dynamically binding a condition variable to
-          precisely one mutex for its entire lifecycle. This restriction may be able
-          to be relaxed in the future (a mutex is unbound when no threads are
-          waiting on the condvar), but for now it is sufficient to guarantee safety.
-    
-    * Condvars now support timeouts for their blocking operations. The
-      implementation for these operations is provided by the system.
-    
-    Due to the modification of the `Condvar` API, removal of the `std::sync::mutex`
-    API, and reimplementation, this is a breaking change. Most code should be fairly
-    easy to port using the examples in the documentation of these primitives.
-    
-    [breaking-change]
-    
-    Closes #17094
-    Closes #18003
-
-commit 6d965cc2c99787a949d38abf225412fe502d3ed8
-Merge: 53e8bd6 5cfac94
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Thu Dec 4 12:02:56 2014 +0000
-
-    auto merge of #19167 : japaric/rust/rhs-cmp, r=aturon
-    
-    Comparison traits have gained an `Rhs` input parameter that defaults to `Self`. And now the comparison operators can be overloaded to work between different types. In particular, this PR allows the following operations (and their commutative versions):
-    
-    - `&amp;str` == `String` == `CowString`
-    - `&amp;[A]` == `&amp;mut [B]` == `Vec&lt;C&gt;` == `CowVec&lt;D&gt;` == `[E, ..N]` (for `N` up to 32)
-    - `&amp;mut A` == `&amp;B` (for `Sized` `A` and `B`)
-    
-    Where `A`, `B`, `C`, `D`, `E` may be different types that implement `PartialEq`. For example, these comparisons are now valid: `string == "foo"`, and `vec_of_strings == ["Hello", "world"]`.
-    
-    [breaking-change]s
-    
-    Since the `==` may now work on different types, operations that relied on the old "same type restriction" to drive type inference, will need to be type annotated. These are the most common fallout cases:
-    
-    - `some_vec == some_iter.collect()`: `collect` needs to be type annotated: `collect::&lt;Vec&lt;_&gt;&gt;()`
-    - `slice == &amp;[a, b, c]`: RHS doesn't get coerced to an slice, use an array instead `[a, b, c]`
-    - `lhs == []`: Change expression to `lhs.is_empty()`
-    - `lhs == some_generic_function()`: Type annotate the RHS as necessary
-    
-    cc #19148
-    
-    r? @aturon
-
-commit e7c1f57d6c8781cfb3e746eac5f13f760fcde2b4
-Author: Steven Fackler &lt;sfackler@gmail.com&gt;
-Date:   Sat Nov 29 23:07:43 2014 -0800
-
-    Back io::stdin with a global singleton BufferedReader
-    
-    io::stdin returns a new `BufferedReader` each time it's called, which
-    results in some very confusing behavior with disappearing output. It now
-    returns a `StdinReader`, which wraps a global singleton
-    `Arc&lt;Mutex&lt;BufferedReader&lt;StdReader&gt;&gt;`. `Reader` is implemented directly
-    on `StdinReader`. However, `Buffer` is not, as the `fill_buf` method is
-    fundamentaly un-thread safe. A `lock` method is defined on `StdinReader`
-    which returns a smart pointer wrapping the underlying `BufferedReader`
-    while guaranteeing mutual exclusion.
-    
-    Code that treats the return value of io::stdin as implementing `Buffer`
-    will break. Add a call to `lock`:
-    
-    ```rust
-    io::stdin().lines()
-    // =&gt;
-    io::stdin().lock().lines()
-    ```
-    
-    Closes #14434
-    
-    [breaking-change]
-
-commit b82624bf205e83555d7764d9f849fbfd30df0083
-Author: Piotr Czarnecki &lt;pioczarn@gmail.com&gt;
-Date:   Sat Nov 8 17:26:52 2014 +0100
-
-    std: Change the behavior of `reserve` for HashMap.
-    
-    HashMap's `reserve` method now takes as an argument the *extra* space
-    to reserve.
-    
-    [breaking-change]
-
-commit 63553a10adc8b507edee1fce43f868d93628ce34
-Author: P1start &lt;rewi-github@whanau.org&gt;
-Date:   Sun Nov 30 21:33:04 2014 +1300
-
-    Fix the ordering of `unsafe` and `extern` in methods
-    
-    This breaks code that looks like this:
-    
-        trait Foo {
-            extern "C" unsafe fn foo();
-        }
-    
-        impl Foo for Bar {
-            extern "C" unsafe fn foo() { ... }
-        }
-    
-    Change such code to look like this:
-    
-        trait Foo {
-            unsafe extern "C" fn foo();
-        }
-    
-        impl Foo for Bar {
-            unsafe extern "C" fn foo() { ... }
-        }
-    
-    Fixes #19398.
-    
-    [breaking-change]
-
-commit dfaad04b7a14012ac282269eacfb51b4e97673c1
-Merge: 8d8f41b 1919b12
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Sun Nov 30 06:56:41 2014 +0000
-
-    auto merge of #19365 : frewsxcv/rust/getopts-cleanup, r=alexcrichton
-    
-    * Remove public reexports, as a part of #19253
-    * Rename getopts::Fail_ to getopts::Fail
-     * Didn't see a reason for the suffixed '_'
-    * Removed getopts::FailType
-     * Looked like it was only beings used for tests; refactored the tests
-       to stop requiring it
-    * A few other non-breaking trivial refactoring changes
-    
-    [breaking-change]
-
-commit 1919b12775ca45e8f5bb4b7540ebfa3d100f5bf6
-Author: Corey Farwell &lt;coreyf@rwell.org&gt;
-Date:   Thu Nov 27 14:39:50 2014 -0500
-
-    getopts: cleanup, renames, remove reexports
-    
-    * Remove public reexports, as a part of #19253
-    * Rename getopts::Fail_ to getopts::Fail
-     * Didn't see a reason for the suffixed '_'
-    * Removed getopts::FailType
-     * Looked like it was only beings used for tests; refactored the tests
-       to stop requiring it
-    * A few other non-breaking trivial refactoring changes
-    
-    [breaking-change]
-
-commit f4a775639ca846f29abeed16a7b4e8e1c8819626
-Merge: 702127f 21d5d13
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Wed Nov 26 09:44:43 2014 -0800
-
-    rollup merge of #19298: nikomatsakis/unboxed-closure-parse-the-plus
-    
-    Implements RFC 438.
-    
-    Fixes #19092.
-    
-    This is a [breaking-change]: change types like `&amp;Foo+Send` or `&amp;'a mut Foo+'a` to `&amp;(Foo+Send)` and `&amp;'a mut (Foo+'a)`, respectively.
-    
-    r? @brson
-
-commit 34b98b306ad23ab895f701de1d009ff026a1d2b1
-Merge: 60299d7 36372b9
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Wed Nov 26 09:44:30 2014 -0800
-
-    rollup merge of #19287: alexcrichton/issue-19272
-    
-    At the same time remove the `pub use` of the variants in favor of accessing
-    through the enum type itself. This is a breaking change as the `Found` and
-    `NotFound` variants must now be imported through `BinarySearchResult` instead of
-    just `std::slice`.
-    
-    [breaking-change]
-    Closes #19271
-
-commit 1a44875af985de43d514192d43ef260a24e83d26
-Merge: 930f877 b299c2b
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Wed Nov 26 17:42:07 2014 +0000
-
-    auto merge of #19176 : aturon/rust/stab-iter, r=alexcrichton
-    
-    This is an initial pass at stabilizing the `iter` module. The module is
-    fairly large, but is also pretty polished, so most of the stabilization
-    leaves things as they are.
-    
-    Some changes:
-    
-    * Due to the new object safety rules, various traits needs to be split
-      into object-safe traits and extension traits. This includes `Iterator`
-      itself. While splitting up the traits adds some complexity, it will
-      also increase flexbility: once we have automatic impls of `Trait` for
-      trait objects over `Trait`, then things like the iterator adapters
-      will all work with trait objects.
-    
-    * Iterator adapters that use up the entire iterator now take it by
-      value, which makes the semantics more clear and helps catch bugs. Due
-      to the splitting of Iterator, this does not affect trait objects. If
-      the underlying iterator is still desired for some reason, `by_ref` can
-      be used. (Note: this change had no fallout in the Rust distro except
-      for the useless mut lint.)
-    
-    * In general, extension traits new and old are following an [in-progress
-      convention](rust-lang/rfcs#445). As such, they
-      are marked `unstable`.
-    
-    * As usual, anything involving closures is `unstable` pending unboxed
-      closures.
-    
-    * A few of the more esoteric/underdeveloped iterator forms (like
-      `RandomAccessIterator` and `MutableDoubleEndedIterator`, along with
-      various unfolds) are left experimental for now.
-    
-    * The `order` submodule is left `experimental` because it will hopefully
-      be replaced by generalized comparison traits.
-    
-    * "Leaf" iterators (like `Repeat` and `Counter`) are uniformly
-      constructed by free fns at the module level. That's because the types
-      are not otherwise of any significance (if we had `impl Trait`, you
-      wouldn't want to define a type at all).
-    
-    Closes #17701
-    
-    Due to renamings and splitting of traits, this is a:
     
     [breaking-change]
 </pre></body></html>
