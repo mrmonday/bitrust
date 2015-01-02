@@ -1,6 +1,37 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 71b46b18a274edc7f7fb60b490e5ebbb9c911462
+Merge: 1f887c8 8dbaa71
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Fri Jan 2 15:51:25 2015 +0000
+
+    auto merge of #20356 : Gankro/rust/stab, r=aturon
+    
+    This stabilizes most of libcollections, carefully avoiding sections of API which are being managed in other PRs. APIs which are not stable are marked explicitly unstable with a reason.
+    
+    Deprecates:
+    
+    * DList
+      * rotate_forward
+      * rotate_backward
+      * prepend
+      * insert_when
+      * insert_ordered
+      * merge
+    
+    * VecMap
+      * update
+      * update_with_key
+    
+    * Renames and newtypes the Bitv and BitvSet iterators to match conventions.
+    
+    * Removes the Copy impl from DList's Iter.
+    
+    as such this is a
+    
+    [breaking-change]
+
 commit d45b5d2ed9b43b3ad573482fb8820a382f20289e
 Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
 Date:   Tue Dec 30 19:55:06 2014 +1300
@@ -2427,55 +2458,4 @@ Date:   Wed Nov 26 12:02:16 2014 +0000
       - libstd: `TaskBuilder::named`
     
     r? @aturon
-
-commit a86f72d9a2adc6d65f2ba0990caca35c1a3f622d
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Thu Nov 6 09:32:32 2014 -0800
-
-    libs: stabilize iter module
-    
-    This is an initial pass at stabilizing the `iter` module. The module is
-    fairly large, but is also pretty polished, so most of the stabilization
-    leaves things as they are.
-    
-    Some changes:
-    
-    * Due to the new object safety rules, various traits needs to be split
-      into object-safe traits and extension traits. This includes `Iterator`
-      itself. While splitting up the traits adds some complexity, it will
-      also increase flexbility: once we have automatic impls of `Trait` for
-      trait objects over `Trait`, then things like the iterator adapters
-      will all work with trait objects.
-    
-    * Iterator adapters that use up the entire iterator now take it by
-      value, which makes the semantics more clear and helps catch bugs. Due
-      to the splitting of Iterator, this does not affect trait objects. If
-      the underlying iterator is still desired for some reason, `by_ref` can
-      be used. (Note: this change had no fallout in the Rust distro except
-      for the useless mut lint.)
-    
-    * In general, extension traits new and old are following an [in-progress
-      convention](https://github.com/rust-lang/rfcs/pull/445). As such, they
-      are marked `unstable`.
-    
-    * As usual, anything involving closures is `unstable` pending unboxed
-      closures.
-    
-    * A few of the more esoteric/underdeveloped iterator forms (like
-      `RandomAccessIterator` and `MutableDoubleEndedIterator`, along with
-      various unfolds) are left experimental for now.
-    
-    * The `order` submodule is left `experimental` because it will hopefully
-      be replaced by generalized comparison traits.
-    
-    * "Leaf" iterators (like `Repeat` and `Counter`) are uniformly
-      constructed by free fns at the module level. That's because the types
-      are not otherwise of any significance (if we had `impl Trait`, you
-      wouldn't want to define a type at all).
-    
-    Closes #17701
-    
-    Due to renamings and splitting of traits, this is a:
-    
-    [breaking-change]
 </pre></body></html>
