@@ -32,6 +32,26 @@ Date:   Fri Jan 2 15:51:25 2015 +0000
     
     [breaking-change]
 
+commit 7506fe52696c5b3b628f173d74dc4a13b5ccc1f3
+Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
+Date:   Wed Dec 31 17:25:18 2014 +1300
+
+    Accept `derive` instead of `deriving`
+    
+    [breaking-change]
+    
+    `deriving is still accepted, but gives a deprecation warning
+
+commit 74d11d26f4042ce04c56edfd6caafa003383147d
+Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
+Date:   Wed Dec 31 17:24:42 2014 +1300
+
+    Accept `self` in place of `mod` in use items
+    
+    [breaking-change]
+    
+    `mod` is still accepted, but gives a deprecated warning
+
 commit d45b5d2ed9b43b3ad573482fb8820a382f20289e
 Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
 Date:   Tue Dec 30 19:55:06 2014 +1300
@@ -2410,52 +2430,4 @@ Date:   Wed Nov 26 17:42:07 2014 +0000
     Due to renamings and splitting of traits, this is a:
     
     [breaking-change]
-
-commit ce238d752b1e04d4aea21c0fadf420a270ed6ff9
-Author: Corey Farwell &lt;coreyf@rwell.org&gt;
-Date:   Sat Nov 22 13:48:01 2014 -0500
-
-    Unpublicize reexports, unprefix JSON type aliases
-    
-    The type aliases json::JsonString and json::JsonObject were originally
-    prefixed with 'json' to prevent collisions with (at the time) the enums
-    json::String and json::Object respectively. Now that enum namespacing
-    has landed, this 'json' prefix is redundant and can be removed:
-    
-    json::JsonArray -&gt; json::Array
-    json::JsonObject -&gt; json::Object
-    
-    In addition, this commit also unpublicizes all of the re-exports in this
-    JSON module, as a part of #19253
-    
-    [breaking-change]
-
-commit 8fb027e398ef756b7b02a270ef0304be92e70f4d
-Merge: 61af402 3293ab1
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Wed Nov 26 12:02:16 2014 +0000
-
-    auto merge of #19252 : japaric/rust/cow, r=aturon
-    
-    - Add `IntoCow` trait, and put it in the prelude
-    - Add `is_owned`/`is_borrowed` methods to `Cow`
-    - Add `CowString`/`CowVec` type aliases (to `Cow&lt;'_, String, str&gt;`/`Cow&lt;'_, Vec, [T]&gt;` respectively)
-    - `Cow` implements: `Show`, `Hash`, `[Partial]{Eq,Ord}`
-    - `impl BorrowFrom&lt;Cow&lt;'a, T, B&gt;&gt; for B`
-    
-    [breaking-change]s:
-    
-    - `IntoMaybeOwned` has been removed from the prelude
-    - libcollections: `SendStr` is now an alias to `CowString&lt;'static&gt;` (it was aliased to `MaybeOwned&lt;'static&gt;`)
-    - libgraphviz:
-      - `LabelText` variants now wrap `CowString` instead of `MaybeOwned`
-      - `Nodes` and `Edges` are now type aliases to `CowVec` (they were aliased to `MaybeOwnedVec`)
-    - libstd/path: `Display::as_maybe_owned` has been renamed to `Display::as_cow` and now returns a `CowString`
-    - These functions now accept/return `Cow` instead of `MaybeOwned[Vector]`:
-      - libregex: `Replacer::reg_replace`
-      - libcollections: `str::from_utf8_lossy`
-      - libgraphviz: `Id::new`, `Id::name`, `LabelText::pre_escaped_content`
-      - libstd: `TaskBuilder::named`
-    
-    r? @aturon
 </pre></body></html>
