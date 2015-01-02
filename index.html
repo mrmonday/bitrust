@@ -1,6 +1,18 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit d45b5d2ed9b43b3ad573482fb8820a382f20289e
+Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
+Date:   Tue Dec 30 19:55:06 2014 +1300
+
+    Disallow [_, ..n] syntax for fixed length arrays and repeating array constructors
+    
+    Closes #19999
+    
+    [breaking-change]
+    
+    Use [_; n] instead.
+
 commit 39d74026663597a8d4ad0ab04e6d117bf9fd6ad4
 Merge: c594959 41da99d
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2466,24 +2478,4 @@ Date:   Thu Nov 6 09:32:32 2014 -0800
     Due to renamings and splitting of traits, this is a:
     
     [breaking-change]
-
-commit 689ef2dabfa3b2b379c953e5fb68ce2c805c2231
-Merge: 0e06f71 985acfd
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Tue Nov 25 20:32:20 2014 +0000
-
-    auto merge of #19255 : aturon/rust/merge-sync, r=alexcrichton,alexcrichton
-    
-    This patch merges the `libsync` crate into `libstd`, undoing part of the
-    facade. This is in preparation for ultimately merging `librustrt`, as
-    well as the upcoming rewrite of `sync`.
-    
-    Because this removes the `libsync` crate, it is a:
-    
-    [breaking-change]
-    
-    However, all uses of `libsync` should be able to reroute through
-    `std::sync` and `std::comm` instead.
-    
-    r? @alexcrichton
 </pre></body></html>
