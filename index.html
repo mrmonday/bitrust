@@ -1,6 +1,29 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 9c3e6082e71618c088afd93f7a4a9a7708c9dcbd
+Merge: a6b1097 d9769ec
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Sat Jan 3 03:25:21 2015 +0000
+
+    auto merge of #20154 : P1start/rust/qualified-assoc-type-generics, r=nikomatsakis
+    
+    This modifies `Parser::eat_lt` to always split up `&lt;&lt;`s, instead of doing so only when a lifetime name followed or the `force` parameter (now removed) was `true`. This is because `Foo&lt;&lt;TYPE` is now a valid start to a type, whereas previously only `Foo&lt;&lt;LIFETIME` was valid.
+    
+    This is a [breaking-change]. Change code that looks like this:
+    
+    ```rust
+    let x = foo as bar &lt;&lt; 13;
+    ```
+    
+    to use parentheses, like this:
+    
+    ```rust
+    let x = (foo as bar) &lt;&lt; 13;
+    ```
+    
+    Closes #17362.
+
 commit 9ca8076cb77a7d7738162c80e1d240ef2ad0b73a
 Merge: 073fd5b f9ce6f5
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -874,6 +897,24 @@ Date:   Sun Dec 7 01:55:34 2014 +0000
     Remove Ascii, AsciiCast, OwnedAsciiCast, AsciiStr, IntoBytes, IntoString.
     
     As a replacement, add is_ascii() to AsciiExt, and implement AsciiExt for u8 and char.
+    
+    [breaking-change]
+
+commit d9769ec3834b62318da892925dc24c8883bb1635
+Author: P1start &lt;rewi-github@whanau.org&gt;
+Date:   Tue Dec 23 13:13:49 2014 +1300
+
+    Parse fully-qualified associated types in generics without whitespace
+    
+    This breaks code that looks like this:
+    
+        let x = foo as bar &lt;&lt; 13;
+    
+    Change such code to look like this:
+    
+        let x = (foo as bar) &lt;&lt; 13;
+    
+    Closes #17362.
     
     [breaking-change]
 
@@ -2338,100 +2379,6 @@ Date:   Fri Dec 5 10:06:52 2014 -0800
     ```
     
     Closes #14434
-    
-    [breaking-change]
-
-commit 08ce178866e4533d8815fe5868a520e0fc55b21c
-Merge: 4573da6 c3adbd3
-Author: Corey Richardson &lt;corey@octayn.net&gt;
-Date:   Fri Dec 5 10:06:39 2014 -0800
-
-    rollup merge of #19274: alexcrichton/rewrite-sync
-    
-    This commit is a reimplementation of `std::sync` to be based on the
-    system-provided primitives wherever possible. The previous implementation was
-    fundamentally built on top of channels, and as part of the runtime reform it has
-    become clear that this is not the level of abstraction that the standard level
-    should be providing. This rewrite aims to provide as thin of a shim as possible
-    on top of the system primitives in order to make them safe.
-    
-    The overall interface of the `std::sync` module has in general not changed, but
-    there are a few important distinctions, highlighted below:
-    
-    * The condition variable type, `Condvar`, has been separated out of a `Mutex`.
-      A condition variable is now an entirely separate type. This separation
-      benefits users who only use one mutex, and provides a clearer distinction of
-      who's responsible for managing condition variables (the application).
-    
-    * All of `Condvar`, `Mutex`, and `RWLock` are now directly built on top of
-      system primitives rather than using a custom implementation. The `Once`,
-      `Barrier`, and `Semaphore` types are still built upon these abstractions of
-      the system primitives.
-    
-    * The `Condvar`, `Mutex`, and `RWLock` types all have a new static type and
-      constant initializer corresponding to them. These are provided primarily for C
-      FFI interoperation, but are often useful to otherwise simply have a global
-      lock. The types, however, will leak memory unless `destroy()` is called on
-      them, which is clearly documented.
-    
-    * The fundamental architecture of this design is to provide two separate layers.
-      The first layer is that exposed by `sys_common` which is a cross-platform
-      bare-metal abstraction of the system synchronization primitives. No attempt is
-      made at making this layer safe, and it is quite unsafe to use! It is currently
-      not exported as part of the API of the standard library, but the stabilization
-      of the `sys` module will ensure that these will be exposed in time. The
-      purpose of this layer is to provide the core cross-platform abstractions if
-      necessary to implementors.
-    
-      The second layer is the layer provided by `std::sync` which is intended to be
-      the thinnest possible layer on top of `sys_common` which is entirely safe to
-      use. There are a few concerns which need to be addressed when making these
-      system primitives safe:
-    
-        * Once used, the OS primitives can never be **moved**. This means that they
-          essentially need to have a stable address. The static primitives use
-          `&amp;'static self` to enforce this, and the non-static primitives all use a
-          `Box` to provide this guarantee.
-    
-        * Poisoning is leveraged to ensure that invalid data is not accessible from
-          other tasks after one has panicked.
-    
-      In addition to these overall blanket safety limitations, each primitive has a
-      few restrictions of its own:
-    
-        * Mutexes and rwlocks can only be unlocked from the same thread that they
-          were locked by. This is achieved through RAII lock guards which cannot be
-          sent across threads.
-    
-        * Mutexes and rwlocks can only be unlocked if they were previously locked.
-          This is achieved by not exposing an unlocking method.
-    
-        * A condition variable can only be waited on with a locked mutex. This is
-          achieved by requiring a `MutexGuard` in the `wait()` method.
-    
-        * A condition variable cannot be used concurrently with more than one mutex.
-          This is guaranteed by dynamically binding a condition variable to
-          precisely one mutex for its entire lifecycle. This restriction may be able
-          to be relaxed in the future (a mutex is unbound when no threads are
-          waiting on the condvar), but for now it is sufficient to guarantee safety.
-    
-    * Condvars support timeouts for their blocking operations. The
-      implementation for these operations is provided by the system.
-    
-    Due to the modification of the `Condvar` API, removal of the `std::sync::mutex`
-    API, and reimplementation, this is a breaking change. Most code should be fairly
-    easy to port using the examples in the documentation of these primitives.
-    
-    [breaking-change]
-    
-    Closes #17094
-    Closes #18003
-
-commit d91331074862f13d87f67b85eeba2a1192c3a12d
-Author: Erick Tryzelaar &lt;erick.tryzelaar@gmail.com&gt;
-Date:   Fri Dec 5 09:04:55 2014 -0800
-
-    test: expose boxplot and the extra stats test keeps track of
     
     [breaking-change]
 </pre></body></html>
