@@ -1,6 +1,49 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit c6c786671d692d7b13c2e5c68a53001327b4b125
+Merge: 496dc4e ce8f748
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Sun Jan 4 00:50:59 2015 +0000
+
+    auto merge of #20490 : japaric/rust/assoc-types, r=aturon
+    
+    closes #20486
+    closes #20474
+    closes #20441
+    
+    [breaking-change]
+    
+    The `Index[Mut]` traits now have one less input parameter, as the return type of the indexing operation is an associated type. This breaks all existing implementations.
+    
+    ---
+    
+    binop traits (`Add`, `Sub`, etc) now have an associated type for their return type. Also, the RHS input parameter now defaults to `Self` (except for the `Shl` and `Shr` traits). For example, the `Add` trait now looks like this:
+    
+    ``` rust
+    trait Add&lt;Rhs=Self&gt; {
+        type Output;
+    
+        fn add(self, Rhs) -&gt; Self::Output;
+    }
+    ```
+    
+    The `Neg` and `Not` traits now also have an associated type for their return type.
+    
+    This breaks all existing implementations of these traits.
+    
+    ---
+    Affected traits:
+    
+    - `Iterator { type Item }`
+    - `IteratorExt` no input/output types, uses `&lt;Self as Iterator&gt;::Item` in its methods
+    - `DoubleEndedIterator` no input/output types, uses `&lt;Self as Iterator&gt;::Item` in its methods
+    - `DoubleEndedIteratorExt` no input/output types, uses `&lt;Self as Iterator&gt;::Item` in its methods
+    - `RandomAccessIterator` no input/output types
+    - `ExactSizeIterator` no input/output types, uses `&lt;Self as Iterator&gt;::Item` in its methods
+    
+    This breaks all the implementations of these traits.
+
 commit 9c3e6082e71618c088afd93f7a4a9a7708c9dcbd
 Merge: a6b1097 d9769ec
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2352,33 +2395,4 @@ Date:   Fri Dec 5 15:53:30 2014 -0800
     [breaking-change]
     
     Closes #19586. Closes #19375.
-
-commit a6ce402401f0da3a48a5a183ae109a00024ba666
-Merge: 26f2867 e7c1f57
-Author: Corey Richardson &lt;corey@octayn.net&gt;
-Date:   Fri Dec 5 10:06:52 2014 -0800
-
-    rollup merge of #19416: sfackler/global-stdin
-    
-    io::stdin returns a new `BufferedReader` each time it's called, which
-    results in some very confusing behavior with disappearing output. It now
-    returns a `StdinReader`, which wraps a global singleton
-    `Arc&lt;Mutex&lt;BufferedReader&lt;StdReader&gt;&gt;`. `Reader` is implemented directly
-    on `StdinReader`. However, `Buffer` is not, as the `fill_buf` method is
-    fundamentaly un-thread safe. A `lock` method is defined on `StdinReader`
-    which returns a smart pointer wrapping the underlying `BufferedReader`
-    while guaranteeing mutual exclusion.
-    
-    Code that treats the return value of io::stdin as implementing `Buffer`
-    will break. Add a call to `lock`:
-    
-    ```rust
-    io::stdin().read_line();
-    // =&gt;
-    io::stdin().lock().read_line();
-    ```
-    
-    Closes #14434
-    
-    [breaking-change]
 </pre></body></html>
