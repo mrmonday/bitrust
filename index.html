@@ -1,6 +1,31 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 0302d379776fca82d3eb693046239dc66998f691
+Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+Date:   Tue Dec 30 13:58:31 2014 +1100
+
+    Merge `UnicodeChar` and `CharExt`.
+    
+    This "reexports" all the functionality of `core::char::CharExt` as
+    methods on `unicode::u_char::UnicodeChar` (renamed to `CharExt`).
+    
+    Imports may need to be updated (one now just imports
+    `unicode::CharExt`, or `std::char::CharExt` rather than two traits from
+    either), so this is a
+    
+    [breaking-change]
+
+commit 19120209d8e532514203d16a2cff0ad3b44de3bb
+Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+Date:   Tue Dec 30 13:53:20 2014 +1100
+
+    Rename `core::char::Char` to `CharExt` to match prelude guidelines.
+    
+    Imports may need to be updated so this is a
+    
+    [breaking-change]
+
 commit c6c786671d692d7b13c2e5c68a53001327b4b125
 Merge: 496dc4e ce8f748
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2356,37 +2381,6 @@ Date:   Mon Nov 24 02:22:30 2014 +0900
     costs more than that of an integral type.
     
     Fixes #18319
-    
-    [breaking-change]
-
-commit 558f8d8e3ea6b7da3d6d338740637149a7e45840
-Merge: a243e88 6e18b5a
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Sun Dec 7 16:12:22 2014 +0000
-
-    auto merge of #19539 : cmr/rust/18959, r=nikomatsakis
-    
-    Closes #18959
-    
-    Technically, this causes code that once compiled to no longer compile, but
-    that code probably never ran.
-    
-    [breaking-change]
-    
-    ------------
-    
-    Not quite sure the error message is good enough, I feel like it ought to tell you "because it inherits from non-object-safe trait Foo", so I've opened up a follow-up issue #19538
-
-commit 6e18b5af9336947ec5d41e66d216c52c12bf74a3
-Author: Corey Richardson &lt;corey@octayn.net&gt;
-Date:   Thu Nov 27 11:28:51 2014 -0500
-
-    rustc: check supertraits for object safety
-    
-    Closes #18959
-    
-    Technically, this causes code that once compiled to no longer compile, but
-    that code probably never ran.
     
     [breaking-change]
 </pre></body></html>
