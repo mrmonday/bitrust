@@ -1,6 +1,55 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 03268bbf35d3ff2350d987fe7b60375839abdf2e
+Merge: 8e83af6 0cb7a40
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Mon Jan 5 14:51:03 2015 +0000
+
+    auto merge of #20514 : alexcrichton/rust/serialize-associated-type, r=aturon
+    
+    This commit moves the libserialize crate (and will force the hand of the
+    rustc-serialize crate) to not require the `old_orphan_check` feature gate as
+    well as using associated types wherever possible. Concretely, the following
+    changes were made:
+    
+    * The error type of `Encoder` and `Decoder` is now an associated type, meaning
+      that these traits have no type parameters.
+    
+    * The `Encoder` and `Decoder` type parameters on the `Encodable` and `Decodable`
+      traits have moved to the corresponding method of the trait. This movement
+      alleviates the dependency on `old_orphan_check` but implies that
+      implementations can no longer be specialized for the type of encoder/decoder
+      being implemented.
+    
+    Due to the trait definitions changing, this is a:
+    
+    [breaking-change]
+
+commit 0cb7a4062a3c69bb0c54f0c9136889a1006e4f62
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Sat Jan 3 22:24:50 2015 -0800
+
+    serialize: Use assoc types + less old_orphan_check
+    
+    This commit moves the libserialize crate (and will force the hand of the
+    rustc-serialize crate) to not require the `old_orphan_check` feature gate as
+    well as using associated types wherever possible. Concretely, the following
+    changes were made:
+    
+    * The error type of `Encoder` and `Decoder` is now an associated type, meaning
+      that these traits have no type parameters.
+    
+    * The `Encoder` and `Decoder` type parameters on the `Encodable` and `Decodable`
+      traits have moved to the corresponding method of the trait. This movement
+      alleviates the dependency on `old_orphan_check` but implies that
+      implementations can no longer be specialized for the type of encoder/decoder
+      being implemented.
+    
+    Due to the trait definitions changing, this is a:
+    
+    [breaking-change]
+
 commit 0302d379776fca82d3eb693046239dc66998f691
 Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
 Date:   Tue Dec 30 13:58:31 2014 +1100
@@ -2338,49 +2387,6 @@ Date:   Mon Nov 24 03:14:02 2014 +0900
     As a workaround of this problem, this commit makes the encoder always
     emit a decimal point even if it is not necessary. If the fractional part
     of a float number is zero, ".0" is padded to the end of the result.
-    
-    [breaking-change]
-
-commit f102123b659911dbee25bbe518d73d66185bb978
-Author: Barosl Lee &lt;vcs@barosl.com&gt;
-Date:   Mon Nov 24 03:00:10 2014 +0900
-
-    libserialize: Do not coerce to integer when decoding a float value
-    
-    When an integral value is expected by the user but a fractional value is
-    found, the current implementation uses std::num::cast() to coerce to an
-    integer type, losing the fractional part. This behavior is not desirable
-    because the number loses precision without notice.
-    
-    This commit makes it raise ExpectedError when such a situation arises.
-    
-    [breaking-change]
-
-commit ca4f53655e82a0a0e1d613b16108720bb7a50fde
-Author: Barosl Lee &lt;vcs@barosl.com&gt;
-Date:   Mon Nov 24 02:22:30 2014 +0900
-
-    libserialize: Remove float preprocessing in serialize::json::Encoder
-    
-    serialize::json::Encoder currently uses f64 to emit any integral type.
-    This is possibly due to the behavior of JavaScript, which uses f64 to
-    represent any numeric value.
-    
-    This leads to a problem that only the integers in the range of [-2^53+1,
-    2^53-1] can be encoded. Therefore, i64 and u64 cannot be used reliably
-    in the current implementation.
-    
-    RFC 7159 suggests that good interoperability can be achieved if the
-    range is respected by implementations. However, it also says that
-    implementations are allowed to set the range of number accepted. And it
-    seems that the JSON encoders outside of the JavaScript world usually
-    make use of i64 values.
-    
-    This commit removes the float preprocessing done in the emit_* methods.
-    It also increases performance, because transforming f64 into String
-    costs more than that of an integral type.
-    
-    Fixes #18319
     
     [breaking-change]
 </pre></body></html>
