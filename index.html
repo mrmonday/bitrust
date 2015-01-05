@@ -44,6 +44,16 @@ Date:   Sun Jan 4 00:50:59 2015 +0000
     
     This breaks all the implementations of these traits.
 
+commit f031285c3a76b86525695bbb5b46daa9e77df200
+Author: Corey Farwell &lt;coreyf@rwell.org&gt;
+Date:   Fri Jan 2 19:31:50 2015 -0800
+
+    Remove graphviz::LabelText::* public reexport
+    
+    Part of #19253
+    
+    [breaking-change]
+
 commit 9c3e6082e71618c088afd93f7a4a9a7708c9dcbd
 Merge: a6b1097 d9769ec
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2379,20 +2389,4 @@ Date:   Thu Nov 27 11:28:51 2014 -0500
     that code probably never ran.
     
     [breaking-change]
-
-commit e8524198e3931373f5e097dece21e36d21c4a537
-Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-Date:   Fri Dec 5 15:53:30 2014 -0800
-
-    Feature-gate explicit unboxed closure method calls &amp; manual impls,
-    detect UFCS drop and allow UFCS methods to have explicit type parameters.
-    
-    Work towards #18875.
-    
-    Since code could previously call the methods &amp; implement the traits
-    manually, this is a
-    
-    [breaking-change]
-    
-    Closes #19586. Closes #19375.
 </pre></body></html>
