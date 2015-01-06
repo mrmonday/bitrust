@@ -1,6 +1,34 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit ae4762761c995494726e8c9f41b05e99e6c7c81b
+Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+Date:   Mon Jan 5 21:14:50 2015 +1100
+
+    Merge core::num::Float and std::num::FloatMath.
+    
+    `FloatMath` no longer exists and all functionality from both traits is
+    available under `Float`. Change from
+    
+        use std::num::{Float, FloatMath};
+    
+    to
+    
+        use std::num::Float;
+    
+    [breaking-change]
+
+commit cd4ed38404384bdb13500f1d2e782d32ece2b239
+Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+Date:   Mon Jan 5 18:30:55 2015 +1100
+
+    Deprecate the constant-returning functions in Float.
+    
+    These are replaced by the equivalent constants in `std::f32` and
+    `std::f64` respectively.
+    
+    [breaking-change]
+
 commit 25d5a3a19423fee01787de87a56d185dd4e0a4e7
 Merge: 743d926 ec7a50d
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2422,125 +2450,4 @@ Date:   Sun Dec 14 11:37:27 2014 +0000
     This is a [breaking-change]. Mostly, uses of `proc()` simply need to be converted to `move||` (unboxed closures), but in some cases the adaptations required are more complex (particularly for library authors). A detailed write-up can be found here: http://smallcultfollowing.com/babysteps/blog/2014/11/26/purging-proc/
     
     The commits are ordered to emphasize the more important changes, but are not truly standalone.
-
-commit 81f9a319265ddbe6b7823b50c29e3aff076d82c1
-Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
-Date:   Wed Dec 10 23:12:31 2014 -0600
-
-    Change `VecMap`'s iterators to use wrapper structs instead of typedefs.
-    
-    Using a type alias for iterator implementations is fragile since this
-    exposes the implementation to users of the iterator, and any changes
-    could break existing code.
-    
-    This commit changes the iterators of `VecMap` to use
-    proper new types, rather than type aliases.  However, since it is
-    fair-game to treat a type-alias as the aliased type, this is a:
-    
-    [breaking-change].
-
-commit 444fa1b7cffcd99ca5b8abb51acf979f06a25899
-Merge: 567b90f b8e0b81
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Sat Dec 13 22:57:21 2014 +0000
-
-    auto merge of #19467 : japaric/rust/uc, r=alexcrichton
-    
-    This PR moves almost all our current uses of closures, both in public API and internal uses, to the new "unboxed" closures system.
-    
-    In most cases, downstream code that *only uses* closures will continue to work as it is. The reason is that the `|| {}` syntax can be inferred either as a boxed or an "unboxed" closure according to the context. For example the following code will continue to work:
-    
-    ``` rust
-    some_option.map(|x| x.transform_with(upvar))
-    ```
-    
-    And will get silently upgraded to an "unboxed" closure.
-    
-    In some other cases, it may be necessary to "annotate" which `Fn*` trait the closure implements:
-    
-    ```
-    // Change this
-    |x| { /* body */}
-    // to either of these
-    |: x| { /* body */}  // closure implements the FnOnce trait
-    |&amp;mut : x| { /* body */}  // FnMut
-    |&amp;: x| { /* body */}  // Fn
-    ```
-    
-    This mainly occurs when the closure is assigned to a variable first, and then passed to a function/method.
-    
-    ``` rust
-    let closure = |: x| x.transform_with(upvar);
-    some.option.map(closure)
-    ```
-    
-    (It's very likely that in the future, an improved inference engine will make this annotation unnecessary)
-    
-    Other cases that require annotation are closures that implement some trait via a blanket `impl`, for example:
-    
-    - `std::finally::Finally`
-    - `regex::Replacer`
-    - `std::str::CharEq`
-    
-    ``` rust
-    string.trim_left_chars(|c: char| c.is_whitespace())
-    //~^ ERROR: the trait `Fn&lt;(char,), bool&gt;` is not implemented for the type `|char| -&gt; bool`
-    string.trim_left_chars(|&amp;: c: char| c.is_whitespace())  // OK
-    ```
-    
-    Finally, all implementations of traits that contain boxed closures in the arguments of their methods are now broken. And will need to be updated to use unboxed closures. These are the main affected traits:
-    
-    - `serialize::Decoder`
-    - `serialize::DecoderHelpers`
-    - `serialize::Encoder`
-    - `serialize::EncoderHelpers`
-    - `rustrt::ToCStr`
-    
-    For example, change this:
-    
-    ``` rust
-    // libserialize/json.rs
-    impl&lt;'a&gt; Encoder&lt;io::IoError&gt; for Encoder&lt;'a&gt; {
-        fn emit_enum(&amp;mut self,
-                     _name: &amp;str,
-                     f: |&amp;mut Encoder&lt;'a&gt;| -&gt; EncodeResult) -&gt; EncodeResult {
-            f(self)
-        }
-    }
-    ```
-    
-    to:
-    
-    ``` rust
-    // libserialize/json.rs
-    impl&lt;'a&gt; Encoder&lt;io::IoError&gt; for Encoder&lt;'a&gt; {
-        fn emit_enum&lt;F&gt;(&amp;mut self, _name: &amp;str, f: F) -&gt; EncodeResult where
-            F: FnOnce(&amp;mut Encoder&lt;'a&gt;) -&gt; EncodeResult
-        {
-            f(self)
-        }
-    }
-    ```
-    
-    [breaking-change]
-    
-    ---
-    
-    ### How the `Fn*` bound has been selected
-    
-    I've chosen the bounds to make the functions/structs as "generic as possible", i.e. to let them allow the maximum amount of input.
-    
-    - An `F: FnOnce` bound accepts the three kinds of closures: `|:|`, `|&amp;mut:|` and `|&amp;:|`.
-    - An `F: FnMut` bound only accepts "non-consuming" closures: `|&amp;mut:|` and `|&amp;:|`.
-    - An `F: Fn` bound only accept the "immutable environment" closures: `|&amp;:|`.
-    
-    This means that whenever possible the `FnOnce` bound has been used, if the `FnOnce` bound couldn't be used, then the `FnMut` was used. The `Fn` bound was never used in the whole repository.
-    
-    The `FnMut` bound was the most used, because it resembles the semantics of the current boxed closures: the closure can modify its environment, and the closure may be called several times.
-    
-    The `FnOnce` bound allows new semantics: you can move out the upvars when the closure is called. This can be effectively paired with the `move || {}` syntax to transfer ownership from the environment to the closure caller.
-    
-    In the case of trait methods, is hard to select the "right" bound since we can't control how the trait may be implemented by downstream users. In these cases, I have selected the bound based on how we use these traits in the repository. For this reason the selected bounds may not be ideal, and may require tweaking before stabilization.
-    
-    r? @aturon
 </pre></body></html>
