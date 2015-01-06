@@ -1,6 +1,68 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 25d5a3a19423fee01787de87a56d185dd4e0a4e7
+Merge: 743d926 ec7a50d
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Jan 5 18:37:22 2015 -0800
+
+    rollup merge of #20507: alexcrichton/issue-20444
+    
+    This commit is an implementation of [RFC 494][rfc] which removes the entire
+    `std::c_vec` module and redesigns the `std::c_str` module as `std::ffi`.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0494-c_str-and-c_vec-stability.md
+    
+    The interface of the new `CString` is outlined in the linked RFC, the primary
+    changes being:
+    
+    * The `ToCStr` trait is gone, meaning the `with_c_str` and `to_c_str` methods
+      are now gone. These two methods are replaced with a `CString::from_slice`
+      method.
+    * The `CString` type is now just a wrapper around `Vec&lt;u8&gt;` with a static
+      guarantee that there is a trailing nul byte with no internal nul bytes. This
+      means that `CString` now implements `Deref&lt;Target = [c_char]&gt;`, which is where
+      it gains most of its methods from. A few helper methods are added to acquire a
+      slice of `u8` instead of `c_char`, as well as including a slice with the
+      trailing nul byte if necessary.
+    * All usage of non-owned `CString` values is now done via two functions inside
+      of `std::ffi`, called `c_str_to_bytes` and `c_str_to_bytes_with_nul`. These
+      functions are now the one method used to convert a `*const c_char` to a Rust
+      slice of `u8`.
+    
+    Many more details, including newly deprecated methods, can be found linked in
+    the RFC. This is a:
+    
+    [breaking-change]
+    Closes #20444
+
+commit 88b4c8e0d347921673e61bf1770ba0acd4c7d824
+Merge: 059566b 5caf847
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Mon Jan 5 18:36:34 2015 -0800
+
+    rollup merge of #20465: nikomatsakis/assoc-types-regions-20303
+    
+    Treat associated types the same as type parameters when it comes to region bounding. Fixes #20303.
+    
+    Strictly speaking, this is a [breaking-change] (if you are using
+    associated types). You are no longer free to wantonly violate the type
+    system rules by closing associated types into objects without any form
+    of region bound. Instead you should add region bounds like `T::X :
+    'a`, just as you would with a normal type parameter.
+    
+    r? @aturon
+
+commit 48f50e1e98691d74427e23e82694f528b3fb4d56
+Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
+Date:   Tue Jan 6 09:44:33 2015 +1300
+
+    Obsolete `Sized? T`
+    
+    [breaking-change]
+    
+    Use `T: ?Sized`
+
 commit c7dd3c4d69aee1c4ad8cc220c194b176bba2ab62
 Merge: f11f3e7 eb2506c
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -104,6 +166,164 @@ Date:   Mon Jan 5 23:51:00 2015 +0000
     r? @nikomatsakis @aturon (You probably want to focus on the deleted/modified tests.)
     cc @eddyb
 
+commit 6e68fd09edc7ed37fd76f703247b5410cd338bfe
+Author: Niko Matsakis &lt;niko@alum.mit.edu&gt;
+Date:   Sun Jan 4 20:35:06 2015 -0500
+
+    Implement new orphan rule that requires that impls of remote traits meet the following two criteria:
+    
+    - the self type includes some local type; and,
+    - type parameters in the self type must be constrained by a local type.
+    
+    A type parameter is called *constrained* if it appears in some type-parameter of a local type.
+    
+    Here are some examples that are accepted. In all of these examples, I
+    assume that `Foo` is a trait defined in another crate. If `Foo` were
+    defined in the local crate, then all the examples would be legal.
+    
+    - `impl Foo for LocalType`
+    - `impl&lt;T&gt; Foo&lt;T&gt; for LocalType` -- T does not appear in Self, so it is OK
+    - `impl&lt;T&gt; Foo&lt;T&gt; for LocalType&lt;T&gt;` -- T here is constrained by LocalType
+    - `impl&lt;T&gt; Foo&lt;T&gt; for (LocalType&lt;T&gt;, T)` -- T here is constrained by LocalType
+    
+    Here are some illegal examples (again, these examples assume that
+    `Foo` is not local to the current crate):
+    
+    - `impl Foo for int` -- the Self type is not local
+    - `impl&lt;T&gt; Foo for T` -- T appears in Self unconstrained by a local type
+    - `impl&lt;T&gt; Foo for (LocalType, T)` -- T appears in Self unconstrained by a local type
+    
+    This is a [breaking-change]. For the time being, you can opt out of
+    the new rules by placing `#[old_orphan_check]` on the trait (and
+    enabling the feature gate where the trait is defined). Longer term,
+    you should restructure your traits to avoid the problem. Usually this
+    means changing the order of parameters so that the "central" type
+    parameter is in the `Self` position.
+    
+    As an example of that refactoring, consider the `BorrowFrom` trait:
+    
+    ```rust
+    pub trait BorrowFrom&lt;Sized? Owned&gt; for Sized? {
+        fn borrow_from(owned: &amp;Owned) -&gt; &amp;Self;
+    }
+    ```
+    
+    As defined, this trait is commonly implemented for custom pointer
+    types, such as `Arc`. Those impls follow the pattern:
+    
+    ```rust
+    impl&lt;T&gt; BorrowFrom&lt;Arc&lt;T&gt;&gt; for T {...}
+    ```
+    
+    Unfortunately, this impl is illegal because the self type `T` is not
+    local to the current crate. Therefore, we are going to change the order of the parameters,
+    so that `BorrowFrom` becomes `Borrow`:
+    
+    ```rust
+    pub trait Borrow&lt;Sized? Borrowed&gt; for Sized? {
+        fn borrow_from(owned: &amp;Self) -&gt; &amp;Borrowed;
+    }
+    ```
+    
+    Now the `Arc` impl is written:
+    
+    ```rust
+    impl&lt;T&gt; Borrow&lt;T&gt; for Arc&lt;T&gt; { ... }
+    ```
+    
+    This impl is legal because the self type (`Arc&lt;T&gt;`) is local.
+
+commit 64ec47c9d2a75c8150d153450e7e7b7db60208dc
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Sun Jan 4 08:43:27 2015 -0800
+
+    Final alpha stabilization of core::iter
+    
+    This commit wraps up the adjustments to the iterator for recent language
+    changes.
+    
+    * Moves `rposition` from `ExactSizeIterator` to `IteratorExt` using a
+      `where` clause, thereby removing the `ExactSizeIterator:
+      DoubleEndedIterator` constraint.
+    
+    * Merges `MutableDoubleEndedIterator` into `IteratorExt`, renaming
+      `reverse_` to `reverse_in_place`.
+    
+    * Merges `IteratorOrdExt`, `IteratorCloneExt` and `CloneIteratorExt`
+      into `IteratorExt` using `where` clauses.
+    
+    Marks as `#[stable]`:
+    
+    * the `iter` module itself
+    * `FromIterator`, `Extend`
+    * `Iterator`, `IteratorExt`
+    * `map`
+    * `filter`
+    * `filter_map`
+    * `skip_while`
+    * `take_while`
+    * `scan`
+    * `flat_map`
+    * `inspect`
+    * `collect`
+    * `fold`
+    * `all`
+    * `any`
+    * `find`
+    * `rposition`
+    * `max`, `min`
+    * Various adapter types related to the above methods
+    
+    Because of the trait merging, this is a:
+    
+    [breaking-change]
+
+commit ec7a50d20dff416d9fec837a6492dfe244f5f3ab
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Tue Nov 25 13:28:35 2014 -0800
+
+    std: Redesign c_str and c_vec
+    
+    This commit is an implementation of [RFC 494][rfc] which removes the entire
+    `std::c_vec` module and redesigns the `std::c_str` module as `std::ffi`.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0494-c_str-and-c_vec-stability.md
+    
+    The interface of the new `CString` is outlined in the linked RFC, the primary
+    changes being:
+    
+    * The `ToCStr` trait is gone, meaning the `with_c_str` and `to_c_str` methods
+      are now gone. These two methods are replaced with a `CString::from_slice`
+      method.
+    * The `CString` type is now just a wrapper around `Vec&lt;u8&gt;` with a static
+      guarantee that there is a trailing nul byte with no internal nul bytes. This
+      means that `CString` now implements `Deref&lt;Target = [c_char]&gt;`, which is where
+      it gains most of its methods from. A few helper methods are added to acquire a
+      slice of `u8` instead of `c_char`, as well as including a slice with the
+      trailing nul byte if necessary.
+    * All usage of non-owned `CString` values is now done via two functions inside
+      of `std::ffi`, called `c_str_to_bytes` and `c_str_to_bytes_with_nul`. These
+      functions are now the one method used to convert a `*const c_char` to a Rust
+      slice of `u8`.
+    
+    Many more details, including newly deprecated methods, can be found linked in
+    the RFC. This is a:
+    
+    [breaking-change]
+    Closes #20444
+
+commit c8868942e845254abfd3623a709847d65e015a2f
+Author: Niko Matsakis &lt;niko@alum.mit.edu&gt;
+Date:   Sat Jan 3 04:40:33 2015 -0500
+
+    Treat associated types the same as type parameters when it comes to region bounding. Fixes #20303.
+    
+    Strictly speaking, this is a [breaking-change] (if you are using
+    associated types). You are no longer free to wantonly violate the type
+    system rules by closing associated types into objects without any form
+    of region bound. Instead you should add region bounds like `T::X :
+    'a`, just as you would with a normal type parameter.
+
 commit 03268bbf35d3ff2350d987fe7b60375839abdf2e
 Merge: 8e83af6 0cb7a40
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -152,6 +372,33 @@ Date:   Sat Jan 3 22:24:50 2015 -0800
     Due to the trait definitions changing, this is a:
     
     [breaking-change]
+
+commit bf6c007760169e9c382d3700fd1cdd20037e4343
+Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+Date:   Fri Dec 5 15:56:25 2014 -0800
+
+    Change `&amp;` pat to only work with &amp;T, and `&amp;mut` with &amp;mut T.
+    
+    This implements RFC 179 by making the pattern `&amp;&lt;pat&gt;` require matching
+    against a variable of type `&amp;T`, and introducing the pattern `&amp;mut
+    &lt;pat&gt;` which only works with variables of type `&amp;mut T`.
+    
+    The pattern `&amp;mut x` currently parses as `&amp;(mut x)` i.e. a pattern match
+    through a `&amp;T` or a `&amp;mut T` that binds the variable `x` to have type
+    `T` and to be mutable. This should be rewritten as follows, for example,
+    
+        for &amp;mut x in slice.iter() {
+    
+    becomes
+    
+        for &amp;x in slice.iter() {
+            let mut x = x;
+    
+    Due to this, this is a
+    
+    [breaking-change]
+    
+    Closes #20496.
 
 commit 0302d379776fca82d3eb693046239dc66998f691
 Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
@@ -2296,179 +2543,4 @@ Date:   Sat Dec 13 22:57:21 2014 +0000
     In the case of trait methods, is hard to select the "right" bound since we can't control how the trait may be implemented by downstream users. In these cases, I have selected the bound based on how we use these traits in the repository. For this reason the selected bounds may not be ideal, and may require tweaking before stabilization.
     
     r? @aturon
-
-commit bc486dc233b23f79d5f144cbbbd67cde208c14b6
-Merge: daa2bde 20eaf16
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Wed Dec 10 15:22:18 2014 +0000
-
-    auto merge of #19663 : tbu-/rust/pr_fix_vecmap, r=Gankro
-    
-    - Introduce a named type for the return type of `VecMap::move_iter`
-    - Rename all type parameters to `V` for "Value".
-    - Remove unnecessary call to an `Option::unwrap`, use pattern matching instead.
-    - Remove incorrect `Hash` implementation which took the `VecMap`'s capacity
-      into account.
-    
-    This is a [breaking-change], however whoever used the `Hash` implementation
-    relied on an incorrect implementation.
-
-commit 2457375534dc51bff5229a21f9966c60d5800c47
-Merge: b4b1bb0 9af324a
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Tue Dec 9 09:25:14 2014 -0800
-
-    rollup merge of #19653: frewsxcv/rm-reexports
-    
-    Brief note: This does *not* affect anything in the prelude
-    
-    Part of #19253
-    
-    All this does is remove the reexporting of Result and Option from their
-    respective modules. More core reexports might be removed, but these ones
-    are the safest to remove since these enums (and their variants) are included in
-    the prelude.
-    
-    Depends on https://github.com/rust-lang/rust/pull/19407 which is merged, but might need a new snapshot
-    
-    [breaking-change]
-
-commit d0ad3c7f933d575d3700d8f5124e5474dfcdbd63
-Merge: ae60f9c a119ad8
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Tue Dec 9 09:24:50 2014 -0800
-
-    rollup merge of #19594: Arcterus/master
-    
-    It is useful to have configurable newlines in base64 as the standard
-    leaves that for the implementation to decide.  GNU `base64` apparently
-    uses LF, which meant in `uutils` we had to manually convert the CRLF to
-    LF.  This made the program very slow for large inputs.
-    
-    [breaking-change]
-
-commit 26c24221e47f76aef8c479ec66c01700df4d6ebb
-Merge: 60f97fc e852419
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Tue Dec 9 09:24:44 2014 -0800
-
-    rollup merge of #19587: huonw/closure-feature-gate
-    
-    detect UFCS drop and allow UFCS methods to have explicit type parameters.
-    
-    Work towards #18875.
-    
-    Since code could previously call the methods &amp; implement the traits
-    manually, this is a
-    
-    [breaking-change]
-    
-    Closes #19586. Closes #19375.
-
-commit 67ae3a49e4864133784cd745a9a8866889f3ae15
-Author: Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
-Date:   Tue Dec 9 18:17:18 2014 +0100
-
-    Clean up `libcollections::VecMap`
-    
-    - Introduce a named type for the return type of `VecMap::move_iter`
-    - Rename all type parameters to `V` for "Value".
-    - Remove unnecessary call to an `Option::unwrap`, use pattern matching instead.
-    - Remove incorrect `Hash` implementation which took the `VecMap`'s capacity
-      into account.
-    
-    This is a [breaking-change], however whoever used the `Hash` implementation
-    relied on an incorrect implementation.
-
-commit 553ab271a31a9573fb6e95d03d8f4d00e17d6511
-Author: Arcterus &lt;Arcterus@mail.com&gt;
-Date:   Sat Dec 6 02:35:26 2014 -0800
-
-    serialize: base64: allow LF in addition to CRLF and optimize slightly
-    
-    It is useful to have configurable newlines in base64 as the standard
-    leaves that for the implementation to decide.  GNU `base64` apparently
-    uses LF, which meant in `uutils` we had to manually convert the CRLF to
-    LF.  This made the program very slow for large inputs.
-    
-    [breaking-change]
-
-commit 9af324a673443367c5b58a182804982c11f73981
-Author: Corey Farwell &lt;coreyf@rwell.org&gt;
-Date:   Mon Dec 8 12:58:01 2014 -0500
-
-    Remove Result and Option reexports
-    
-    Brief note: This does *not* affect anything in the prelude
-    
-    Part of #19253
-    
-    All this does is remove the reexporting of Result and Option from their
-    respective modules. More core reexports might be removed, but these ones
-    are the safest to remove since these enums (and their variants) are included in
-    the prelude.
-    
-    [breaking-change]
-
-commit 096a28607fb80c91e6e2ca64d9ef44c4e550e96c
-Author: Niko Matsakis &lt;niko@alum.mit.edu&gt;
-Date:   Fri Dec 5 17:01:33 2014 -0800
-
-    librustc: Make `Copy` opt-in.
-    
-    This change makes the compiler no longer infer whether types (structures
-    and enumerations) implement the `Copy` trait (and thus are implicitly
-    copyable). Rather, you must implement `Copy` yourself via `impl Copy for
-    MyType {}`.
-    
-    A new warning has been added, `missing_copy_implementations`, to warn
-    you if a non-generic public type has been added that could have
-    implemented `Copy` but didn't.
-    
-    For convenience, you may *temporarily* opt out of this behavior by using
-    `#![feature(opt_out_copy)]`. Note though that this feature gate will never be
-    accepted and will be removed by the time that 1.0 is released, so you should
-    transition your code away from using it.
-    
-    This breaks code like:
-    
-        #[deriving(Show)]
-        struct Point2D {
-            x: int,
-            y: int,
-        }
-    
-        fn main() {
-            let mypoint = Point2D {
-                x: 1,
-                y: 1,
-            };
-            let otherpoint = mypoint;
-            println!("{}{}", mypoint, otherpoint);
-        }
-    
-    Change this code to:
-    
-        #[deriving(Show)]
-        struct Point2D {
-            x: int,
-            y: int,
-        }
-    
-        impl Copy for Point2D {}
-    
-        fn main() {
-            let mypoint = Point2D {
-                x: 1,
-                y: 1,
-            };
-            let otherpoint = mypoint;
-            println!("{}{}", mypoint, otherpoint);
-        }
-    
-    This is the backwards-incompatible part of #13231.
-    
-    Part of RFC #3.
-    
-    [breaking-change]
 </pre></body></html>
