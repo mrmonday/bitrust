@@ -1,6 +1,109 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit c7dd3c4d69aee1c4ad8cc220c194b176bba2ab62
+Merge: f11f3e7 eb2506c
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Mon Jan 5 23:51:00 2015 +0000
+
+    auto merge of #20578 : japaric/rust/no-more-bc, r=nmatsakis
+    
+    This PR removes boxed closures from the language, the closure type syntax (`let f: |int| -&gt; bool = /* ... */`) has been obsoleted. Move all your uses of closures to the new unboxed closure system (i.e. `Fn*` traits).
+    
+    [breaking-change] patterns
+    
+    - `lef f = || {}`
+    
+    This binding used to type check to a boxed closure. Now that boxed closures are gone, you need to annotate the "kind" of the unboxed closure, i.e. you need pick one of these: `|&amp;:| {}`, `|&amp;mut:| {}` or `|:| {}`.
+    
+    In the (near) future we'll have closure "kind" inference, so the compiler will infer which `Fn*` trait to use based on how the closure is used. Once this inference machinery is in place, we'll be able to remove the kind annotation from most closures.
+    
+    - `type Alias&lt;'a&gt; = |int|:'a -&gt; bool`
+    
+    Use a trait object: `type Alias&lt;'a&gt; = Box&lt;FnMut(int) -&gt; bool + 'a&gt;`. Use the `Fn*` trait that makes sense for your use case.
+    
+    - `fn foo(&amp;self, f: |uint| -&gt; bool)`
+    
+    In this case you can use either a trait object or an unboxed closure:
+    
+    ``` rust
+    fn foo(&amp;self, f: F) where F: FnMut(uint) -&gt; bool;
+    // or
+    fn foo(&amp;self, f: Box&lt;FnMut(uint) -&gt; bool&gt;);
+    ```
+    
+    - `struct Struct&lt;'a&gt; { f: |uint|:'a -&gt; bool }`
+    
+    Again, you can use either a trait object or an unboxed closure:
+    
+    ``` rust
+    struct Struct&lt;F&gt; where F: FnMut(uint) -&gt; bool { f: F }
+    // or
+    struct Struct&lt;'a&gt; { f: Box&lt;FnMut(uint) -&gt; bool + 'a&gt; }
+    ```
+    
+    - Using `|x, y| f(x, y)` for closure "borrows"
+    
+    This comes up in recursive functions, consider the following (contrived) example:
+    
+    ``` rust
+    fn foo(x: uint, f: |uint| -&gt; bool) -&gt; bool {
+        //foo(x / 2, f) &amp;&amp; f(x)  // can't use this because `f` gets moved away in the `foo` call
+        foo(x / 2, |x| f(x)) &amp;&amp; f(x)  // instead "borrow" `f` in the `foo` call
+    }
+    ```
+    
+    If you attempt to do the same with unboxed closures you'll hit ""error: reached the recursion limit during monomorphization" (see #19596):
+    
+    ``` rust
+    fn foo&lt;F&gt;(x: uint, mut f: F) -&gt; bool where F: FnMut(uint) -&gt; bool {
+        foo(x / 2, |x| f(x)) &amp;&amp; f(x)
+        //~^ error: reached the recursion limit during monomorphization
+    }
+    ```
+    
+    Instead you *should* be able to write this:
+    
+    ``` rust
+    fn foo&lt;F&gt;(x: uint, mut f: F) -&gt; bool where F: FnMut(uint) -&gt; bool {
+        foo(x / 2, &amp;mut f) &amp;&amp; f(x)
+        //~^ error: the trait `FnMut` is not implemented for the type `&amp;mut F`
+    }
+    ```
+    
+    But as you see above `&amp;mut F` doesn't implement the `FnMut` trait. `&amp;mut F` *should* implement the `FnMut` and the above code *should* work, but due to a bug (see #18835) it doesn't (for now).
+    
+    You can work around the issue by rewriting the function to take `&amp;mut F` instead of `F`:
+    
+    ``` rust
+    fn foo&lt;F&gt;(x: uint, f: &amp;mut F) -&gt; bool where F: FnMut(uint) -&gt; bool {
+        foo(x / 2, f) &amp;&amp; (*f)(x)
+    }
+    ```
+    
+    This finally works! However writing `foo(0, &amp;mut |x| x == 0)` is unergonomic. So you can use a private helper function to avoid this:
+    
+    ``` rust
+    // public API function
+    pub fn foo&lt;F&gt;(x: uint, mut f: F) -&gt; bool where F: FnMut(uint) -&gt; bool {
+        foo_(x, &amp;mut f)
+    }
+    
+    // private helper function
+    fn foo_&lt;F&gt;(x: uint, f: &amp;mut F) -&gt; bool where F: FnMut(uint) -&gt; bool {
+        foo_(x / 2, f) &amp;&amp; (*f)(x)
+    }
+    ```
+    
+    Closes #14798
+    
+    ---
+    
+    There is more cleanup to do: like renaming functions/types from `unboxed_closure` to just `closure`, removing more dead code, simplify functions which now have unused arguments, update the documentation, etc. But that can be done in another PR.
+    
+    r? @nikomatsakis @aturon (You probably want to focus on the deleted/modified tests.)
+    cc @eddyb
+
 commit 03268bbf35d3ff2350d987fe7b60375839abdf2e
 Merge: 8e83af6 0cb7a40
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2366,27 +2469,6 @@ Date:   Fri Dec 5 17:01:33 2014 -0800
     This is the backwards-incompatible part of #13231.
     
     Part of RFC #3.
-    
-    [breaking-change]
-
-commit fec0f16c98ab066ff11be35b5a8bb0d80efa90f1
-Author: Barosl Lee &lt;vcs@barosl.com&gt;
-Date:   Mon Nov 24 03:14:02 2014 +0900
-
-    libserialize: Always use a decimal point when emitting a float value
-    
-    JSON doesn't distinguish between integer and float. They are just
-    numbers. Also, in the current implementation, a fractional number
-    without the fractional part is encoded without a decimal point.
-    
-    Thereforce, when the value is decoded, it is first rendered as Json,
-    either I64 or U64. This reduces type safety, because while the original
-    intention was to cast the value to float, it can also be casted to
-    integer.
-    
-    As a workaround of this problem, this commit makes the encoder always
-    emit a decimal point even if it is not necessary. If the fractional part
-    of a float number is zero, ".0" is padded to the end of the result.
     
     [breaking-change]
 </pre></body></html>
