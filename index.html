@@ -1,6 +1,210 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 36f5d122b80682de473aeda2e20f14b6ceb86d74
+Merge: 0631b46 caca9b2
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Tue Jan 6 15:38:38 2015 -0800
+
+    rollup merge of #20615: aturon/stab-2-thread
+    
+    This commit takes a first pass at stabilizing `std::thread`:
+    
+    * It removes the `detach` method in favor of two constructors -- `spawn`
+      for detached threads, `scoped` for "scoped" (i.e., must-join)
+      threads. This addresses some of the surprise/frustrating debug
+      sessions with the previous API, in which `spawn` produced a guard that
+      on destruction joined the thread (unless `detach` was called).
+    
+      The reason to have the division in part is that `Send` will soon not
+      imply `'static`, which means that `scoped` thread creation can take a
+      closure over *shared stack data* of the parent thread. On the other
+      hand, this means that the parent must not pop the relevant stack
+      frames while the child thread is running. The `JoinGuard` is used to
+      prevent this from happening by joining on drop (if you have not
+      already explicitly `join`ed.) The APIs around `scoped` are
+      future-proofed for the `Send` changes by taking an additional lifetime
+      parameter. With the current definition of `Send`, this is forced to be
+      `'static`, but when `Send` changes these APIs will gain their full
+      flexibility immediately.
+    
+      Threads that are `spawn`ed, on the other hand, are detached from the
+      start and do not yield an RAII guard.
+    
+      The hope is that, by making `scoped` an explicit opt-in with a very
+      suggestive name, it will be drastically less likely to be caught by a
+      surprising deadlock due to an implicit join at the end of a scope.
+    
+    * The module itself is marked stable.
+    
+    * Existing methods other than `spawn` and `scoped` are marked stable.
+    
+    The migration path is:
+    
+    ```rust
+    Thread::spawn(f).detached()
+    ```
+    
+    becomes
+    
+    ```rust
+    Thread::spawn(f)
+    ```
+    
+    while
+    
+    ```rust
+    let res = Thread::spawn(f);
+    res.join()
+    ```
+    
+    becomes
+    
+    ```rust
+    let res = Thread::scoped(f);
+    res.join()
+    ```
+    
+    [breaking-change]
+
+commit 44440e5c18a1dbcc9685866ffffe00c508929079
+Author: Sean McArthur &lt;sean.monstar@gmail.com&gt;
+Date:   Sat Dec 20 00:09:35 2014 -0800
+
+    core: split into fmt::Show and fmt::String
+    
+    fmt::Show is for debugging, and can and should be implemented for
+    all public types. This trait is used with `{:?}` syntax. There still
+    exists #[derive(Show)].
+    
+    fmt::String is for types that faithfully be represented as a String.
+    Because of this, there is no way to derive fmt::String, all
+    implementations must be purposeful. It is used by the default format
+    syntax, `{}`.
+    
+    This will break most instances of `{}`, since that now requires the type
+    to impl fmt::String. In most cases, replacing `{}` with `{:?}` is the
+    correct fix. Types that were being printed specifically for users should
+    receive a fmt::String implementation to fix this.
+    
+    Part of #20013
+    
+    [breaking-change]
+
+commit 2375a79152b8a6554c3e97a3f127fedd75f7495f
+Author: Niko Matsakis &lt;niko@alum.mit.edu&gt;
+Date:   Mon Jan 5 06:17:42 2015 -0500
+
+    Implement impl reachability rules. This is a [breaking-change]. Type
+    parameters on impls must now also appear in the trait ref, self type,
+    or some associated type declared on the impl. This ensures that they
+    are constrianed in some way and that the semantics of the trait system
+    are well-defined (always a good thing).
+    
+    There are three major ways to fix this error:
+    
+    1. Convert the trait to use associated types; most often the type
+       parameters are not constrained because they are in fact outputs of
+       the impl.
+    
+    2. Move the type parameters to methods.
+    
+    3. Add an additional type parameter to the self type or trait so that
+       the unused parameter can appear there.
+    
+    In some cases, it is not possible to fix the impl because the trait
+    definition needs to be changed first (and that may be out of your
+    control). In that case, for the time being, you can opt out of these
+    rules by using `#[old_impl_check]` on the impl and adding a
+    `#![feature(old_impl_check)]` to your crate declaration.
+
+commit 503709708c72401dbe091ed5c7e0494efabe0669
+Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
+Date:   Tue Jan 6 14:03:46 2015 +1300
+
+    Change `std::kinds` to `std::markers`; flatten `std::kinds::marker`
+    
+    [breaking-change]
+
+commit f67b81e8d4dc198ad10ad50a7624e43cc1e25802
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Mon Jan 5 15:45:18 2015 -0800
+
+    Stabilize std::thread
+    
+    This commit takes a first pass at stabilizing `std::thread`:
+    
+    * It removes the `detach` method in favor of two constructors -- `spawn`
+      for detached threads, `scoped` for "scoped" (i.e., must-join)
+      threads. This addresses some of the surprise/frustrating debug
+      sessions with the previous API, in which `spawn` produced a guard that
+      on destruction joined the thread (unless `detach` was called).
+    
+      The reason to have the division in part is that `Send` will soon not
+      imply `'static`, which means that `scoped` thread creation can take a
+      closure over *shared stack data* of the parent thread. On the other
+      hand, this means that the parent must not pop the relevant stack
+      frames while the child thread is running. The `JoinGuard` is used to
+      prevent this from happening by joining on drop (if you have not
+      already explicitly `join`ed.) The APIs around `scoped` are
+      future-proofed for the `Send` changes by taking an additional lifetime
+      parameter. With the current definition of `Send`, this is forced to be
+      `'static`, but when `Send` changes these APIs will gain their full
+      flexibility immediately.
+    
+      Threads that are `spawn`ed, on the other hand, are detached from the
+      start and do not yield an RAII guard.
+    
+      The hope is that, by making `scoped` an explicit opt-in with a very
+      suggestive name, it will be drastically less likely to be caught by a
+      surprising deadlock due to an implicit join at the end of a scope.
+    
+    * The module itself is marked stable.
+    
+    * Existing methods other than `spawn` and `scoped` are marked stable.
+    
+    The migration path is:
+    
+    ```rust
+    Thread::spawn(f).detached()
+    ```
+    
+    becomes
+    
+    ```rust
+    Thread::spawn(f)
+    ```
+    
+    while
+    
+    ```rust
+    let res = Thread::spawn(f);
+    res.join()
+    ```
+    
+    becomes
+    
+    ```rust
+    let res = Thread::scoped(f);
+    res.join()
+    ```
+    
+    [breaking-change]
+
+commit 6680c9c5c797101fc5e0608cb2c3657517333148
+Author: Corey Richardson &lt;corey@octayn.net&gt;
+Date:   Fri Jan 2 16:41:24 2015 -0500
+
+    syntax: implement 'macro input future proofing'
+    
+    See RFC 550 (https://github.com/rust-lang/rfcs/pull/550) for the motivation
+    and details.
+    
+    If this breaks your code, add one of the listed tokens after the relevant
+    non-terminal in your matcher.
+    
+    [breaking-change]
+
 commit ae4762761c995494726e8c9f41b05e99e6c7c81b
 Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
 Date:   Mon Jan 5 21:14:50 2015 +1100
@@ -2280,174 +2484,4 @@ Date:   Fri Dec 12 00:04:47 2014 -0600
     fair-game to treat a type-alias as the aliased type, this is a:
     
     [breaking-change].
-
-commit 0669a432a2e09ad08886cb2138dbe9f5d681fb7f
-Merge: 92e9e70 89d2061
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Mon Dec 15 22:11:44 2014 +0000
-
-    auto merge of #19448 : japaric/rust/binops-by-value, r=nikomatsakis
-    
-    - The following operator traits now take their arguments by value: `Add`, `Sub`, `Mul`, `Div`, `Rem`, `BitAnd`, `BitOr`, `BitXor`, `Shl`, `Shr`. This breaks all existing implementations of these traits.
-    
-    - The binary operation `a OP b` now "desugars" to `OpTrait::op_method(a, b)` and consumes both arguments.
-    
-    - `String` and `Vec` addition have been changed to reuse the LHS owned value, and to avoid internal cloning. Only the following asymmetric operations are available: `String + &amp;str` and `Vec&lt;T&gt; + &amp;[T]`, which are now a short-hand for the "append" operation.
-    
-    [breaking-change]
-    
-    ---
-    
-    This passes `make check` locally. I haven't touch the unary operators in this PR, but converting them to by value should be very similar to this PR. I can work on them after this gets the thumbs up.
-    
-    @nikomatsakis r? the compiler changes
-    @aturon r? the library changes. I think the only controversial bit is the semantic change of the `Vec`/`String` `Add` implementation.
-    cc #19148
-
-commit c9ea7c9a58bc2bcfe77d264cedaeca5a3296634a
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Mon Dec 15 09:06:06 2014 -0800
-
-    serialize: Change some FnOnce bounds to FnMut
-    
-    Relax some of the bounds on the decoder methods back to FnMut to help accomodate
-    some more flavorful variants of decoders which may need to run the closure more
-    than once when it, for example, attempts to find the first successful enum to
-    decode.
-    
-    This a breaking change due to the bounds for the trait switching, and clients
-    will need to update from `FnOnce` to `FnMut` as well as likely making the local
-    function binding mutable in order to call the function.
-    
-    [breaking-change]
-
-commit b60de4bfc2cf45ebe16b9b5b768f0aad54211625
-Author: Niko Matsakis &lt;niko@alum.mit.edu&gt;
-Date:   Fri Dec 12 11:09:24 2014 -0500
-
-    Emit warning when lifetime names are shadowed.
-    
-    This is not technically a [breaking-change], but it will be soon, so
-    you should update your code. Typically, shadowing is accidental, and
-    the shadowing lifetime can simply be removed. This frequently occurs
-    in constructor patterns:
-    
-    ```rust
-    // Old:
-    impl&lt;'a&gt; SomeStruct&lt;'a&gt; { fn new&lt;'a&gt;(..) -&gt; SomeStruct&lt;'a&gt; { ... } }
-    
-    // Should be:
-    impl&lt;'a&gt; SomeStruct&lt;'a&gt; { fn new(..) -&gt; SomeStruct&lt;'a&gt; { ... } }
-    ```
-    
-    Otherwise, you should rename the inner lifetime to something
-    else. Note though that lifetime elision frequently applies:
-    
-    ```rust
-    // Old
-    impl&lt;'a&gt; SomeStruct&lt;'a&gt; {
-        fn get&lt;'a&gt;(x: &amp;'a self) -&gt; &amp;'a T { &amp;self.field }
-    }
-    
-    // Should be:
-    impl&lt;'a&gt; SomeStruct&lt;'a&gt; {
-        fn get(x: &amp;self) -&gt; &amp;T { &amp;self.field }
-    }
-    ``
-
-commit 1fbca8824a6b6018191b7ee998d2c97f30c481d7
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Sun Dec 14 10:34:23 2014 -0800
-
-    std: Fully stabilize Option&lt;T&gt;
-    
-    This commit takes a second pass through the `std::option` module to fully
-    stabilize any lingering methods inside of it.
-    
-    These items were made stable as-is
-    
-    * Some
-    * None
-    * as_mut
-    * expect
-    * unwrap
-    * unwrap_or
-    * unwrap_or_else
-    * map
-    * map_or
-    * map_or_else
-    * and_then
-    * or_else
-    * unwrap_or_default
-    * Default implementation
-    * FromIterator implementation
-    * Copy implementation
-    
-    These items were made stable with modifications
-    
-    * iter - now returns a struct called Iter
-    * iter_mut - now returns a struct called IterMut
-    * into_iter - now returns a struct called IntoIter, Clone is never implemented
-    
-    This is a breaking change due to the modifications to the names of the iterator
-    types returned. Code referencing the old names should updated to referencing the
-    newer names instead. This is also a breaking change due to the fact that
-    `IntoIter` no longer implements the `Clone` trait.
-    
-    These items were explicitly not stabilized
-    
-    * as_slice - waiting on indexing conventions
-    * as_mut_slice - waiting on conventions with as_slice as well
-    * cloned - the API was still just recently added
-    * ok_or - API remains experimental
-    * ok_or_else - API remains experimental
-    
-    [breaking-change]
-
-commit c2b0d7dd8818a0dca9b1fa7af6873375907f05ca
-Author: Eric Kidd &lt;git@randomhacks.net&gt;
-Date:   Sat Dec 13 13:33:18 2014 -0500
-
-    Modify `regex::Captures::{at,name}` to return `Option`
-    
-    Closes #14602.  As discussed in that issue, the existing `at` and `name`
-    functions represent two different results with the empty string:
-    
-    1. Matched the empty string.
-    2. Did not match anything.
-    
-    Consider the following example.  This regex has two named matched
-    groups, `key` and `value`. `value` is optional:
-    
-    ```rust
-    // Matches "foo", "foo;v=bar" and "foo;v=".
-    regex!(r"(?P&lt;key&gt;[a-z]+)(;v=(?P&lt;value&gt;[a-z]*))?");
-    ```
-    
-    We can access `value` using `caps.name("value")`, but there's no way for
-    us to distinguish between the `"foo"` and `"foo;v="` cases.
-    
-    Early this year, @BurntSushi recommended modifying the existing `at` and
-    `name` functions to return `Option`, instead of adding new functions to
-    the API.
-    
-    This is a [breaking-change], but the fix is easy:
-    
-    - `refs.at(1)` becomes `refs.at(1).unwrap_or("")`.
-    - `refs.name(name)` becomes `refs.name(name).unwrap_or("")`.
-
-commit 52f7a4a351646d3837f214b5c7aec390c9b08221
-Merge: 3a9305c f6d60f3
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Sun Dec 14 11:37:27 2014 +0000
-
-    auto merge of #19338 : nikomatsakis/rust/unboxed-closure-purge-the-proc, r=acrichto
-    
-    They are replaced with unboxed closures.
-    
-    cc @pcwalton @aturon
-    
-    This is a [breaking-change]. Mostly, uses of `proc()` simply need to be converted to `move||` (unboxed closures), but in some cases the adaptations required are more complex (particularly for library authors). A detailed write-up can be found here: http://smallcultfollowing.com/babysteps/blog/2014/11/26/purging-proc/
-    
-    The commits are ordered to emphasize the more important changes, but are not truly standalone.
 </pre></body></html>
