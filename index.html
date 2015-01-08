@@ -1,6 +1,321 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 92cd8ea96ad2a1da51863b7f089baec41ed10ce9
+Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+Date:   Thu Jan 8 11:39:45 2015 +1100
+
+    Prohibit type parameter shadowing with a clunky hammer.
+    
+    This is a [breaking-change].
+    
+    Change
+    
+        impl&lt;T&gt; Foo&lt;T&gt; {
+            fn bar&lt;T&gt;(...
+    
+    to (for example)
+    
+        impl&lt;T&gt; Foo&lt;T&gt; {
+            fn bar&lt;U&gt;(...
+    
+    Per RFC 459.
+    
+    Closes #19390.
+
+commit 6301c7878ebcaa45e77315db2a9afd8b5d1425c8
+Merge: f3b67af dd3e89a
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Wed Jan 7 17:17:23 2015 -0800
+
+    rollup merge of #20680: nick29581/target-word
+    
+    Closes #20421
+    
+    [breaking-change]
+    
+    r? @brson
+
+commit 8bf3ee7c5c44fa5aa0a1003e8fe61a0af1527927
+Merge: b1c23f6 511f0b8
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Wed Jan 7 17:17:19 2015 -0800
+
+    rollup merge of #20654: alexcrichton/stabilize-hash
+    
+    This commit aims to prepare the `std::hash` module for alpha by formalizing its
+    current interface whileholding off on adding `#[stable]` to the new APIs.  The
+    current usage with the `HashMap` and `HashSet` types is also reconciled by
+    separating out composable parts of the design. The primary goal of this slight
+    redesign is to separate the concepts of a hasher's state from a hashing
+    algorithm itself.
+    
+    The primary change of this commit is to separate the `Hasher` trait into a
+    `Hasher` and a `HashState` trait. Conceptually the old `Hasher` trait was
+    actually just a factory for various states, but hashing had very little control
+    over how these states were used. Additionally the old `Hasher` trait was
+    actually fairly unrelated to hashing.
+    
+    This commit redesigns the existing `Hasher` trait to match what the notion of a
+    `Hasher` normally implies with the following definition:
+    
+        trait Hasher {
+            type Output;
+            fn reset(&amp;mut self);
+            fn finish(&amp;self) -&gt; Output;
+        }
+    
+    This `Hasher` trait emphasizes that hashing algorithms may produce outputs other
+    than a `u64`, so the output type is made generic. Other than that, however, very
+    little is assumed about a particular hasher. It is left up to implementors to
+    provide specific methods or trait implementations to feed data into a hasher.
+    
+    The corresponding `Hash` trait becomes:
+    
+        trait Hash&lt;H: Hasher&gt; {
+            fn hash(&amp;self, &amp;mut H);
+        }
+    
+    The old default of `SipState` was removed from this trait as it's not something
+    that we're willing to stabilize until the end of time, but the type parameter is
+    always required to implement `Hasher`. Note that the type parameter `H` remains
+    on the trait to enable multidispatch for specialization of hashing for
+    particular hashers.
+    
+    Note that `Writer` is not mentioned in either of `Hash` or `Hasher`, it is
+    simply used as part `derive` and the implementations for all primitive types.
+    
+    With these definitions, the old `Hasher` trait is realized as a new `HashState`
+    trait in the `collections::hash_state` module as an unstable addition for
+    now. The current definition looks like:
+    
+        trait HashState {
+            type Hasher: Hasher;
+            fn hasher(&amp;self) -&gt; Hasher;
+        }
+    
+    The purpose of this trait is to emphasize that the one piece of functionality
+    for implementors is that new instances of `Hasher` can be created.  This
+    conceptually represents the two keys from which more instances of a
+    `SipHasher` can be created, and a `HashState` is what's stored in a
+    `HashMap`, not a `Hasher`.
+    
+    Implementors of custom hash algorithms should implement the `Hasher` trait, and
+    only hash algorithms intended for use in hash maps need to implement or worry
+    about the `HashState` trait.
+    
+    The entire module and `HashState` infrastructure remains `#[unstable]` due to it
+    being recently redesigned, but some other stability decision made for the
+    `std::hash` module are:
+    
+    * The `Writer` trait remains `#[experimental]` as it's intended to be replaced
+      with an `io::Writer` (more details soon).
+    * The top-level `hash` function is `#[unstable]` as it is intended to be generic
+      over the hashing algorithm instead of hardwired to `SipHasher`
+    * The inner `sip` module is now private as its one export, `SipHasher` is
+      reexported in the `hash` module.
+    
+    And finally, a few changes were made to the default parameters on `HashMap`.
+    
+    * The `RandomSipHasher` default type parameter was renamed to `RandomState`.
+      This renaming emphasizes that it is not a hasher, but rather just state to
+      generate hashers. It also moves away from the name "sip" as it may not always
+      be implemented as `SipHasher`. This type lives in the
+      `std::collections::hash_map` module as `#[unstable]`
+    
+    * The associated `Hasher` type of `RandomState` is creatively called...
+      `Hasher`! This concrete structure lives next to `RandomState` as an
+      implemenation of the "default hashing algorithm" used for a `HashMap`. Under
+      the hood this is currently implemented as `SipHasher`, but it draws an
+      explicit interface for now and allows us to modify the implementation over
+      time if necessary.
+    
+    There are many breaking changes outlined above, and as a result this commit is
+    a:
+    
+    [breaking-change]
+
+commit 4a31aaddb364f5ab8280242a1016bdd3d10dcaed
+Author: Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+Date:   Wed Jan 7 15:15:34 2015 +0100
+
+    Added `box_syntax` feature gate; added to std and rustc crates for bootstrap.
+    
+    To avoid using the feauture, change uses of `box &lt;expr&gt;` to
+    `Box::new(&lt;expr&gt;)` alternative, as noted by the feature gate message.
+    
+    (Note that box patterns have no analogous trivial replacement, at
+    least not in general; you need to revise the code to do a partial
+    match, deref, and then the rest of the match.)
+    
+    [breaking-change]
+
+commit 63a9bd5e0adc03652e10506055564077aa00eeaa
+Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
+Date:   Thu Jan 8 08:30:33 2015 +1300
+
+    Fix precedence for ranges.
+    
+    Technically this is a
+    
+    [breaking-change]
+    
+    but it probably shouldn't affect your code.
+    
+    Closes #20256
+
+commit 209c701bf9e95542aec69455bc12c7ca295109c4
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Tue Jan 6 11:07:09 2015 -0800
+
+    std: Stablize the macros module
+    
+    This commit performs a pass over the `std::macros` module, applying stability
+    attributes where necessary. In particular, this audits macros for patterns such
+    as:
+    
+    * Standard use of forward-to-format-args via `$($arg:tt)*` (or `+`)
+    * Prevent macro-defined identifiers from leaking into expression arguments as
+      hygiene is not perfectly implemented.
+    * Wherever possible, `$crate` is used now.
+    
+    Specifically, the following actions were taken:
+    
+    * The `std::macros` module itself is no longer public.
+    * The `panic!` macro is stable
+    * The `assert!` macro is stable
+    * The `assert_eq!` macro is stable
+    * The `debug_assert!` macro is stable
+    * The `debug_assert_eq!` macro is stable
+    * The `unreachable!` macro is stable after removing the extra forms to bring the
+      definition in line with the `unimplemented!` macro.
+    * The `try!` macro is stable
+    * The `vec!` macro is stable
+    
+    [breaking-change]
+
+commit 511f0b8a3de5a166fc96aba5170782c9abf92101
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Tue Dec 9 12:37:23 2014 -0800
+
+    std: Stabilize the std::hash module
+    
+    This commit aims to prepare the `std::hash` module for alpha by formalizing its
+    current interface whileholding off on adding `#[stable]` to the new APIs.  The
+    current usage with the `HashMap` and `HashSet` types is also reconciled by
+    separating out composable parts of the design. The primary goal of this slight
+    redesign is to separate the concepts of a hasher's state from a hashing
+    algorithm itself.
+    
+    The primary change of this commit is to separate the `Hasher` trait into a
+    `Hasher` and a `HashState` trait. Conceptually the old `Hasher` trait was
+    actually just a factory for various states, but hashing had very little control
+    over how these states were used. Additionally the old `Hasher` trait was
+    actually fairly unrelated to hashing.
+    
+    This commit redesigns the existing `Hasher` trait to match what the notion of a
+    `Hasher` normally implies with the following definition:
+    
+        trait Hasher {
+            type Output;
+            fn reset(&amp;mut self);
+            fn finish(&amp;self) -&gt; Output;
+        }
+    
+    This `Hasher` trait emphasizes that hashing algorithms may produce outputs other
+    than a `u64`, so the output type is made generic. Other than that, however, very
+    little is assumed about a particular hasher. It is left up to implementors to
+    provide specific methods or trait implementations to feed data into a hasher.
+    
+    The corresponding `Hash` trait becomes:
+    
+        trait Hash&lt;H: Hasher&gt; {
+            fn hash(&amp;self, &amp;mut H);
+        }
+    
+    The old default of `SipState` was removed from this trait as it's not something
+    that we're willing to stabilize until the end of time, but the type parameter is
+    always required to implement `Hasher`. Note that the type parameter `H` remains
+    on the trait to enable multidispatch for specialization of hashing for
+    particular hashers.
+    
+    Note that `Writer` is not mentioned in either of `Hash` or `Hasher`, it is
+    simply used as part `derive` and the implementations for all primitive types.
+    
+    With these definitions, the old `Hasher` trait is realized as a new `HashState`
+    trait in the `collections::hash_state` module as an unstable addition for
+    now. The current definition looks like:
+    
+        trait HashState {
+            type Hasher: Hasher;
+            fn hasher(&amp;self) -&gt; Hasher;
+        }
+    
+    The purpose of this trait is to emphasize that the one piece of functionality
+    for implementors is that new instances of `Hasher` can be created.  This
+    conceptually represents the two keys from which more instances of a
+    `SipHasher` can be created, and a `HashState` is what's stored in a
+    `HashMap`, not a `Hasher`.
+    
+    Implementors of custom hash algorithms should implement the `Hasher` trait, and
+    only hash algorithms intended for use in hash maps need to implement or worry
+    about the `HashState` trait.
+    
+    The entire module and `HashState` infrastructure remains `#[unstable]` due to it
+    being recently redesigned, but some other stability decision made for the
+    `std::hash` module are:
+    
+    * The `Writer` trait remains `#[experimental]` as it's intended to be replaced
+      with an `io::Writer` (more details soon).
+    * The top-level `hash` function is `#[unstable]` as it is intended to be generic
+      over the hashing algorithm instead of hardwired to `SipHasher`
+    * The inner `sip` module is now private as its one export, `SipHasher` is
+      reexported in the `hash` module.
+    
+    And finally, a few changes were made to the default parameters on `HashMap`.
+    
+    * The `RandomSipHasher` default type parameter was renamed to `RandomState`.
+      This renaming emphasizes that it is not a hasher, but rather just state to
+      generate hashers. It also moves away from the name "sip" as it may not always
+      be implemented as `SipHasher`. This type lives in the
+      `std::collections::hash_map` module as `#[unstable]`
+    
+    * The associated `Hasher` type of `RandomState` is creatively called...
+      `Hasher`! This concrete structure lives next to `RandomState` as an
+      implemenation of the "default hashing algorithm" used for a `HashMap`. Under
+      the hood this is currently implemented as `SipHasher`, but it draws an
+      explicit interface for now and allows us to modify the implementation over
+      time if necessary.
+    
+    There are many breaking changes outlined above, and as a result this commit is
+    a:
+    
+    [breaking-change]
+
+commit dd3e89aaf25c667fa8207f8800c4b60d70d76c1b
+Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
+Date:   Wed Jan 7 17:26:55 2015 +1300
+
+    Rename `target_word_size` to `target_pointer_width`
+    
+    Closes #20421
+    
+    [breaking-change]
+
+commit 7deb9abd1b45f3e56ca6b13432866ae89886f21f
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Wed Jan 7 10:39:37 2015 -0800
+
+    Add isize, usize modules, deprecate int, uint modules
+    
+    This PR introduces `isize` and `usize` modules to `core` and `std`, and
+    deprecates the existing `int` and `uint` modules. The rustdoc primitive
+    type links now point to these new modules.
+    
+    Due to deprecation this is a:
+    
+    [breaking-change]
+
 commit 36f5d122b80682de473aeda2e20f14b6ceb86d74
 Merge: 0631b46 caca9b2
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2331,157 +2646,4 @@ Date:   Wed Dec 17 08:34:14 2014 -0800
     * ok_or_else - API remains experimental
     
     [breaking-change]
-
-commit 5294ceb312b059709f204300156b732cc78cfaf0
-Merge: 974e17b c2b0d7d
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Wed Dec 17 08:34:01 2014 -0800
-
-    rollup merge of #19818: emk/regex_at_name_opt
-    
-    Hello! This is my first Rust patch, and I fear that I've probably skipped at least 7 critical steps. I'd appreciate your feedback and advice about how to contribute to Rust.
-    
-    This patch is based on a discussion with @BurntSushi in #14602 a while back. I'm happy to revise it as needed to fit into the modern world. :-)
-    
-    As discussed in that issue, the existing `at` and `name` functions represent two different results with the empty string:
-    
-    1. Matched the empty string.
-    2. Did not match anything.
-    
-    Consider the following example.  This regex has two named matched groups, `key` and `value`. `value` is optional:
-    
-    ```rust
-    // Matches "foo", "foo;v=bar" and "foo;v=".
-    regex!(r"(?P&lt;key&gt;[a-z]+)(;v=(?P&lt;value&gt;[a-z]*))?");
-    ```
-    
-    We can access `value` using `caps.name("value")`, but there's no way for us to distinguish between the `"foo"` and `"foo;v="` cases.
-    
-    Early this year, @BurntSushi recommended modifying the existing `at` and `name` functions to return `Option`, instead of adding new functions to the API.
-    
-    This is a [breaking-change], but the fix is easy:
-    
-    - `refs.at(1)` becomes `refs.at(1).unwrap_or("")`.
-    - `refs.name(name)` becomes `refs.name(name).unwrap_or("")`.
-
-commit 974e17b9ea63b38b4a512742fc877a7e4ee94e03
-Merge: 126a83f 341cf40
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Wed Dec 17 08:33:58 2014 -0800
-
-    rollup merge of #19770: csouth3/iterator-wrapperstructs
-    
-    Using a type alias for iterator implementations is fragile since this exposes the implementation to users of the iterator, and any changes could break existing code.
-    
-    This PR changes the iterators of `BTreeMap`, `BTreeSet`, `HashMap`, and `HashSet` to use proper new types, rather than type aliases.  However, since it is fair-game to treat a type-alias as the aliased type, this is a:
-    
-    [breaking-change].
-
-commit 71201234d2ed3f20637fc373df063e7750cbc0ad
-Merge: 66c297d 81f9a31
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Wed Dec 17 08:33:44 2014 -0800
-
-    rollup merge of #19720: csouth3/vecmap-newtypes
-    
-    Using a type alias for iterator implementations is fragile since this
-    exposes the implementation to users of the iterator, and any changes
-    could break existing code.
-    
-    This commit changes the iterators of `VecMap` to use
-    proper new types, rather than type aliases.  However, since it is
-    fair-game to treat a type-alias as the aliased type, this is a:
-    
-    [breaking-change].
-
-commit 4265e86844b6f328ed8a0d144d02a935706c35ee
-Merge: 42deaa5 769aa0a
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Wed Dec 17 02:42:57 2014 +0000
-
-    auto merge of #19761 : nick29581/rust/coerce-double, r=nikomatsakis
-    
-    Part of #18469
-    
-    [breaking-change]
-    
-    A receiver will only ever get a single auto-reference. Previously arrays and strings would get two, e.g., [T] would be auto-ref'ed to &amp;&amp;[T]. This is usually apparent when a trait is implemented for `&amp;[T]` and has a method takes self by reference. The usual solution is to implement the trait for `[T]` (the DST form).
-    
-    r? @nikomatsakis (or anyone else, really)
-
-commit 769aa0a7b378a7b71f5bcbec3485fe171ff4f3b9
-Author: Nick Cameron &lt;ncameron@mozilla.com&gt;
-Date:   Fri Dec 12 13:23:21 2014 +1300
-
-    Remove the double auto-ref on arrays/strings as receivers
-    
-    Part of #18469
-    
-    [breaking-change]
-    
-    A receiver will only ever get a single auto-reference. Previously arrays and strings would get two, e.g., [T] would be auto-ref'ed to &amp;&amp;[T]. This is usually apparent when a trait is implemented for `&amp;[T]` and has a method takes self by reference. The usual solution is to implement the trait for `[T]` (the DST form).
-
-commit 341cf405e5be56b9b1c8f3be6d0fe9a014eeff26
-Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
-Date:   Sat Dec 13 12:36:05 2014 -0600
-
-    Use wrapper structs for `HashSet`'s iterators.
-    
-    Using a type alias for iterator implementations is fragile since this
-    exposes the implementation to users of the iterator, and any changes
-    could break existing code.
-    
-    This commit changes the iterators of `HashSet` to use
-    proper new types, rather than type aliases.  However, since it is
-    fair-game to treat a type-alias as the aliased type, this is a:
-    
-    [breaking-change].
-
-commit 85fe141fb7c066e88a6872e74347c5f34d0223a7
-Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
-Date:   Fri Dec 12 01:02:19 2014 -0600
-
-    Use wrapper structs for `HashMap`'s iterators.
-    
-    Using a type alias for iterator implementations is fragile since this
-    exposes the implementation to users of the iterator, and any changes
-    could break existing code.
-    
-    This commit changes the keys and values iterators of `HashMap` to use
-    proper new types, rather than type aliases.  However, since it is
-    fair-game to treat a type-alias as the aliased type, this is a:
-    
-    [breaking-change].
-
-commit a81c3ab468ad7aebcab8a545b196e74c2fb3ac32
-Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
-Date:   Fri Dec 12 23:14:57 2014 -0600
-
-    Use wrapper structs for `BTreeSet`'s iterators.
-    
-    Using a type alias for iterator implementations is fragile since this
-    exposes the implementation to users of the iterator, and any changes
-    could break existing code.
-    
-    This commit changes the iterators of `BTreeSet` to use
-    proper new types, rather than type aliases.  However, since it is
-    fair-game to treat a type-alias as the aliased type, this is a:
-    
-    [breaking-change].
-
-commit 765806ef1ee93b352b724aa76870d23d82894e4e
-Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
-Date:   Fri Dec 12 00:04:47 2014 -0600
-
-    Use wrapper structs for `BTreeMap`'s iterators.
-    
-    Using a type alias for iterator implementations is fragile since this
-    exposes the implementation to users of the iterator, and any changes
-    could break existing code.
-    
-    This commit changes the keys and values iterators of `BTreeMap` to use
-    proper new types, rather than type aliases.  However, since it is
-    fair-game to treat a type-alias as the aliased type, this is a:
-    
-    [breaking-change].
 </pre></body></html>
