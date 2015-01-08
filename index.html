@@ -1,6 +1,15 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit daee409b60cdb17040122343e0a184049c62180b
+Merge: e40f62d 0d0869a
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Thu Jan 8 09:22:06 2015 -0800
+
+    rollup merge of #20740: FlaPer87/remove-opt-out-copy
+    
+    [breaking-change] code using this feature will break.
+
 commit 92cd8ea96ad2a1da51863b7f089baec41ed10ce9
 Author: Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
 Date:   Thu Jan 8 11:39:45 2015 +1100
@@ -2594,56 +2603,6 @@ Date:   Fri Nov 14 09:18:10 2014 -0800
     RFC #378.
     
     Closes #18635.
-    
-    [breaking-change]
-
-commit 137a3dbffd5454874bf001e213f695644b78523a
-Merge: dea69e6 1fbca88
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Wed Dec 17 08:34:14 2014 -0800
-
-    rollup merge of #19849: alexcrichton/second-pass-option
-    
-    This commit takes a second pass through the `std::option` module to fully
-    stabilize any lingering methods inside of it.
-    
-    These items were made stable as-is
-    
-    * Some
-    * None
-    * as_mut
-    * expect
-    * unwrap
-    * unwrap_or
-    * unwrap_or_else
-    * map
-    * map_or
-    * map_or_else
-    * and_then
-    * or_else
-    * unwrap_or_default
-    * Default implementation
-    * FromIterator implementation
-    * Copy implementation
-    
-    These items were made stable with modifications
-    
-    * iter - now returns a struct called Iter
-    * iter_mut - now returns a struct called IterMut
-    * into_iter - now returns a struct called IntoIter, Clone is never implemented
-    
-    This is a breaking change due to the modifications to the names of the iterator
-    types returned. Code referencing the old names should updated to referencing the
-    newer names instead. This is also a breaking change due to the fact that
-    `IntoIter` no longer implements the `Clone` trait.
-    
-    These items were explicitly not stabilized
-    
-    * as_slice - waiting on indexing conventions
-    * as_mut_slice - waiting on conventions with as_slice as well
-    * cloned - the API was still just recently added
-    * ok_or - API remains experimental
-    * ok_or_else - API remains experimental
     
     [breaking-change]
 </pre></body></html>
