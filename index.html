@@ -1,6 +1,49 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 2e4cef4e78253beb4c08ed35416fad076d978344
+Merge: 2127e0d b4fae2f
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Sun Jan 11 16:45:48 2015 +0000
+
+    auto merge of #20910 : sfackler/rust/show-impls, r=alexcrichton
+    
+    A derived implementation would not be appropriate for the Buffered types
+    since the buffer is both huge (64k by default) and full of uninitialized
+    memory. Instead of printing the whole thing, we display how full it is.
+    
+    I also altered `MultiWriter` to make it generic over Writers instead of
+    taking `Box&lt;Writer&gt;` trait objects. `Box&lt;Writer&gt;` implements `Writer` so
+    existing use cases should continue to work, and this enables a more
+    useful Show implementation in applicable cases.
+    
+    The change to `MultiWriter` may break code that uses it, but any fixes
+    should be easy.
+    
+    [breaking-change]
+    
+    r? @alexcrichton
+
+commit b4fae2fba99e713a6d6a8a59caaf1cfba847b50e
+Author: Steven Fackler &lt;sfackler@gmail.com&gt;
+Date:   Sat Jan 10 17:32:54 2015 -0800
+
+    Implement Show for types in std::io::{buffered,util}
+    
+    A derived implementation would not be appropriate for the Buffered types
+    since the buffer is both huge (64k by default) and full of uninitialized
+    memory. Instead of printing the whole thing, we display how full it is.
+    
+    I also altered MultiWriter to make it generic over Writers instead of
+    taking Box&lt;Writer&gt; trait objects. Box&lt;Writer&gt; implements Writer so
+    existing use cases should continue to work, and this enables a more
+    useful Show implementation in applicable cases.
+    
+    The change to MultiWriter may break code that uses it, but any fixes
+    should be easy.
+    
+    [breaking-change]
+
 commit daee409b60cdb17040122343e0a184049c62180b
 Merge: e40f62d 0d0869a
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2499,110 +2542,4 @@ Date:   Fri Dec 19 02:52:01 2014 +0000
     [breaking-change]
     
     r? @aturon @alexcrichton
-
-commit f9a48492a82f805aa40d8b6fea290badbab0d1b1
-Merge: c4d58ce ddb2466
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Thu Dec 18 17:32:07 2014 +0000
-
-    auto merge of #19984 : japaric/rust/macro-expressions, r=alexcrichton
-    
-    followed by a semicolon.
-    
-    This allows code like `vec![1i, 2, 3].len();` to work.
-    
-    This breaks code that uses macros as statements without putting
-    semicolons after them, such as:
-    
-        fn main() {
-            ...
-            assert!(a == b)
-            assert!(c == d)
-            println(...);
-        }
-    
-    It also breaks code that uses macros as items without semicolons:
-    
-        local_data_key!(foo)
-    
-        fn main() {
-            println("hello world")
-        }
-    
-    Add semicolons to fix this code. Those two examples can be fixed as
-    follows:
-    
-        fn main() {
-            ...
-            assert!(a == b);
-            assert!(c == d);
-            println(...);
-        }
-    
-        local_data_key!(foo);
-    
-        fn main() {
-            println("hello world")
-        }
-    
-    RFC #378.
-    
-    Closes #18635.
-    
-    [breaking-change]
-    
-    ---
-    
-    Rebased version of #18958
-    r? @alexcrichton
-    cc @pcwalton
-
-commit ddb2466f6a1bb66f22824334022a4cee61c73bdc
-Author: Patrick Walton &lt;pcwalton@mimiga.net&gt;
-Date:   Fri Nov 14 09:18:10 2014 -0800
-
-    librustc: Always parse `macro!()`/`macro![]` as expressions if not
-    followed by a semicolon.
-    
-    This allows code like `vec![1i, 2, 3].len();` to work.
-    
-    This breaks code that uses macros as statements without putting
-    semicolons after them, such as:
-    
-        fn main() {
-            ...
-            assert!(a == b)
-            assert!(c == d)
-            println(...);
-        }
-    
-    It also breaks code that uses macros as items without semicolons:
-    
-        local_data_key!(foo)
-    
-        fn main() {
-            println("hello world")
-        }
-    
-    Add semicolons to fix this code. Those two examples can be fixed as
-    follows:
-    
-        fn main() {
-            ...
-            assert!(a == b);
-            assert!(c == d);
-            println(...);
-        }
-    
-        local_data_key!(foo);
-    
-        fn main() {
-            println("hello world")
-        }
-    
-    RFC #378.
-    
-    Closes #18635.
-    
-    [breaking-change]
 </pre></body></html>
