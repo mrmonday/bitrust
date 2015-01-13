@@ -1,6 +1,31 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 3d0d9bb6fbdf6ead9396f0874cf38f3ef7c9be5c
+Merge: 3a44a19 8b6cda3
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Mon Jan 12 22:56:20 2015 +0000
+
+    auto merge of #20896 : sfackler/rust/atomic-rename, r=alexcrichton
+    
+    Change any use of AtomicInt to AtomicIsize and AtomicUint to AtomicUsize
+    
+    Closes #20893
+    
+    [breaking-change]
+
+commit 8b6cda3ce681d4d95c3097d12ed754975b4a07f6
+Author: Steven Fackler &lt;sfackler@gmail.com&gt;
+Date:   Sat Jan 10 13:42:48 2015 -0800
+
+    Rename AtomicInt and AtomicUint
+    
+    Change any use of AtomicInt to AtomicIsize and AtomicUint to AtomicUsize
+    
+    Closes #20893
+    
+    [breaking-change]
+
 commit 2e4cef4e78253beb4c08ed35416fad076d978344
 Merge: 2127e0d b4fae2f
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2507,39 +2532,4 @@ Date:   Sun Nov 23 19:21:17 2014 -0800
     removed very soon.
     
     [breaking-change]
-
-commit 6bdce25e155d846bb9252fa4a18baef7e74cf8bf
-Merge: 840de07 9b5de39
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Fri Dec 19 06:12:01 2014 +0000
-
-    auto merge of #19899 : japaric/rust/unops-by-value, r=nikomatsakis
-    
-    - The following operator traits now take their argument by value: `Neg`, `Not`. This breaks all existing implementations of these traits.
-    
-    - The unary operation `OP a` now "desugars" to `OpTrait::op_method(a)` and consumes its argument.
-    
-    [breaking-change]
-    
-    ---
-    
-    r? @nikomatsakis This PR is very similar to the binops-by-value PR
-    cc @aturon
-
-commit 840de072085df360733c48396224e9966e2dc72c
-Merge: 99d6956 67d3823
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Fri Dec 19 02:52:01 2014 +0000
-
-    auto merge of #19955 : Gankro/rust/kill-all-code, r=aturon
-    
-    EnumSet lives on in libcollections so that librustc can still use it. This adds a direct dependency on libcollections to librustc and libserialize.
-    
-    Should not be merged until https://github.com/rust-lang/rfcs/pull/509 is accepted.
-    
-    All of these collections have already been moved to collect-rs where they will ideally be maintained and experimented with, or will be replaced by something better: https://github.com/Gankro/collect-rs/
-    
-    [breaking-change]
-    
-    r? @aturon @alexcrichton
 </pre></body></html>
