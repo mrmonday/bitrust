@@ -1,6 +1,19 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 0419b4ab1225595b022d8ed4e425526b4d850995
+Merge: 7be39b0 de7b3cf
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Thu Jan 15 14:12:00 2015 -0800
+
+    rollup merge of #21167: FlaPer87/coherence-impls
+    
+    Fixes #21080
+    
+    r? @nikomatsakis
+    
+    [breaking-change]
+
 commit 3d0d9bb6fbdf6ead9396f0874cf38f3ef7c9be5c
 Merge: 3a44a19 8b6cda3
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -2515,21 +2528,6 @@ Date:   Mon Nov 24 17:33:37 2014 -0800
     will also offer a detached mode.
     
     Since this changes the semantics of shutdown, it is a:
-    
-    [breaking-change]
-
-commit 2b3477d373603527d23cc578f3737857b7b253d7
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Sun Nov 23 19:21:17 2014 -0800
-
-    libs: merge librustrt into libstd
-    
-    This commit merges the `rustrt` crate into `std`, undoing part of the
-    facade. This merger continues the paring down of the runtime system.
-    
-    Code relying on the public API of `rustrt` will break; some of this API
-    is now available through `std::rt`, but is likely to change and/or be
-    removed very soon.
     
     [breaking-change]
 </pre></body></html>
