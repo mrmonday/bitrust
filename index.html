@@ -1,6 +1,23 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit ee2bfae011e368e224d6d4f4c9fad13606ee99da
+Merge: f3d71be cb85223
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Fri Jan 16 13:10:59 2015 +0000
+
+    auto merge of #20972 : FlaPer87/rust/oibit-send-and-friends, r=nikomatsakis
+    
+    This PR adds rules for negative implementations. It follows pretty much what the [RFC](https://github.com/rust-lang/rfcs/blob/master/text/0019-opt-in-builtin-traits.md) says with 1 main difference:
+    
+    Instead of positive implementations override negative implementations, this have been implemented in a way that a negative implementation of `Trait` for `T` will overlap with a positive implementation, causing a coherence error.
+    
+    @nikomatsakis r?
+    
+    cc #13231
+    
+    [breaking-change]
+
 commit 0419b4ab1225595b022d8ed4e425526b4d850995
 Merge: 7be39b0 de7b3cf
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2512,22 +2529,6 @@ Date:   Sun Dec 14 00:05:32 2014 -0800
     doc for details.
     
     Closes #18000
-    
-    [breaking-change]
-
-commit 9b03b72d7fb82f07d35e7dcda02754c6da90ae58
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Mon Nov 24 17:33:37 2014 -0800
-
-    Remove rt::bookkeeping
-    
-    This commit removes the runtime bookkeeping previously used to ensure
-    that all Rust tasks were joined before the runtime was shut down.
-    
-    This functionality will be replaced by an RAII style `Thread` API, that
-    will also offer a detached mode.
-    
-    Since this changes the semantics of shutdown, it is a:
     
     [breaking-change]
 </pre></body></html>
