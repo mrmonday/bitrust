@@ -1,6 +1,51 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 34fa70fba5425cbbb96bce783e9fd5c23dd9b471
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Fri Jan 16 12:20:03 2015 -0800
+
+    std: Move the bitflags! macro to a gated crate
+    
+    In accordance with [collections reform part 2][rfc] this macro has been moved to
+    an external [bitflags crate][crate] which is [available though
+    crates.io][cratesio]. Inside the standard distribution the macro has been moved
+    to a crate called `rustc_bitflags` for current users to continue using.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0509-collections-reform-part-2.md
+    [crate]: https://github.com/rust-lang/bitflags
+    [cratesio]: http://crates.io/crates/bitflags
+    
+    The major user of `bitflags!` in terms of a public-facing possibly-stable API
+    today is the `FilePermissions` structure inside of `std::io`. This user,
+    however, will likely no longer use `bitflags!` after I/O reform has landed. To
+    prevent breaking APIs today, this structure remains as-is.
+    
+    Current users of the `bitflags!` macro should add this to their `Cargo.toml`:
+    
+        bitflags = "0.1"
+    
+    and this to their crate root:
+    
+        #[macro_use] extern crate bitflags;
+    
+    Due to the removal of a public macro, this is a:
+    
+    [breaking-change]
+
+commit 873ae555e9a42fd12b0a92134112ec000d749ab2
+Author: Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
+Date:   Thu Jan 15 22:56:53 2015 +0200
+
+    Revert stability for Bitv and BitvSet
+    
+    The collections were promoted to stable by mistake and do not match RFC 509.
+    This reverts the stability back to unstable.
+    
+    [breaking-change] since previously stable API became unstable.
+    
+    Fixes #21193
+
 commit cbeb77ec7a42b988703fa0b0c857f26d464fdc2f
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
 Date:   Tue Jan 6 08:46:07 2015 -0800
@@ -2481,65 +2526,4 @@ Date:   Fri Dec 19 21:54:50 2014 +0100
     * Remaining set combination iterators renamed to Union and SymmetricDifference
     
     [breaking-change]
-
-commit 0efafac398ff7f28c5f0fe756c15b9008b3e0534
-Merge: 6bdce25 903c5a8
-Author: bors &lt;bors@rust-lang.org&gt;
-Date:   Fri Dec 19 08:28:52 2014 +0000
-
-    auto merge of #19654 : aturon/rust/merge-rt, r=alexcrichton
-    
-    This PR substantially narrows the notion of a "runtime" in Rust, and allows calling into Rust code directly without any setup or teardown.
-    
-    After this PR, the basic "runtime support" in Rust will consist of:
-    
-    * Unwinding and backtrace support
-    * Stack guards
-    
-    Other support, such as helper threads for timers or the notion of a "current thread" are initialized automatically upon first use.
-    
-    When using Rust in an embedded context, it should now be possible to call a Rust function directly as a C function with absolutely no setup, though in that case panics will cause the process to abort. In this regard, the C/Rust interface will look much like the C/C++ interface.
-    
-    In more detail, this PR:
-    
-    * Merges `librustrt` back into `std::rt`, undoing the facade. While doing so, it removes a substantial amount of redundant functionality (such as mutexes defined in the `rt` module). Code using `librustrt` can now call into `std::rt` to e.g. start executing Rust code with unwinding support.
-    
-    * Allows all runtime data to be initialized lazily, including the "current thread", the "at_exit" infrastructure, and the "args" storage.
-    
-    * Deprecates and largely removes `std::task` along with the widespread requirement that there be a "current task" for many APIs in `std`. The entire task infrastructure is replaced with `std::thread`, which provides a more standard API for manipulating and creating native OS threads. In particular, it's possible to join on a created thread, and to get a handle to the currently-running thread. In addition, threads are equipped with some basic blocking support in the form of `park`/`unpark` operations (following a tradition in some OSes as well as the JVM). See the `std::thread` documentation for more details.
-    
-    * Channels are refactored to use a new internal blocking infrastructure that itself sits on top of `park`/`unpark`.
-    
-    One important change here is that a Rust program ends when its main thread does, following most threading models. On the other hand, threads will often be created with an RAII-style join handle that will re-institute blocking semantics naturally (and with finer control).
-    
-    This is very much a:
-    
-    [breaking-change]
-    
-    Closes #18000
-    r? @alexcrichton
-
-commit 903c5a8f69714382ec9fc22745f902c3e219cb68
-Author: Aaron Turon &lt;aturon@mozilla.com&gt;
-Date:   Thu Dec 18 23:29:30 2014 -0800
-
-    Disable at_exit handlers
-    
-    The [final step](https://github.com/rust-lang/rust/pull/19654) of
-    runtime removal changes the threading/process model so that the process
-    shuts down when the main thread exits. But several shared resources,
-    like the helper thread for timeouts, are shut down when the main thread
-    exits (but before the process ends), and they are not prepared to be
-    used after shut down, but other threads may try to access them during
-    the shutdown sequence of the main thread.
-    
-    As an interim solution, the `at_exit` cleanup routine is simply skipped.
-    
-    Ultimately, these resources should be made to safely handle asynchronous
-    shutdown, usually by panicking if called from a detached thread when the
-    main thread is ending.
-    
-    See issue for details https://github.com/rust-lang/rust/issues/20012
-    
-    This is a [breaking-change] for anyone relying on `at_exit`.
 </pre></body></html>
