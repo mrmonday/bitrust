@@ -1,6 +1,45 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 7b87900d72cf53037119e3bac1506a9786ca508a
+Merge: 135cac8 d053ccb
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Mon Jan 19 10:19:23 2015 +0000
+
+    Auto merge of #20874 - klutzy:windows-dynamic-lib, r=alexcrichton
+    
+    This is a [breaking-change] since `std::dynamic_lib::dl` is now
+    private.
+    
+    When `LoadLibraryW()` fails, original code called `errno()` to get error
+    code.  However, there was local allocation of `Vec` before
+    `LoadLibraryW()`, and it drops before `errno()`, and the drop
+    (deallocation) changed `errno`! Therefore `dynamic_lib::open()` thought
+    it always succeeded.
+    This commit fixes the issue.
+    
+    This commit also sets Windows error mode during `LoadLibrary()` to
+    prevent "dll load failed" dialog.
+
+commit d053ccb45fafc12a52629f209122c1ce9bbfabed
+Author: klutzy &lt;klutzytheklutzy@gmail.com&gt;
+Date:   Sat Jan 10 22:53:22 2015 +0900
+
+    std::dynamic_lib: Fix Windows error handling
+    
+    This is a [breaking-change] since `std::dynamic_lib::dl` is now
+    private.
+    
+    When `LoadLibraryW()` fails, original code called `errno()` to get error
+    code.  However, there was local allocation of `Vec` before
+    `LoadLibraryW()`, and it drops before `errno()`, and the drop
+    (deallocation) changed `errno`! Therefore `dynamic_lib::open()` thought
+    it always succeeded.
+    This commit fixes the issue.
+    
+    This commit also sets Windows error mode during `LoadLibrary()` to
+    prevent "dll load failed" dialog.
+
 commit 34fa70fba5425cbbb96bce783e9fd5c23dd9b471
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
 Date:   Fri Jan 16 12:20:03 2015 -0800
@@ -2483,47 +2522,6 @@ Date:   Sat Dec 13 11:15:18 2014 -0500
      * InAddr
     * src/libstd/sys/unix/timer.rs
      * Req
-    
-    [breaking-change]
-
-commit 9c5101542d2a4983ade627bc593e16c0bb5f23ba
-Author: Alexis Beingessner &lt;a.beingessner@gmail.com&gt;
-Date:   Fri Nov 21 20:47:40 2014 -0500
-
-    Conventions and cleanup for Bitv and BitvSet
-    
-    Part of #18424
-    
-    This commit changes the semantics of `reserve` and `capacity` for Bitv and BitvSet to match conventions. It also introduces the notion of `reserve_index` and `reserve_index_exact` for collections with maximum-index-based capacity semantics.
-    
-    Deprecates free function constructors in favour of functions on Bitv itself.
-    
-    Changes `Bitv::pop` to return an Option rather than panicking.
-    
-    Deprecates and renames several methods in favour of conventions.
-    
-    Marks several blessed methods as unstable.
-    
-    This commit also substantially refactors Bitv and BitvSet's implementations. The new implementation is simpler, cleaner, better documented, and more robust against overflows. It also reduces coupling between Bitv and BitvSet. Tests have been seperated into seperate submodules.
-    
-    Fixes #16958
-    
-    [breaking-change]
-
-commit cf350ea5eb562fcfb67775ad4d847e441a8006a4
-Author: bluss &lt;bluss&gt;
-Date:   Fri Dec 19 21:54:50 2014 +0100
-
-    hashset: Clean up and rename the HashSet iterators
-    
-    This removes the type SetAlgebraItems and replaces it with the
-    structs Intersection and Difference.
-    
-    Rename the existing HashSet iterators according to RFC #344:
-    
-    * SetItems -&gt; Iter
-    * SetMoveItems -&gt; IntoIter
-    * Remaining set combination iterators renamed to Union and SymmetricDifference
     
     [breaking-change]
 </pre></body></html>
