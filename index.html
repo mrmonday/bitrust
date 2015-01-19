@@ -1,6 +1,22 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit cda3490f8fb099a1ddd1f253a75c29110042dc01
+Merge: 43f2c19 3121c04
+Author: bors &lt;bors@rust-lang.org&gt;
+Date:   Mon Jan 19 15:44:41 2015 +0000
+
+    Auto merge of #21269 - alexcrichton:issue-6936, r=pnkfelix
+    
+    This commit modifies resolve to prevent conflicts with typedef names in the same
+    method that conflits are prevented with enum names. This is a breaking change
+    due to the differing semantics in resolve, and any errors generated on behalf of
+    this change require that a conflicting typedef, module, or structure to be
+    renamed so they do not conflict.
+    
+    [breaking-change]
+    Closes #6936
+
 commit 7b87900d72cf53037119e3bac1506a9786ca508a
 Merge: 135cac8 d053ccb
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -20,6 +36,21 @@ Date:   Mon Jan 19 10:19:23 2015 +0000
     
     This commit also sets Windows error mode during `LoadLibrary()` to
     prevent "dll load failed" dialog.
+
+commit 2549cbec9dfe02cdc93a3cf3bfe9638e5a4c2948
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Fri Jan 16 14:25:45 2015 -0800
+
+    rustc_resolve: Do not allow mods to shadow types
+    
+    This commit modifies resolve to prevent conflicts with typedef names in the same
+    method that conflits are prevented with enum names. This is a breaking change
+    due to the differing semantics in resolve, and any errors generated on behalf of
+    this change require that a conflicting typedef, module, or structure to be
+    renamed so they do not conflict.
+    
+    [breaking-change]
+    Closes #6936
 
 commit d053ccb45fafc12a52629f209122c1ce9bbfabed
 Author: klutzy &lt;klutzytheklutzy@gmail.com&gt;
@@ -2441,87 +2472,4 @@ Date:   Fri Dec 19 17:53:40 2014 -0600
     *Stabilizes `swap` in `RingBuf`
     
     Because of the method renaming, this is a [breaking-change].
-
-commit 25f8051f2ebdc9444e0f75e91dc0cbb45d194181
-Merge: bc99ced 98af642
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Sun Dec 21 00:03:59 2014 -0800
-
-    rollup merge of #19842: frewsxcv/rm-reexports
-    
-    Remove most of the public reexports mentioned in #19253
-    
-    These are all leftovers from the enum namespacing transition
-    
-    In particular:
-    
-    * src/libstd/num/strconv.rs
-     * ExponentFormat
-     * SignificantDigits
-     * SignFormat
-    * src/libstd/path/windows.rs
-     * PathPrefix
-    * src/libstd/sys/windows/timer.rs
-     * Req
-    * src/libcollections/str.rs
-     * MaybeOwned
-    * src/libstd/collections/hash/map.rs
-     * Entry
-    * src/libstd/collections/hash/table.rs
-     * BucketState
-    * src/libstd/dynamic_lib.rs
-     * Rtld
-    * src/libstd/os.rs
-     * MemoryMapKind
-     * MapOption
-     * MapError
-    * src/libstd/sys/common/net.rs
-     * SocketStatus
-     * InAddr
-    * src/libstd/sys/unix/timer.rs
-     * Req
-    
-    [breaking-change]
-
-commit 98af642f5c8f60ae141a5d3ff92e8cc4e4317342
-Author: Corey Farwell &lt;coreyf@rwell.org&gt;
-Date:   Sat Dec 13 11:15:18 2014 -0500
-
-    Remove a ton of public reexports
-    
-    Remove most of the public reexports mentioned in #19253
-    
-    These are all leftovers from the enum namespacing transition
-    
-    In particular:
-    
-    * src/libstd/num/strconv.rs
-     * ExponentFormat
-     * SignificantDigits
-     * SignFormat
-    * src/libstd/path/windows.rs
-     * PathPrefix
-    * src/libstd/sys/windows/timer.rs
-     * Req
-    * src/libcollections/str.rs
-     * MaybeOwned
-    * src/libstd/collections/hash/map.rs
-     * Entry
-    * src/libstd/collections/hash/table.rs
-     * BucketState
-    * src/libstd/dynamic_lib.rs
-     * Rtld
-    * src/libstd/io/net/ip.rs
-     * IpAddr
-    * src/libstd/os.rs
-     * MemoryMapKind
-     * MapOption
-     * MapError
-    * src/libstd/sys/common/net.rs
-     * SocketStatus
-     * InAddr
-    * src/libstd/sys/unix/timer.rs
-     * Req
-    
-    [breaking-change]
 </pre></body></html>
