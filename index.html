@@ -1,6 +1,30 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 8d05f6c74c34c1d72fd91be3057fe7d4581aca3a
+Merge: 3d6568f b4090aa
+Author: Barosl LEE &lt;github@barosl.com&gt;
+Date:   Wed Jan 21 02:16:51 2015 +0900
+
+    Rollup merge of #21388 - aochagavia:collections, r=Gankro
+    
+    **Breaking change**: `VecMap::into_iter` now consumes the `VecMap`. To fix it you should pass the VecMap by value instead of by reference.
+    
+    [breaking-change]
+    
+    r? @Gankro
+
+commit e63443d536a0e6157dce0cfb39dfcd2d614fb357
+Merge: 409c997 97a2b26
+Author: Barosl LEE &lt;github@barosl.com&gt;
+Date:   Wed Jan 21 02:16:47 2015 +0900
+
+    Rollup merge of #21312 - michaelsproul:remove-error-send-bound, r=aturon
+    
+    As discussed with @aturon, this PR removes the `Send` bound from `std::error::Error`, allowing us to implement `Error` for error types containing non-`Send` types. Current examples include `PoisonError` and `TryLockError` from `std::sync` which contain a Guard that we don't want sent between tasks.
+    
+    [breaking-change]
+
 commit cda3490f8fb099a1ddd1f253a75c29110042dc01
 Merge: 43f2c19 3121c04
 Author: bors &lt;bors@rust-lang.org&gt;
@@ -36,6 +60,17 @@ Date:   Mon Jan 19 10:19:23 2015 +0000
     
     This commit also sets Windows error mode during `LoadLibrary()` to
     prevent "dll load failed" dialog.
+
+commit 2366dee8e9cb41d963900c8d5128f810a87fc6bb
+Author: Adolfo Ochagavía &lt;aochagavia92@gmail.com&gt;
+Date:   Mon Jan 19 10:48:01 2015 +0100
+
+    Make VecMap::into_iter consume the VecMap
+    
+    This is a breaking change. To fix it you should pass the VecMap by value
+    instead of by reference.
+    
+    [breaking-change]
 
 commit 2549cbec9dfe02cdc93a3cf3bfe9638e5a4c2948
 Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2416,60 +2451,4 @@ Date:   Sat Dec 20 15:28:20 2014 +0100
         Entries -&gt; Iter, MoveItems -&gt; IntoIter, MutEntries -&gt; IterMut
     
     Also a [breaking-change].
-
-commit f8cfd2480b69a1cc266fc91d0b60c825a9dc18a7
-Author: Florian Wilkens &lt;floya@live.de&gt;
-Date:   Fri Dec 19 21:52:10 2014 +0100
-
-    Renaming of the Iter types as in RFC #344
-    
-    libcore: slice::Items -&gt; slice::Iter, slice::MutItems -&gt; slice::IterMut
-    libcollections: *::Items -&gt; *::Iter, *::MoveItems -&gt; *::IntoIter, *::MutItems -&gt; *::IterMut
-    
-    This is of course a [breaking-change].
-
-commit a76a80276852f05f30adaa4d2a8a2729b5fc0bfa
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Thu Dec 18 22:52:48 2014 -0800
-
-    serialize: Fully deprecate the library
-    
-    This commit completes the deprecation story for the in-tree serialization
-    library. The compiler will now emit a warning whenever it encounters
-    `deriving(Encodable)` or `deriving(Decodable)`, and the library itself is now
-    marked `#[unstable]` for when feature staging is enabled.
-    
-    All users of serialization can migrate to the `rustc-serialize` crate on
-    crates.io which provides the exact same interface as the libserialize library
-    in-tree. The new deriving modes are named `RustcEncodable` and `RustcDecodable`
-    and require `extern crate "rustc-serialize" as rustc_serialize` at the crate
-    root in order to expand correctly.
-    
-    To migrate all crates, add the following to your `Cargo.toml`:
-    
-        [dependencies]
-        rustc-serialize = "0.1.1"
-    
-    And then add the following to your crate root:
-    
-        extern crate "rustc-serialize" as rustc_serialize;
-    
-    Finally, rename `Encodable` and `Decodable` deriving modes to `RustcEncodable`
-    and `RustcDecodable`.
-    
-    [breaking-change]
-
-commit abf492d44f0a3b705be8c0920bfb4771f039b843
-Author: Chase Southwood &lt;chase.southwood@gmail.com&gt;
-Date:   Fri Dec 19 17:53:40 2014 -0600
-
-    Misc Stabilization for collections
-    
-    This commit:
-    
-    *Renames `BinaryHeap::top` to `BinaryHeap::peek`
-    *Stabilizes `front/back/front_mut/back_mut` in `DList` and `RingBuf`
-    *Stabilizes `swap` in `RingBuf`
-    
-    Because of the method renaming, this is a [breaking-change].
 </pre></body></html>
