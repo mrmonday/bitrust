@@ -1,6 +1,90 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 092ba6a8563b5c95f5aa53a705eaba6cc94e2da7
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Sat Jan 17 16:15:47 2015 -0800
+
+    Deprecate slicing methods in favor of notation
+    
+    This commit deprecates `slice`, `slice_from`, `slice_to` and their
+    mutable variants in favor of slice notation.
+    
+    The `as_slice` methods are left intact, for now.
+    
+    [breaking-change]
+
+commit fba0bf63a90379e8825012a817167774e14a627f
+Author: Aaron Turon &lt;aturon@mozilla.com&gt;
+Date:   Thu Jan 15 20:00:09 2015 -0800
+
+    Stabilize Index traits and most range notation
+    
+    This commit marks as `#[stable]`:
+    
+    * The `Index` and `IndexMut` traits. These are stabilized as taking the
+      index itself *by reference*; after extensive discussion it was
+      determined that this is a better match with our choices
+      elsewhere (e.g. making comparison operators auto-reference), and that
+      the use cases for by-value indices are better handled through
+      `IndexSet`.
+    
+    * The `Range`, `RangeFrom` and `RangeTo` structs, introduced for range
+      notation.
+    
+    * Various impls of `Index` and `IndexMut`.
+    
+    The `FullRange` struct is left unstable as we may wish to rename it to
+    `RangeFull` in the future.
+    
+    This commit also *removes* the `Step` trait in favor of direct
+    implementation of iterator traits on ranges for integers. The `Step`
+    trait was not a terribly useful factoring internally, and it is likely
+    that external integer types are best off implementing range iterators
+    directly. It was removed to simplify the API surface. We can always
+    reintroduce `Step` later if it turns out to be useful.
+    
+    Due to this removal, this is a:
+    
+    [breaking-change]
+
+commit 3cb9fa26ef9905c00a29ea577fb55a12a91c8e7b
+Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
+Date:   Tue Jan 20 15:45:07 2015 -0800
+
+    std: Rename Show/String to Debug/Display
+    
+    This commit is an implementation of [RFC 565][rfc] which is a stabilization of
+    the `std::fmt` module and the implementations of various formatting traits.
+    Specifically, the following changes were performed:
+    
+    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0565-show-string-guidelines.md
+    
+    * The `Show` trait is now deprecated, it was renamed to `Debug`
+    * The `String` trait is now deprecated, it was renamed to `Display`
+    * Many `Debug` and `Display` implementations were audited in accordance with the
+      RFC and audited implementations now have the `#[stable]` attribute
+      * Integers and floats no longer print a suffix
+      * Smart pointers no longer print details that they are a smart pointer
+      * Paths with `Debug` are now quoted and escape characters
+    * The `unwrap` methods on `Result` now require `Display` instead of `Debug`
+    * The `Error` trait no longer has a `detail` method and now requires that
+      `Display` must be implemented. With the loss of `String`, this has moved into
+      libcore.
+    * `impl&lt;E: Error&gt; FromError&lt;E&gt; for Box&lt;Error&gt;` now exists
+    * `derive(Show)` has been renamed to `derive(Debug)`. This is not currently
+      warned about due to warnings being emitted on stage1+
+    
+    While backwards compatibility is attempted to be maintained with a blanket
+    implementation of `Display` for the old `String` trait (and the same for
+    `Show`/`Debug`) this is still a breaking change due to primitives no longer
+    implementing `String` as well as modifications such as `unwrap` and the `Error`
+    trait. Most code is fairly straightforward to update with a rename or tweaks of
+    method calls.
+    
+    [breaking-change]
+    Closes #21436
+
 commit 8d05f6c74c34c1d72fd91be3057fe7d4581aca3a
 Merge: 3d6568f b4090aa
 Author: Barosl LEE &lt;github@barosl.com&gt;
@@ -2397,58 +2481,4 @@ Date:   Mon Dec 22 12:46:31 2014 -0800
     and `RustcDecodable`.
     
     [breaking-change]
-
-commit 2f55a9db0de8b2a2d72c7139eae38272d4d8cf41
-Merge: 34d6800 20d7a5f
-Author: Alex Crichton &lt;alex@alexcrichton.com&gt;
-Date:   Mon Dec 22 12:45:52 2014 -0800
-
-    rollup merge of #19216: Gankro/bitv
-    
-    Part of #18424
-    
-    This commit changes the semantics of `reserve` and `capacity` for Bitv and BitvSet to match conventions. It also introduces the notion of `reserve_index` and `reserve_index_exact` for collections with maximum-index-based capacity semantics.
-    
-    Deprecates free function constructors in favour of functions on Bitv itself.
-    
-    Changes `Bitv::pop` to return an Option rather than panicking.
-    
-    Deprecates and renames several methods in favour of conventions.
-    
-    Marks several blessed methods as unstable.
-    
-    This commit also substantially refactors Bitv and BitvSet's implementations. The new implementation is simpler, cleaner, better documented, and more robust against overflows. It also reduces coupling between Bitv and BitvSet. Tests have been seperated into seperate submodules.
-    
-    Fixes #16958
-    
-    [breaking-change]
-
-commit 02feaf2a804e4e810d5a3adbedbcbe3905692286
-Author: Corey Farwell &lt;coreyf@rwell.org&gt;
-Date:   Mon Dec 22 11:09:55 2014 -0800
-
-    Remove cmp::Ordering::* public reexport
-    
-    Part of #19253
-    
-    I would have removed this public reexport in #19842, but #19812 hadn't merged (and snapshotted) at the time
-    
-    In #19407, I changed the codebase to stop utilizing this reexport
-    
-    [breaking-change]
-
-commit 22050e3ed44d9b4d79edced506b470a425e0d302
-Author: Florian Wilkens &lt;floya@live.de&gt;
-Date:   Sat Dec 20 15:28:20 2014 +0100
-
-    Added missing renames:
-    
-    libcollections:
-        AbsEntries -&gt; AbsIter, Entries -&gt; Iter, MoveEntries -&gt; IntoIter, MutEntries -&gt; IterMut
-        DifferenceItems -&gt; Difference, SymDifferenceItems -&gt; SymmetricDifference, IntersectionItems -&gt; Intersection, UnionItems -&gt; Union
-    
-    libstd/hash/{table, map}:
-        Entries -&gt; Iter, MoveItems -&gt; IntoIter, MutEntries -&gt; IterMut
-    
-    Also a [breaking-change].
 </pre></body></html>
