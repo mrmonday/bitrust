@@ -1,6 +1,21 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit e5c1f166a8282072089de2ad62a5b2427bd2bebf
+Merge: 4be79d6 6c29708
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Jan 24 05:12:15 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Jan 24 05:12:15 2015 +0000
+
+    Auto merge of #21458 - alexcrichton:remove-some-code, r=brson
+    
+    The base64 support can be trivially removed (there are no in-tree users) and the regex support is a whopping 4k lines of code to maintain for a few non-critical uses in-tree. This commit migrates all current users in-tree away from regexes to custom matching code.
+    
+    The most critical application affected by this migration is that the testing framework no longer considers filter arguments as regexes, but rather just a substring matching. It is expected that more featureful testing frameworks can evolve outside of the in-tree libtest version over time which can properly depend on libregex from crates.io.
+    
+    [breaking-change]
+
 commit 092ba6a8563b5c95f5aa53a705eaba6cc94e2da7
 Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
 AuthorDate: Sat Jan 17 16:15:47 2015 -0800
@@ -2647,38 +2662,4 @@ CommitDate: Mon Dec 22 12:47:11 2014 -0800
     Note that this PR does not address `Bitv::{get,set}` or HashMap's iterators, nor does it move `std::vec` to `std::collections::vec`, all of which still need to be done.
     
     Because of the method renaming, this is a [breaking-change].
-
-commit b04bc5cc49a398df712092a68ab9ad83019498ad
-Merge: 9b99436 a76a802
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Dec 22 12:46:31 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Dec 22 12:46:31 2014 -0800
-
-    rollup merge of #20033: alexcrichton/deprecate-serialise
-    
-    This commit completes the deprecation story for the in-tree serialization
-    library. The compiler will now emit a warning whenever it encounters
-    `deriving(Encodable)` or `deriving(Decodable)`, and the library itself is now
-    marked `#[unstable]` for when feature staging is enabled.
-    
-    All users of serialization can migrate to the `rustc-serialize` crate on
-    crates.io which provides the exact same interface as the libserialize library
-    in-tree. The new deriving modes are named `RustcEncodable` and `RustcDecodable`
-    and require `extern crate "rustc-serialize" as rustc_serialize` at the crate
-    root in order to expand correctly.
-    
-    To migrate all crates, add the following to your `Cargo.toml`:
-    
-        [dependencies]
-        rustc-serialize = "0.1.1"
-    
-    And then add the following to your crate root:
-    
-        extern crate "rustc-serialize" as rustc_serialize;
-    
-    Finally, rename `Encodable` and `Decodable` deriving modes to `RustcEncodable`
-    and `RustcDecodable`.
-    
-    [breaking-change]
 </pre></body></html>
