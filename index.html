@@ -1,6 +1,242 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit d77f6d5366b330f9c2061cad0d3ff638c9cc05b7
+Merge: e365e4c d6bf04a
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Jan 27 11:07:26 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Jan 27 11:07:26 2015 +0000
+
+    Auto merge of #21657 - pnkfelix:block-remainder-extents, r=nikomatsakis
+    
+     Add `CodeExtent::Remainder` variant; pre-req for new scoping/drop rules.
+    
+    This new enum variant introduces finer-grain code extents, i.e. we now track that a binding lives only for a suffix of a block, and (importantly) will be dropped when it goes out of scope *before* the bindings that occurred earlier in the block.
+    
+    Both of these notions are neatly captured by marking the block (and each suffix) as an enclosing scope of the next suffix beneath it.
+    
+    This is work that is part of the foundation for issue #8861.
+    
+    (It actually has been seen in earlier posted pull requests, in particular #21022; I have just factored it out into its own PR to ease my own near-future rebasing, and also get people used to the new rules.)
+    
+    ----
+    
+    These finer grained scopes do mean that some code is newly rejected by `rustc`; for example:
+    
+    ```rust
+    let mut map : HashMap&lt;u8, &amp;u8&gt; = HashMap::new();
+    let tmp = Box::new(2);
+    map.insert(43, &amp;*tmp);
+    ```
+    
+    This will now fail to compile with a message that `*tmp` does not live long enough, because the scope of `tmp` is now strictly smaller than
+    that of `map`, and the use of `&amp;u8` in map's type requires that the borrowed references are all to data that live at least as long as the map.
+    
+    The usual fix for a case like this is to move the binding for `tmp` up above that of `map`; note that you can still leave the initialization in the original spot, like so:
+    
+    ```rust
+    let tmp;
+    let mut map : HashMap&lt;u8, &amp;u8&gt; = HashMap::new();
+    tmp = box 2;
+    map.insert(43, &amp;*tmp);
+    ```
+    
+    Similarly, one can encounter an analogous situation with `Vec`: one would need to rewrite:
+    
+    ```rust
+    let mut vec = Vec::new();
+    let tmp = 'c';
+    vec.push(&amp;tmp);
+    ```
+    
+    as:
+    
+    ```rust
+    let tmp;
+    let mut vec = Vec::new();
+    tmp = 'c';
+    vec.push(&amp;tmp);
+    ```
+    
+    ----
+    
+    In some corner cases, it does not suffice to reorder the bindings; in particular, when the types for both bindings need to reflect exactly the *same* code extent, and a parent/child relationship between them does not work.
+    
+    In pnkfelix's experience this has arisen most often when mixing uses of cyclic data structures while also allowing a lifetime parameter `'a` to flow into a type parameter context where the type is *invariant* with respect to the type parameter. An important instance of this is `arena::TypedArena&lt;T&gt;`, which is invariant with respect to `T`.
+    
+    (The reason that variance is relevant is this: *if* `TypedArena` were covariant with respect to its type parameter, then we could assign it
+    the longer lifetime when it is initialized, and then convert it to a subtype (via covariance) with a shorter lifetime when necessary.  But `TypedArena` is invariant with respect to its type parameter, and thus if `S` is a subtype of `T` (in particular, if `S` has a lifetime parameter that is shorter than that of `T`), then a `TypedArena&lt;S&gt;` is unrelated to `TypedArena&lt;T&gt;`.)
+    
+    Concretely, consider code like this:
+    
+    ```rust
+    struct Node&lt;'a&gt; { sibling: Option&lt;&amp;'a Node&lt;'a&gt;&gt; }
+    struct Context&lt;'a&gt; {
+        // because of this field, `Context&lt;'a&gt;` is invariant with respect to `'a`.
+        arena: &amp;'a TypedArena&lt;Node&lt;'a&gt;&gt;,
+        ...
+    }
+    fn new_ctxt&lt;'a&gt;(arena: &amp;'a TypedArena&lt;Node&lt;'a&gt;&gt;) -&gt; Context&lt;'a&gt; { ... }
+    fn use_ctxt&lt;'a&gt;(fcx: &amp;'a Context&lt;'a&gt;) { ... }
+    
+    let arena = TypedArena::new();
+    let ctxt = new_ctxt(&amp;arena);
+    
+    use_ctxt(&amp;ctxt);
+    ```
+    
+    In these situations, if you try to introduce two bindings via two distinct `let` statements, each is (with this commit) assigned a distinct extent, and the region inference system cannot find a single region to assign to the lifetime `'a` that works for both of the bindings. So you get an error that `ctxt` does not live long enough; but moving its binding up above that of `arena` just shifts the error so now the compiler complains that `arena` does not live long enough.
+    
+     * SO: What to do? The easiest fix in this case is to ensure that the two bindings *do* get assigned the same static extent, by stuffing both
+    bindings into the same let statement, like so:
+    
+    ```rust
+    let (arena, ctxt): (TypedArena, Context);
+    arena = TypedArena::new();
+    ctxt = new_ctxt(&amp;arena);
+    
+    use_ctxt(&amp;ctxt);
+    ```
+    
+    ----
+    
+    Due to the new code restrictions outlined above, this is a ...
+    
+    [breaking-change]
+
+commit d6bf04a22e78afbe62e9d81e3578418f420123bc
+Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+AuthorDate: Mon Jan 26 12:48:19 2015 +0100
+Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+CommitDate: Tue Jan 27 10:26:52 2015 +0100
+
+    Add `CodeExtent::Remainder` variant; pre-req for new scoping/drop rules.
+    
+    This new variant introduces finer-grain code extents, i.e. we now
+    track that a binding lives only for a suffix of a block, and
+    (importantly) will be dropped when it goes out of scope *before* the
+    bindings that occurred earlier in the block.
+    
+    Both of these notions are neatly captured by marking the block (and
+    each suffix) as an enclosing scope of the next suffix beneath it.
+    
+    This is work that is part of the foundation for issue #8861.
+    
+    (It actually has been seen in earlier posted pull requests; I have
+    just factored it out into its own PR to ease my own rebasing.)
+    
+    ----
+    
+    These finer grained scopes do mean that some code is newly rejected by
+    `rustc`; for example:
+    
+    ```rust
+    let mut map : HashMap&lt;u8, &amp;u8&gt; = HashMap::new();
+    let tmp = Box::new(2);
+    map.insert(43, &amp;*tmp);
+    ```
+    
+    This will now fail to compile with a message that `*tmp` does not live
+    long enough, because the scope of `tmp` is now strictly smaller than
+    that of `map`, and the use of `&amp;u8` in map's type requires that the
+    borrowed references are all to data that live at least as long as the
+    map.
+    
+    The usual fix for a case like this is to move the binding for `tmp`
+    up above that of `map`; note that you can still leave the initialization
+    in the original spot, like so:
+    
+    ```rust
+    let tmp;
+    let mut map : HashMap&lt;u8, &amp;u8&gt; = HashMap::new();
+    tmp = box 2;
+    map.insert(43, &amp;*tmp);
+    ```
+    
+    Similarly, one can encounter an analogous situation with `Vec`: one
+    would need to rewrite:
+    
+    ```rust
+    let mut vec = Vec::new();
+    let tmp = 'c';
+    vec.push(&amp;tmp);
+    ```
+    
+    as:
+    
+    ```
+    let tmp;
+    let mut vec = Vec::new();
+    tmp = 'c';
+    vec.push(&amp;tmp);
+    ```
+    
+    ----
+    
+    In some corner cases, it does not suffice to reorder the bindings; in
+    particular, when the types for both bindings need to reflect exactly
+    the *same* code extent, and a parent/child relationship between them
+    does not work.
+    
+    In pnkfelix's experience this has arisen most often when mixing uses
+    of cyclic data structures while also allowing a lifetime parameter
+    `'a` to flow into a type parameter context where the type is
+    *invariant* with respect to the type parameter. An important instance
+    of this is `arena::TypedArena&lt;T&gt;`, which is invariant with respect
+    to `T`.
+    
+    (The reason that variance is relevant is this: *if* `TypedArena` were
+    covariant with respect to its type parameter, then we could assign it
+    the longer lifetime when it is initialized, and then convert it to a
+    subtype (via covariance) with a shorter lifetime when necessary.  But
+    `TypedArena` is invariant with respect to its type parameter, and thus
+    if `S` is a subtype of `T` (in particular, if `S` has a lifetime
+    parameter that is shorter than that of `T`), then a `TypedArena&lt;S&gt;` is
+    unrelated to `TypedArena&lt;T&gt;`.)
+    
+    Concretely, consider code like this:
+    
+    ```rust
+    struct Node&lt;'a&gt; { sibling: Option&lt;&amp;'a Node&lt;'a&gt;&gt; }
+    struct Context&lt;'a&gt; {
+        // because of this field, `Context&lt;'a&gt;` is invariant with respect to `'a`.
+        arena: &amp;'a TypedArena&lt;Node&lt;'a&gt;&gt;,
+        ...
+    }
+    fn new_ctxt&lt;'a&gt;(arena: &amp;'a TypedArena&lt;Node&lt;'a&gt;&gt;) -&gt; Context&lt;'a&gt; { ... }
+    fn use_ctxt&lt;'a&gt;(fcx: &amp;'a Context&lt;'a&gt;) { ... }
+    
+    let arena = TypedArena::new();
+    let ctxt = new_ctxt(&amp;arena);
+    
+    use_ctxt(&amp;ctxt);
+    ```
+    
+    In these situations, if you try to introduce two bindings via two
+    distinct `let` statements, each is (with this commit) assigned a
+    distinct extent, and the region inference system cannot find a single
+    region to assign to the lifetime `'a` that works for both of the
+    bindings. So you get an error that `ctxt` does not live long enough;
+    but moving its binding up above that of `arena` just shifts the error
+    so now the compiler complains that `arena` does not live long enough.
+    
+    SO: What to do? The easiest fix in this case is to ensure that the two
+    bindings *do* get assigned the same static extent, by stuffing both
+    bindings into the same let statement, like so:
+    
+    ```rust
+    let (arena, ctxt): (TypedArena, Context);
+    arena = TypedArena::new();
+    ctxt = new_ctxt(&amp;arena);
+    
+    use_ctxt(&amp;ctxt);
+    ```
+    
+    Due to the new code rejections outlined above, this is a ...
+    
+    [breaking-change]
+
 commit a6a6fadbb97268d2b3e47649d91053fbb4827266
 Merge: a637365 5d836cd
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2649,25 +2885,4 @@ CommitDate: Wed Dec 24 20:47:12 2014 +0000
     [RFC 344]: https://github.com/rust-lang/rfcs/blob/master/text/0344-conventions-galore.md
     
     [breaking-change]
-
-commit 1e5811ef9271644db0d0ddaae351976b0d4abdd2
-Author:     Simon Sapin &lt;simon.sapin@exyr.org&gt;
-AuthorDate: Fri Dec 5 09:57:42 2014 -0800
-Commit:     Simon Sapin &lt;simon.sapin@exyr.org&gt;
-CommitDate: Wed Dec 24 19:33:04 2014 +0100
-
-    Rename to_ascii_{lower,upper} to to_ascii_{lower,upper}case, per #14401
-    
-    [breaking-change]
-
-commit 96a3c7c6a051ab2f5fc01fe9e686f7fffcc87c61
-Merge: d10642e 16f01cc
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Dec 23 22:21:10 2014 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Dec 23 22:21:10 2014 +0000
-
-    auto merge of #19758 : tbu-/rust/pr_fp_name, r=alexcrichton
-    
-    This is a [breaking-change].
 </pre></body></html>
