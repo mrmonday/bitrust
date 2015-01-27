@@ -1,6 +1,77 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit a6a6fadbb97268d2b3e47649d91053fbb4827266
+Merge: a637365 5d836cd
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Jan 27 02:46:09 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Jan 27 02:46:09 2015 +0000
+
+    Auto merge of #21543 - alexcrichton:old-io, r=aturon
+    
+    In preparation for the I/O rejuvination of the standard library, this commit
+    renames the current `io` module to `old_io` in order to make room for the new
+    I/O modules. It is expected that the I/O RFCs will land incrementally over time
+    instead of all at once, and this provides a fresh clean path for new modules to
+    enter into as well as guaranteeing that all old infrastructure will remain in
+    place for some time.
+    
+    As each `old_io` module is replaced it will be deprecated in-place for new
+    structures in `std::{io, fs, net}` (as appropriate).
+    
+    This commit does *not* leave a reexport of `old_io as io` as the deprecation
+    lint does not currently warn on this form of use. This is quite a large breaking
+    change for all imports in existing code, but all functionality is retained
+    precisely as-is and path statements simply need to be renamed from `io` to
+    `old_io`.
+    
+    [breaking-change]
+
+commit 5d836cdf8666ce0af6911a0c89dffea4da74b374
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Jan 23 10:46:14 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Mon Jan 26 16:01:58 2015 -0800
+
+    std: Rename Writer::write to Writer::write_all
+    
+    In preparation for upcoming changes to the `Writer` trait (soon to be called
+    `Write`) this commit renames the current `write` method to `write_all` to match
+    the semantics of the upcoming `write_all` method. The `write` method will be
+    repurposed to return a `usize` indicating how much data was written which
+    differs from the current `write` semantics. In order to head off as much
+    unintended breakage as possible, the method is being deprecated now in favor of
+    a new name.
+    
+    [breaking-change]
+
+commit f72b1645103e12b581f7022b893c37b5fe41aef7
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Thu Jan 22 16:27:48 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Mon Jan 26 16:01:16 2015 -0800
+
+    std: Rename io to old_io
+    
+    In preparation for the I/O rejuvination of the standard library, this commit
+    renames the current `io` module to `old_io` in order to make room for the new
+    I/O modules. It is expected that the I/O RFCs will land incrementally over time
+    instead of all at once, and this provides a fresh clean path for new modules to
+    enter into as well as guaranteeing that all old infrastructure will remain in
+    place for some time.
+    
+    As each `old_io` module is replaced it will be deprecated in-place for new
+    structures in `std::{io, fs, net}` (as appropriate).
+    
+    This commit does *not* leave a reexport of `old_io as io` as the deprecation
+    lint does not currently warn on this form of use. This is quite a large breaking
+    change for all imports in existing code, but all functionality is retained
+    precisely as-is and path statements simply need to be renamed from `io` to
+    `old_io`.
+    
+    [breaking-change]
+
 commit 43046becce78147fa43808626bbb48569086b6a5
 Merge: 70b13a7 0824652
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2599,64 +2670,4 @@ CommitDate: Tue Dec 23 22:21:10 2014 +0000
     auto merge of #19758 : tbu-/rust/pr_fp_name, r=alexcrichton
     
     This is a [breaking-change].
-
-commit 16f01cc13f6a092873096c44eed546561b88d245
-Author:     Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
-AuthorDate: Mon Dec 22 22:50:57 2014 +0100
-Commit:     Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
-CommitDate: Tue Dec 23 13:42:09 2014 +0100
-
-    Rename and namespace `FPCategory`
-    
-    Rename `FPCategory` to `FpCategory` and `Fp* to `*` in order to adhere to the
-    naming convention
-    
-    This is a [breaking-change].
-    
-    Existing code like this:
-    ```
-    use std::num::{FPCategory, FPNaN};
-    ```
-    should be adjusted to this:
-    ```
-    use std::num::FpCategory as Fp
-    ```
-    
-    In the following code you can use the constants `Fp::Nan`, `Fp::Normal`, etc.
-
-commit 85c1a4b1ba09dae786b3554e0ab596814efabe0e
-Author:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
-AuthorDate: Mon Dec 22 10:57:09 2014 +1300
-Commit:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
-CommitDate: Tue Dec 23 22:06:32 2014 +1300
-
-    Rename include_bin! to include_bytes!
-    
-    According to [RFC 344][], methods that return `&amp;[u8]` should have names
-    ending in `bytes`. Though `include_bin!` is a macro not a method, it
-    seems reasonable to follow the convention anyway.
-    
-    We keep the old name around for now, but trigger a deprecation warning
-    when it is used.
-    
-    [RFC 344]: https://github.com/rust-lang/rfcs/blob/master/text/0344-conventions-galore.md
-    
-    [breaking-change]
-
-commit fac17defcb8d0642c25bf8f791e1dc5b4e110be8
-Merge: ca441df 02feaf2
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Dec 22 12:48:16 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Dec 22 12:48:16 2014 -0800
-
-    rollup merge of #20140: frewsxcv/rm-reexports
-    
-    Part of #19253
-    
-    I would have removed this public reexport in #19842, but #19812 hadn't merged (and snapshotted) at the time
-    
-    In #19407, I changed the codebase to stop utilizing this reexport
-    
-    [breaking-change]
 </pre></body></html>
