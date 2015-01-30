@@ -1,6 +1,20 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit a9d465fec902588b71937de96e66d160d2adebf5
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Wed Jan 28 14:27:28 2015 +1300
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Fri Jan 30 12:00:20 2015 +1300
+
+    Use absolute path to FullRange, rather than assuming it is in the prelude
+    
+    Closes #21263
+    
+    [breaking-change]
+    
+    If you are using `core::ops::FullRange` you should change to using `core::ops::RangeFull`
+
 commit d77f6d5366b330f9c2061cad0d3ff638c9cc05b7
 Merge: e365e4c d6bf04a
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2868,21 +2882,4 @@ CommitDate: Wed Dec 24 20:19:48 2014 -0600
     conventions.
     
     This is a [breaking-change].
-
-commit 7e11b22713aebd28ceaaa2ecef937c9b9d247c2f
-Merge: 14597f9 85c1a4b
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Wed Dec 24 20:47:12 2014 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Wed Dec 24 20:47:12 2014 +0000
-
-    auto merge of #20117 : lfairy/rust/rename-include-bin, r=alexcrichton
-    
-    According to [RFC 344][], methods that return `&amp;[u8]` should have names ending in `bytes`. Though `include_bin!` is a macro not a method, it seems reasonable to follow the convention anyway.
-    
-    We keep the old name around for now, but trigger a deprecation warning when it is used.
-    
-    [RFC 344]: https://github.com/rust-lang/rfcs/blob/master/text/0344-conventions-galore.md
-    
-    [breaking-change]
 </pre></body></html>
