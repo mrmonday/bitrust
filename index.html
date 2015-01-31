@@ -1,6 +1,195 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 341e858bd882061b823dac236fd718d473f8ab2e
+Merge: 1a51eb9 b9a9030
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Jan 30 12:02:44 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Fri Jan 30 12:02:44 2015 -0800
+
+    rollup merge of #20790: japaric/for-loops
+    
+    As per [RFC #235][rfc], you can now do:
+    
+    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0235-collections-conventions.md#intoiterator-and-iterable
+    
+    ``` rust
+    let mut v = vec![1];
+    
+    // iterate over immutable references
+    for x in &amp;v {
+        assert_eq!(x, &amp;1);
+    }
+    
+    // iterate over mutable references
+    for x in &amp;mut v {
+        assert_eq!(x, &amp;mut 1);
+    }
+    
+    // iterate over values, this consumes `v`
+    for x in v {
+        assert_eq!(x, 1);
+    }
+    ```
+    
+    [breaking-change]s
+    
+    For loops now "consume" (move) the iterator, this breaks iterating over mutable references to iterators, and also breaks multiple iterations over the same iterator:
+    
+    ``` rust
+    fn foo(mut it: &amp;mut Iter) {  // `Iter` implements `Iterator`
+        for x in it { .. }  //~ error: `&amp;mut Iter` doesn't implement Iterator
+    }
+    
+    fn bar() {
+        for x in it { .. }  //~ note: `it` moved here
+        for x in it { .. }  //~ error: `it` has been moved
+    }
+    ```
+    
+    Both cases can be fixed using the `by_ref()` adapter to create an iterator from the mutable reference:
+    
+    ``` rust
+    fn foo(mut it: &amp;mut Iter) {
+        for x in it.by_ref() { .. }
+    }
+    
+    fn bar() {
+        for x in it.by_ref() { .. }
+        for x in it { .. }
+    }
+    ```
+    
+    This PR also makes iterator non-implicitly copyable, as this was source of subtle bugs in the libraries. You can still use `clone()` to explictly copy the iterator.
+    
+    Finally, since the for loops are implemented in the frontend and use global paths to `IntoIterator`, `Iterator` and `Option` variants, users of the `core` crate will have to use add an `std` module to the root of their crate to be able to use for loops:
+    
+    ``` rust
+    #![no_std]
+    
+    extern crate core;
+    
+    fn main() {
+        for x in 0..10 {}
+    }
+    
+    #[doc(hidden)]
+    mod std {
+        // these imports are needed to use for-loops
+        pub use core::iter;
+        pub use core::option;
+    }
+    ```
+    
+    ---
+    
+    r? @nikomatsakis @aturon
+    cc #18424
+    closes #18045
+
+commit 62273575139a80c2b208a3a27e0c2392b1425be6
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Jan 13 15:42:53 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Fri Jan 30 09:21:56 2015 -0800
+
+    std: Stabilize the std::fmt module
+    
+    This commit performs a final stabilization pass over the std::fmt module,
+    marking all necessary APIs as stable. One of the more interesting aspects of
+    this module is that it exposes a good deal of its runtime representation to the
+    outside world in order for `format_args!` to be able to construct the format
+    strings. Instead of hacking the compiler to assume that these items are stable,
+    this commit instead lays out a story for the stabilization and evolution of
+    these APIs.
+    
+    There are three primary details used by the `format_args!` macro:
+    
+    1. `Arguments` - an opaque package of a "compiled format string". This structure
+       is passed around and the `write` function is the source of truth for
+       transforming a compiled format string into a string at runtime. This must be
+       able to be constructed in stable code.
+    
+    2. `Argument` - an opaque structure representing an argument to a format string.
+       This is *almost* a trait object as it's just a pointer/function pair, but due
+       to the function originating from one of many traits, it's not actually a
+       trait object. Like `Arguments`, this must be constructed from stable code.
+    
+    3. `fmt::rt` - this module contains the runtime type definitions primarily for
+       the `rt::Argument` structure. Whenever an argument is formatted with
+       nonstandard flags, a corresponding `rt::Argument` is generated describing how
+       the argument is being formatted. This can be used to construct an
+       `Arguments`.
+    
+    The primary interface to `std::fmt` is the `Arguments` structure, and as such
+    this type name is stabilize as-is today. It is expected for libraries to pass
+    around an `Arguments` structure to represent a pending formatted computation.
+    
+    The remaining portions are largely "cruft" which would rather not be stabilized,
+    but due to the stability checks they must be. As a result, almost all pieces
+    have been renamed to represent that they are "version 1" of the formatting
+    representation. The theory is that at a later date if we change the
+    representation of these types we can add new definitions called "version 2" and
+    corresponding constructors for `Arguments`.
+    
+    One of the other remaining large questions about the fmt module were how the
+    pending I/O reform would affect the signatures of methods in the module. Due to
+    [RFC 526][rfc], however, the writers of fmt are now incompatible with the
+    writers of io, so this question has largely been solved. As a result the
+    interfaces are largely stabilized as-is today.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0526-fmt-text-writer.md
+    
+    Specifically, the following changes were made:
+    
+    * The contents of `fmt::rt` were all moved under `fmt::rt::v1`
+    * `fmt::rt` is stable
+    * `fmt::rt::v1` is stable
+    * `Error` is stable
+    * `Writer` is stable
+    * `Writer::write_str` is stable
+    * `Writer::write_fmt` is stable
+    * `Formatter` is stable
+    * `Argument` has been renamed to `ArgumentV1` and is stable
+    * `ArgumentV1::new` is stable
+    * `ArgumentV1::from_uint` is stable
+    * `Arguments::new_v1` is stable (renamed from `new`)
+    * `Arguments::new_v1_formatted` is stable (renamed from `with_placeholders`)
+    * All formatting traits are now stable, as well as the `fmt` method.
+    * `fmt::write` is stable
+    * `fmt::format` is stable
+    * `Formatter::pad_integral` is stable
+    * `Formatter::pad` is stable
+    * `Formatter::write_str` is stable
+    * `Formatter::write_fmt` is stable
+    * Some assorted top level items which were only used by `format_args!` were
+      removed in favor of static functions on `ArgumentV1` as well.
+    * The formatting-flag-accessing methods remain unstable
+    
+    Within the contents of the `fmt::rt::v1` module, the following actions were
+    taken:
+    
+    * Reexports of all enum variants were removed
+    * All prefixes on enum variants were removed
+    * A few miscellaneous enum variants were renamed
+    * Otherwise all structs, fields, and variants were marked stable.
+    
+    In addition to these actions in the `std::fmt` module, many implementations of
+    `Show` and `String` were stabilized as well.
+    
+    In some other modules:
+    
+    * `ToString` is now stable
+    * `ToString::to_string` is now stable
+    * `Vec` no longer implements `fmt::Writer` (this has moved to `String`)
+    
+    This is a breaking change due to all of the changes to the `fmt::rt` module, but
+    this likely will not have much impact on existing programs.
+    
+    Closes #20661
+    [breaking-change]
+
 commit a9d465fec902588b71937de96e66d160d2adebf5
 Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
 AuthorDate: Wed Jan 28 14:27:28 2015 +1300
@@ -2851,35 +3040,4 @@ CommitDate: Thu Dec 25 12:19:37 2014 +0100
     As a replacement, add is_ascii() to AsciiExt, and implement AsciiExt for u8 and char.
     
     [breaking-change]
-
-commit d9769ec3834b62318da892925dc24c8883bb1635
-Author:     P1start &lt;rewi-github@whanau.org&gt;
-AuthorDate: Tue Dec 23 13:13:49 2014 +1300
-Commit:     P1start &lt;rewi-github@whanau.org&gt;
-CommitDate: Thu Dec 25 18:58:47 2014 +1300
-
-    Parse fully-qualified associated types in generics without whitespace
-    
-    This breaks code that looks like this:
-    
-        let x = foo as bar &lt;&lt; 13;
-    
-    Change such code to look like this:
-    
-        let x = (foo as bar) &lt;&lt; 13;
-    
-    Closes #17362.
-    
-    [breaking-change]
-
-commit 625697354db8a13450f6d56c7a384c202a79c9db
-Author:     Chase Southwood &lt;chase.southwood@gmail.com&gt;
-AuthorDate: Wed Dec 24 20:19:48 2014 -0600
-Commit:     Chase Southwood &lt;chase.southwood@gmail.com&gt;
-CommitDate: Wed Dec 24 20:19:48 2014 -0600
-
-    Rename remaining hashmap and hashtable iterators to match naming
-    conventions.
-    
-    This is a [breaking-change].
 </pre></body></html>
