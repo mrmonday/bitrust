@@ -1,6 +1,66 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 8550bf74c1149eb54fc568bb53b78fd2b6caec98
+Merge: 3b2ed14 45ddf50
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Feb 3 15:35:53 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Feb 3 15:35:53 2015 -0800
+
+    rollup merge of #21759: aturon/new-path
+    
+    This PR implements [path reform](https://github.com/rust-lang/rfcs/pull/474), and motivation and details for the change can be found there.
+    
+    For convenience, the old path API is being kept as `old_path` for the time being. Updating after this PR is just a matter of changing imports to `old_path` (which is likely not needed, since the prelude entries still export the old path API).
+    
+    This initial PR does not include additional normalization or platform-specific path extensions. These will be done in follow up commits or PRs.
+    
+    [breaking-change]
+    
+    Closes #20034
+    Closes #12056
+    Closes #11594
+    Closes #14028
+    Closes #14049
+    Closes #10035
+
+commit 3e39f0bc0e96f76610104918edaa5912f4f352df
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Thu Jan 29 14:03:36 2015 -0800
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Tue Feb 3 14:34:42 2015 -0800
+
+    Rename std::path to std::old_path
+    
+    As part of [RFC 474](https://github.com/rust-lang/rfcs/pull/474), this
+    commit renames `std::path` to `std::old_path`, leaving the existing path
+    API in place to ease migration to the new one. Updating should be as
+    simple as adjusting imports, and the prelude still maps to the old path
+    APIs for now.
+    
+    [breaking-change]
+
+commit d30f225b492163b14005d5069b7924f3fecf868c
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Feb 3 12:32:56 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Feb 3 12:41:23 2015 -0800
+
+    std: Remove `iter::ByRef` and generalize impls
+    
+    This removes the `ByRef` iterator adaptor to stay in line with the changes to
+    `std::io`. The `by_ref` method instead just returns `&amp;mut Self`.
+    
+    This also removes the implementation of `Iterator for &amp;mut Iterator` and instead
+    generalizes it to `Iterator for &amp;mut I` where `I: Iterator + ?Sized`. The
+    `Box&lt;I&gt;` implementations were also updated.
+    
+    This is a breaking change due to the removal of the `std::iter::ByRef` type. All
+    mentions of `ByRef&lt;'a, T&gt;` should be replaced with `&amp;mut T` to migrate forward.
+    
+    [breaking-change]
+
 commit 99b2bd4bfa332c5a723114d09e8bb74d5a0c7376
 Merge: 747e6b5 0e44484
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -3032,64 +3092,6 @@ CommitDate: Mon Dec 29 09:18:09 2014 -0800
     condition variable now consume the guard and return it in as a `LockResult` to
     indicate whether the lock was poisoned while waiting. Most code can be updated
     by calling `.unwrap()` on the return value of `.lock()`.
-    
-    [breaking-change]
-
-commit c32d03f4172580e3f33e4844ed3c01234dca2d53
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Dec 22 09:04:23 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Dec 29 08:58:21 2014 -0800
-
-    std: Stabilize the prelude module
-    
-    This commit is an implementation of [RFC 503][rfc] which is a stabilization
-    story for the prelude. Most of the RFC was directly applied, removing reexports.
-    Some reexports are kept around, however:
-    
-    * `range` remains until range syntax has landed to reduce churn.
-    * `Path` and `GenericPath` remain until path reform lands. This is done to
-      prevent many imports of `GenericPath` which will soon be removed.
-    * All `io` traits remain until I/O reform lands so imports can be rewritten all
-      at once to `std::io::prelude::*`.
-    
-    This is a breaking change because many prelude reexports have been removed, and
-    the RFC can be consulted for the exact list of removed reexports, as well as to
-    find the locations of where to import them.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0503-prelude-stabilization.md
-    [breaking-change]
-    
-    Closes #20068
-
-commit f53314cd70dd194ea40c55a5d8ceae7b94409aea
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Mon Dec 29 09:33:25 2014 +1300
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Mon Dec 29 18:19:09 2014 +1300
-
-    Remove the glob/shadowing exception bug
-    
-    [breaking-change]
-    
-    This and the other commit in this PR change the rules for shadowing and globs to be
-    stricter. There were previously bugs where some glob imports would not be checked
-    for shadowing. Those are now fixed and you may have to adjust your imports to use
-    fewer globs.
-
-commit 1e89bbcb67020892bc0af5af218c35f0fd453fa4
-Author:     Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
-AuthorDate: Sun Dec 28 02:20:47 2014 +0200
-Commit:     Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
-CommitDate: Sun Dec 28 13:46:35 2014 +0200
-
-    Rename TaskRng to ThreadRng
-    
-    Since runtime is removed, rust has no tasks anymore and everything is moving
-    from being task-* to thread-*. Let’s rename TaskRng as well!
-    
-    * Rename TaskRng to ThreadRng
-    * Rename task_rng to thread_rng
     
     [breaking-change]
 </pre></body></html>
