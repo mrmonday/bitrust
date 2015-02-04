@@ -1,6 +1,19 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit c3e1f77291803d26b2897c0953dce5cf7e70ab65
+Merge: d6c15d9 df1ac7a
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Feb 4 08:47:27 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Feb 4 08:47:27 2015 +0000
+
+    Auto merge of #21892 - huonw:deprecate-rand, r=alexcrichton
+    
+    Use [`rand`](https://crates.io/crates/rand) and [`derive_rand`](https://crates.io/crates/derive_rand) from crates.io.
+    
+    [breaking-change]
+
 commit 8550bf74c1149eb54fc568bb53b78fd2b6caec98
 Merge: 3b2ed14 45ddf50
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -24,6 +37,20 @@ CommitDate: Tue Feb 3 15:35:53 2015 -0800
     Closes #14028
     Closes #14049
     Closes #10035
+
+commit df1ac7aa63ea89a067c57663eab035f7b83f6933
+Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+AuthorDate: Tue Feb 3 20:11:38 2015 +1100
+Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+CommitDate: Wed Feb 4 09:39:40 2015 +1100
+
+    Deprecate in-tree `rand`, `std::rand` and `#[derive(Rand)]`.
+    
+    Use the crates.io crate `rand` (version 0.1 should be a drop in
+    replacement for `std::rand`) and `rand_macros` (`#[derive_Rand]` should
+    be a drop-in replacement).
+    
+    [breaking-change]
 
 commit 3e39f0bc0e96f76610104918edaa5912f4f352df
 Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
@@ -3029,69 +3056,6 @@ CommitDate: Mon Dec 29 12:16:49 2014 -0800
     located, as well as the changing of the semantics of `send` and `recv`. Most
     programs just need to rename imports of `std::comm` to `std::sync::mpsc` and
     add calls to `unwrap` after a send or a receive operation.
-    
-    [breaking-change]
-
-commit 19f73b4ef6fb1d24f19738a8665889396fc1b0c8
-Merge: 3dcc409 c1f3aca
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Mon Dec 29 18:02:30 2014 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Mon Dec 29 18:02:30 2014 +0000
-
-    auto merge of #20058 : Kimundi/rust/str_pattern_pre, r=alexcrichton
-    
-    This stabilizes most methods on `&amp;str` working with patterns in a way that is forwards-compatible with a generic string pattern matching API:
-    - Methods that are using the primary name for their operation are marked as `#[stable]`, as they can be upgraded to a full `Pattern` API later without existing code breaking. Example: `contains(&amp;str)`
-    - Methods that are using a more specific name in order to not clash with the primary one are marked as `#[unstable]`, as they will likely be removed once their functionality is merged into the primary one. Example: `contains_char&lt;C: CharEq&gt;(C)`
-    - The method docs got changed to consistently refer to the pattern types as a pattern.
-    - Methods whose names do not match in the context of the more generic API got renamed. Example: `trim_chars -&gt; trim_matches`
-    
-    Additionally, all methods returning iterators got changed to return unique new types with changed names in accordance with the new naming guidelines.
-    
-    See also https://github.com/rust-lang/rfcs/pull/528
-    
-    Due to some deprecations and type changes, this is a
-    
-    [breaking-change]
-
-commit 76e5ed655c762b812c3da4749a55f1bb1b52c787
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Dec 8 20:20:03 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Dec 29 09:18:09 2014 -0800
-
-    std: Return Result from RWLock/Mutex methods
-    
-    All of the current std::sync primitives have poisoning enable which means that
-    when a task fails inside of a write-access lock then all future attempts to
-    acquire the lock will fail. This strategy ensures that stale data whose
-    invariants are possibly not upheld are never viewed by other tasks to help
-    propagate unexpected panics (bugs in a program) among tasks.
-    
-    Currently there is no way to test whether a mutex or rwlock is poisoned. One
-    method would be to duplicate all the methods with a sister foo_catch function,
-    for example. This pattern is, however, against our [error guidelines][errors].
-    As a result, this commit exposes the fact that a task has failed internally
-    through the return value of a `Result`.
-    
-    [errors]: https://github.com/rust-lang/rfcs/blob/master/text/0236-error-conventions.md#do-not-provide-both-result-and-fail-variants
-    
-    All methods now return a `LockResult&lt;T&gt;` or a `TryLockResult&lt;T&gt;` which
-    communicates whether the lock was poisoned or not. In a `LockResult`, both the
-    `Ok` and `Err` variants contains the `MutexGuard&lt;T&gt;` that is being returned in
-    order to allow access to the data if poisoning is not desired. This also means
-    that the lock is *always* held upon returning from `.lock()`.
-    
-    A new type, `PoisonError`, was added with one method `into_guard` which can
-    consume the assertion that a lock is poisoned to gain access to the underlying
-    data.
-    
-    This is a breaking change because the signatures of these methods have changed,
-    often incompatible ways. One major difference is that the `wait` methods on a
-    condition variable now consume the guard and return it in as a `LockResult` to
-    indicate whether the lock was poisoned while waiting. Most code can be updated
-    by calling `.unwrap()` on the return value of `.lock()`.
     
     [breaking-change]
 </pre></body></html>
