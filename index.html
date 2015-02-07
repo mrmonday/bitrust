@@ -1,6 +1,50 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 8661b3dc0fbb9e21b94266ba62e23cebb8f0603f
+Merge: 80627cd 4583272
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Feb 7 14:08:38 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Feb 7 14:08:38 2015 +0000
+
+    Auto merge of #21971 - pnkfelix:fsk-restrict-fixdsz-array-moves, r=nikomatsakis
+    
+    Revised version of PR #21930.
+    
+    Restrictions on moves into and out-from fixed-length arrays.
+    
+    (There was only one use of this "feature" in the compiler source.)
+    
+    Note 1: the change to the error message in tests/compile-fail/borrowck-use-in-index-lvalue.rs, where we now report that *w is uninitialized (rather than w), was unintended fallout from the implementation strategy used here. The change appears harmless to me, but I welcome advice on how to bring back the old message, which was slightly cleaner (i.e. less unintelligible) since that the syntactic form *w does not actually appear in the source text.
+    
+    Note 2: the move out-from restriction to only apply to expr[i], and not destructuring bind (e.g. f([a, b, c]: Array) { ... }) since the latter is compatible with nonzeroing drop, AFAICT.
+    
+    [breaking-change]
+
+commit cc8f35f874c81be1a5950d2527902b7dd5a94513
+Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+AuthorDate: Tue Feb 3 01:25:45 2015 +0100
+Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+CommitDate: Sat Feb 7 13:44:00 2015 +0100
+
+    Restrictions on moves out-from and into fixed-length arrays.
+    
+    No longer legal: `fn foo(a: [D; 5]) { drop(a); a[2] = D::new(); }`;
+    one must first initialize the entirety of `a` before assigning to its
+    individual elements.
+    
+    No longer legal: `fn foo(arr: [D; 5]) -&gt; D { arr[2] }`, unless `D`
+    implements `Copy`. This "move out-from" restriction only affects
+    `expr[i]`, and not destructuring (e.g. `f([a, b, c]: Array) { ... }`).
+    
+    uses mem_categorization to distinguish destructuring-bind from array
+    indexing.
+    
+    See discussion on RFC PR 533.
+    
+    [breaking-change]
+
 commit 0b6dbbc9cfb747df1db646bba16561c022704056
 Merge: 7ebf9bc 724bf7b
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2947,60 +2991,6 @@ CommitDate: Mon Dec 29 16:36:52 2014 -0800
     
     A number of these changes are breaking changes, but the migrations should be
     fairly straightforward on a case-by-case basis (outlined above where possible).
-    
-    [breaking-change]
-
-commit 748440c5b3bad8a837918400973e9d6cbb58fa7a
-Merge: 9f6eb29 6256973
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Dec 29 16:36:06 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Dec 29 16:36:06 2014 -0800
-
-    rollup merge of #20215: csouth3/hashmap-rename
-    
-    Rename struct `Entries` to `Iter` in hash/table.rs and hash/map.rs, to match the naming convention of rust-lang/rfcs#344.
-    
-    This is a [breaking-change].
-
-commit cc20d6009ebf46b7ec75020ebfe35ff0ef064d1b
-Merge: 94d82c1 35e63e3
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Dec 29 16:35:50 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Dec 29 16:35:50 2014 -0800
-
-    rollup merge of #19661: alexcrichton/mutex-result
-    
-    All of the current std::sync primitives have poisoning enable which means that
-    when a task fails inside of a write-access lock then all future attempts to
-    acquire the lock will fail. This strategy ensures that stale data whose
-    invariants are possibly not upheld are never viewed by other tasks to help
-    propagate unexpected panics (bugs in a program) among tasks.
-    
-    Currently there is no way to test whether a mutex or rwlock is poisoned. One
-    method would be to duplicate all the methods with a sister foo_catch function,
-    for example. This pattern is, however, against our [error guidelines][errors].
-    As a result, this commit exposes the fact that a task has failed internally
-    through the return value of a `Result`.
-    
-    [errors]: https://github.com/rust-lang/rfcs/blob/master/text/0236-error-conventions.md#do-not-provide-both-result-and-fail-variants
-    
-    All methods now return a `LockResult&lt;T&gt;` or a `TryLockResult&lt;T&gt;` which
-    communicates whether the lock was poisoned or not. In a `LockResult`, both the
-    `Ok` and `Err` variants contains the `MutexGuard&lt;T&gt;` that is being returned in
-    order to allow access to the data if poisoning is not desired. This also means
-    that the lock is *always* held upon returning from `.lock()`.
-    
-    A new type, `PoisonError`, was added with one method `into_guard` which can
-    consume the assertion that a lock is poisoned to gain access to the underlying
-    data.
-    
-    This is a breaking change because the signatures of these methods have changed,
-    often incompatible ways. One major difference is that the `wait` methods on a
-    condition variable now consume the guard and return it in as a `LockResult` to
-    indicate whether the lock was poisoned while waiting. Most code can be updated
-    by calling `.unwrap()` on the return value of `.lock()`.
     
     [breaking-change]
 </pre></body></html>
