@@ -1,6 +1,39 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 0b6dbbc9cfb747df1db646bba16561c022704056
+Merge: 7ebf9bc 724bf7b
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Feb 7 04:14:22 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Feb 7 04:14:22 2015 +0000
+
+    Auto merge of #21949 - japaric:index, r=nikomatsakis
+    
+    closes #21630
+    
+    Overloaded indexing (`&amp;[mut] foo[bar]`) only works when `&lt;Self as Index&gt;::Output` is the same as `&lt;Self as IndexMut&gt;::Output` (see issue above). To restrict implementations of `IndexMut` that doesn't work, this PR makes `IndexMut` a supertrait over `Index`, i.e. `trait IndexMut&lt;I&gt;: Index&lt;I&gt;`, just like in the `trait DerefMut: Deref` case.
+    
+    This breaks all downstream implementations of `IndexMut`, in most cases this simply means removing the `type Output = ..` bit, which is now redundant, from `IndexMut` implementations:
+    
+    ``` diff
+     impl Index&lt;Foo&gt; for Bar {
+         type Output = Baz;
+         ..
+     }
+    
+     impl IndexMut&lt;Foo&gt; for Bar {
+    -    type Output = Baz;
+         ..
+     }
+    ```
+    
+    [breaking-change]
+    
+    ---
+    
+    r? @nikomatsakis
+
 commit df7db970dcdb7b7fb1080b9d66baf2e45b689914
 Merge: fc1e045 67ee26d
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2970,16 +3003,4 @@ CommitDate: Mon Dec 29 16:35:50 2014 -0800
     by calling `.unwrap()` on the return value of `.lock()`.
     
     [breaking-change]
-
-commit 4e2afb0052618ca3d758fffd0cf50559be774391
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Fri Dec 19 11:47:48 2014 +1300
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Tue Dec 30 13:06:25 2014 +1300
-
-    Remove ExprSlice by hacking the compiler
-    
-    [breaking-change]
-    
-    The `mut` in slices is now redundant. Mutability is 'inferred' from position. This means that if mutability is only obvious from the type, you will need to use explicit calls to the slicing methods.
 </pre></body></html>
