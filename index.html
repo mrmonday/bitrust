@@ -1,6 +1,36 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit df7db970dcdb7b7fb1080b9d66baf2e45b689914
+Merge: fc1e045 67ee26d
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sat Feb 7 00:44:31 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sat Feb 7 00:44:31 2015 +0530
+
+    Rollup merge of #22009 - japaric:no-mov, r=alexcrichton
+    
+     If you were still using `MaybeOwnedVector`, update your code to use `CowVec`.
+    
+    [breaking-change]
+    
+    ---
+    
+    We already removed `MaybeOwned` (the string equivalent) long time ago and with a much shorter deprecation period. It's time to let go.
+
+commit d1a1d339ef3fb89599f74c0cbae2183c7cf2ee25
+Merge: 08a2bef 5cbbc12
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Fri Feb 6 05:37:32 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Feb 6 16:21:07 2015 +0530
+
+    Rollup merge of #21951 - Gankro:entry, r=aturon
+    
+     This also removes two erroneous re-exports of the Entry variants, and so is incidentally a [breaking-change], though presumably no one should have been using those.
+    
+    r? @aturon
+
 commit c3e1f77291803d26b2897c0953dce5cf7e70ab65
 Merge: d6c15d9 df1ac7a
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2952,110 +2982,4 @@ CommitDate: Tue Dec 30 13:06:25 2014 +1300
     [breaking-change]
     
     The `mut` in slices is now redundant. Mutability is 'inferred' from position. This means that if mutability is only obvious from the type, you will need to use explicit calls to the slicing methods.
-
-commit b26daf3a67a4e283a5e2c49227b60a2321434de0
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Sun Dec 28 10:29:56 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Dec 29 14:11:16 2014 -0800
-
-    std: Second pass stabilization for `string`
-    
-    This commit performs a second pass over the `std::string` module, performing the
-    following actions:
-    
-    * The name `std::string` is now stable.
-    * The `String::from_utf8` function is now stable after having been altered to
-      return a new `FromUtf8Error` structure. The `FromUtf8Error` structure is now
-      stable as well as its `into_bytes` and `utf8_error` methods.
-    * The `String::from_utf8_lossy` function is now stable.
-    * The `String::from_chars` method is now deprecated in favor of `.collect()`
-    * The `String::from_raw_parts` method is now stable
-    * The `String::from_str` function remains experimental
-    * The `String::from_raw_buf` function remains experimental
-    * The `String::from_raw_buf_len` function remains experimental
-    * The `String::from_utf8_unchecked` function is now stable
-    * The `String::from_char` function is now deprecated in favor of
-      `repeat(c).take(n).collect()`
-    * The `String::grow` function is now deprecated in favor of
-      `.extend(repeat(c).take(n)`
-    * The `String::capacity` method is now stable
-    * The `String::reserve` method is now stable
-    * The `String::reserve_exact` method is now stable
-    * The `String::shrink_to_fit` method is now stable
-    * The `String::pop` method is now stable
-    * The `String::as_mut_vec` method is now stable
-    * The `String::is_empty` method is now stable
-    * The `IntoString` trait is now deprecated (there are no implementors)
-    * The `String::truncate` method is now stable
-    * The `String::insert` method is now stable
-    * The `String::remove` method is now stable
-    * The `String::push` method is now stable
-    * The `String::push_str` method is now stable
-    * The `String::from_utf16` function is now stable after its error type has now
-      become an opaque structure to carry more semantic information in the future.
-    
-    A number of these changes are breaking changes, but the migrations should be
-    fairly straightforward on a case-by-case basis (outlined above where possible).
-    
-    [breaking-change]
-
-commit bc83a009f655dd3896be4a7cd33cac8032a605f2
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Dec 23 11:53:35 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Dec 29 12:16:49 2014 -0800
-
-    std: Second pass stabilization for `comm`
-    
-    This commit is a second pass stabilization for the `std::comm` module,
-    performing the following actions:
-    
-    * The entire `std::comm` module was moved under `std::sync::mpsc`. This movement
-      reflects that channels are just yet another synchronization primitive, and
-      they don't necessarily deserve a special place outside of the other
-      concurrency primitives that the standard library offers.
-    * The `send` and `recv` methods have all been removed.
-    * The `send_opt` and `recv_opt` methods have been renamed to `send` and `recv`.
-      This means that all send/receive operations return a `Result` now indicating
-      whether the operation was successful or not.
-    * The error type of `send` is now a `SendError` to implement a custom error
-      message and allow for `unwrap()`. The error type contains an `into_inner`
-      method to extract the value.
-    * The error type of `recv` is now `RecvError` for the same reasons as `send`.
-    * The `TryRecvError` and `TrySendError` types have had public reexports removed
-      of their variants and the variant names have been tweaked with enum
-      namespacing rules.
-    * The `Messages` iterator is renamed to `Iter`
-    
-    This functionality is now all `#[stable]`:
-    
-    * `Sender`
-    * `SyncSender`
-    * `Receiver`
-    * `std::sync::mpsc`
-    * `channel`
-    * `sync_channel`
-    * `Iter`
-    * `Sender::send`
-    * `Sender::clone`
-    * `SyncSender::send`
-    * `SyncSender::try_send`
-    * `SyncSender::clone`
-    * `Receiver::recv`
-    * `Receiver::try_recv`
-    * `Receiver::iter`
-    * `SendError`
-    * `RecvError`
-    * `TrySendError::{mod, Full, Disconnected}`
-    * `TryRecvError::{mod, Empty, Disconnected}`
-    * `SendError::into_inner`
-    * `TrySendError::into_inner`
-    
-    This is a breaking change due to the modification of where this module is
-    located, as well as the changing of the semantics of `send` and `recv`. Most
-    programs just need to rename imports of `std::comm` to `std::sync::mpsc` and
-    add calls to `unwrap` after a send or a receive operation.
-    
-    [breaking-change]
 </pre></body></html>
