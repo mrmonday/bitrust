@@ -1,6 +1,35 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 74b8740719c1b427f79b67d6bc51e9d448dd9c49
+Merge: bfaa1a8 312f8bd
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Feb 8 00:24:03 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Feb 8 00:24:03 2015 +0000
+
+    Auto merge of #21988 - kmcallister:no-std, r=sfackler
+    
+    Fixes #21833.
+    
+    [breaking-change]
+    
+    r? @alexcrichton
+    
+    The tests in #21912 will also need `#[feature(no_std)]`. If you're okay with both PRs, I can merge and test them.
+
+commit d788588dce5525b2bf5674b0c90c791a70582330
+Author:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
+AuthorDate: Thu Feb 5 16:14:42 2015 -0800
+Commit:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
+CommitDate: Sat Feb 7 10:49:58 2015 -0800
+
+    Feature-gate #![no_std]
+    
+    Fixes #21833.
+    
+    [breaking-change]
+
 commit 61626b306314768b273892e3a547b896ef7a4dfd
 Merge: ce5aad2 b445bf2
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2918,94 +2947,6 @@ CommitDate: Tue Dec 30 12:02:22 2014 -0800
     This commit consolidates the traits into a single `SliceConcatExt` trait
     provided by `slice` and the preldue (where it replaces `StrVector`,
     which is removed.)
-    
-    [breaking-change]
-
-commit 4f863a338e0a7c33f81a8ac138103f1a0e8b33c5
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Wed Dec 17 20:50:16 2014 -0800
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Tue Dec 30 12:02:22 2014 -0800
-
-    Second pass stabilization: slice
-    
-    This commit takes a second pass through the `slice` module to
-    stabilize its API. The changes are as follows:
-    
-    **Stable**:
-    
-    * `as_mut_slice`
-    * `as_ptr`, `as_mut_ptr`
-    * `binary_search_by` (was: `binary_search`)
-    * `binary_search` (was: `binary_search_elem`)
-    * `chunks`, `chunks_mut`
-    * `contains`
-    * `ends_with`
-    * `first`, `first_mut` (was: `head`)
-    * `get_unchecked`, `get_unchecked_mut` (was: `unsafe_get`)
-    * `get`
-    * `is_empty`
-    * `iter`, `iter_mut`
-    * `len`
-    * `reverse`
-    * `sort_by`
-    * `sort`
-    * `split_at`, `split_at_mut`
-    * `split_mut`, `splitn_mut`, `rsplitn_mut`
-    * `split`, `splitn`, `rsplitn`
-    * `starts_with`
-    * `swap`
-    * `to_vec`
-    * `windows`
-    
-    **Deprecated**:
-    
-    * `head`, `head_mut` (renamed as above)
-    * `unsafe_get`, `unsafe_mut` (renamed as above)
-    * `binary_search_elem` (renamed as above)
-    * `partitioned`, deprecated in favor of a new, more
-      general iterator consumer called `partition`.
-    * `BinarySearchResult`, deprecated in favor of `Result&lt;uint, uint&gt;`
-    
-    [breaking-change]
-
-commit 9d919d2302b5df42e3bf8979560e0da21f4b2bad
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Tue Dec 16 23:44:43 2014 -0800
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Tue Dec 30 12:02:22 2014 -0800
-
-    Second pass stabilization: vec
-    
-    This commit takes a second pass through the `vec` module to
-    stabilize its API. The changes are as follows:
-    
-    **Stable**:
-    
-    * `dedup`
-    * `from_raw_parts`
-    * `insert`
-    * `into_iter`
-    * `is_empty`
-    * `remove`
-    * `reserve_exact`
-    * `reserve`
-    * `retain`
-    * `swap_remove`
-    * `truncate`
-    
-    **Deprecated**:
-    
-    * `from_fn`, `from_elem`, `grow_fn` and `grow`, all deprecated in
-      favor of iterators. See https://github.com/rust-lang/rfcs/pull/509
-    
-    * `partition`, `partitioned`, deprecated in favor of a new, more
-      general iterator consumer called `partition`.
-    
-    * `unzip`, deprecated in favor of a new, more general iterator
-      consumer called `unzip`.
-    
-    A few remaining methods are left at experimental status.
     
     [breaking-change]
 </pre></body></html>
