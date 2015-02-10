@@ -29,6 +29,32 @@ CommitDate: Tue Feb 10 11:15:52 2015 +0000
     
     [breaking-change]
 
+commit 605225a366b62f29f5fd4b03cc298fff03bc3bdf
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Feb 6 14:47:55 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Mon Feb 9 15:58:13 2015 -0800
+
+    std: Rename IntoIterator::Iter to IntoIter
+    
+    This is in preparation for stabilization of the `IntoIterator` trait. All
+    implementations and references to `Iter` need to be renamed to `IntoIter`.
+    
+    [breaking-change]
+
+commit 64a4decec779ee0a30585a12352d20a54b722506
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Feb 6 14:47:09 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Mon Feb 9 15:58:13 2015 -0800
+
+    std: Remove typarms from IteratorExt::cloned
+    
+    With associated types an where clauses none of the type parameters are
+    necessary.
+    
+    [breaking-change]
+
 commit 93b642d9743edea728ef08b2d6fd17229caaad43
 Author:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
 AuthorDate: Fri Feb 6 13:56:38 2015 -0800
@@ -2913,45 +2939,6 @@ Commit:     Corey Farwell &lt;coreyf@rwell.org&gt;
 CommitDate: Wed Dec 31 19:28:01 2014 -0800
 
     Remove core::iter::MinMaxResult::* public reexport
-    
-    Part of #19253
-    
-    [breaking-change]
-
-commit a6f5b980cc44621efeed847e8d359f3b90c29080
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Dec 31 15:10:45 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Dec 31 16:05:00 2014 -0800
-
-    rustc: Re-jigger -L and -l for MSYS compatibility
-    
-    As discovered in #20376, the MSYS shell will silently rewrite arguemnts that
-    look like unix paths into their windows path counterparts for compatibility, but
-    the recently added `:kind` syntax added to the `-L` flag does not allow for this
-    form of rewriting. This means that the syntax can be difficult to use at an MSYS
-    prompt, as well as causing tests to fail when run manuall right now.
-    
-    This commit takes the other option presented in the original issue to prefix the
-    path with `kind=` instead of suffixing it with `:kind`. For consistence, the
-    `-l` flag is also now migrating to `kind=name`.
-    
-    This is a breaking change due to the *removal* of behavior with `-L`. All code
-    using `:kind` should now pass `kind=` for `-L` arguments. This is not currently,
-    but will become, a breaking change for `-l` flags. The old `name:kind` syntax is
-    still accepted, but all code should update to `kind=name`.
-    
-    [breaking-change]
-    Closes #20376
-
-commit 38f9805f11721d854a59818e0ad7b8a0b6282301
-Merge: 04f4221 1d26fb9
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Dec 30 16:26:22 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Dec 30 16:26:22 2014 -0800
-
-    rollup merge of #20348: frewsxcv/rm-reexports
     
     Part of #19253
     
