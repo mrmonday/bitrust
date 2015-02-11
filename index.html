@@ -1,6 +1,22 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 105f70b50097a5776ef0d1a6da6753c25d191aa6
+Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+AuthorDate: Tue Feb 10 22:49:56 2015 +0100
+Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+CommitDate: Wed Feb 11 11:47:05 2015 +0100
+
+    Add `box_patterns` feature gate.
+    
+    Switch feature-gate checker from `box_syntax` to `box_patterns` when
+    visiting a pattern.
+    
+    (Having to opt into both `box_syntax` and `box_patterns` seemed
+    unnecessary.)
+    
+    [breaking-change]
+
 commit 94c06a1be0ccfcf1a8e105fc98d126de372dbd40
 Merge: de8bc44 1aedc45
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2931,16 +2947,4 @@ CommitDate: Thu Jan 1 04:01:02 2015 +0000
     
     r? @alexcrichton or @aturon
     cc @nikomatsakis
-
-commit f9ce6f5ba458d6a3d4e63b282bac43a18e90aeb0
-Author:     Corey Farwell &lt;coreyf@rwell.org&gt;
-AuthorDate: Wed Dec 31 19:10:43 2014 -0800
-Commit:     Corey Farwell &lt;coreyf@rwell.org&gt;
-CommitDate: Wed Dec 31 19:28:01 2014 -0800
-
-    Remove core::iter::MinMaxResult::* public reexport
-    
-    Part of #19253
-    
-    [breaking-change]
 </pre></body></html>
