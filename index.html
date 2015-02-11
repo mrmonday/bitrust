@@ -17,6 +17,36 @@ CommitDate: Wed Feb 11 11:47:05 2015 +0100
     
     [breaking-change]
 
+commit e02b6d17486ecef8541d03bb6a38c52d1a35b339
+Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+AuthorDate: Mon Oct 27 12:55:16 2014 +0100
+Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+CommitDate: Wed Feb 11 08:50:27 2015 +0100
+
+    destructor checker (dropck).
+    
+    Largely adapted from pcwalton's original branch, with following
+    notable modifications:
+    
+    Use `regionck::type_must_outlive` to generate `SafeDestructor`
+    constraints.  (this plugged some soundness holes in the analysis).
+    
+    Avoid exponential time blowup on compile-fail/huge-struct.rs by
+    keeping the breadcrumbs until end of traversal.
+    
+    Avoid premature return from regionck::visit_expr.
+    
+    Factored drop-checking code out into dropck module.
+    
+    Added `SafeDestructor` to enum `SubregionOrigin` (for error reporting).
+    
+    ----
+    
+    Since this imposes restrictions on the lifetimes used in types with
+    destructors, this is a (wait for it)
+    
+    [breaking-change]
+
 commit 94c06a1be0ccfcf1a8e105fc98d126de372dbd40
 Merge: de8bc44 1aedc45
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2919,32 +2949,4 @@ CommitDate: Thu Jan 1 07:06:46 2015 -0500
     Closes #18102
     
     [breaking-change]
-
-commit 47b8479e73e40395f1b1b2d0c6281f28f80301e4
-Merge: 7d4f487 10bbf69
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Thu Jan 1 04:01:02 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Thu Jan 1 04:01:02 2015 +0000
-
-    auto merge of #20363 : japaric/rust/moar-uc, r=nmatsakis
-    
-    The the last argument of the `ItemDecorator::expand` method has changed to `Box&lt;FnMut&gt;`. Syntax extensions will break.
-    
-    [breaking-change]
-    
-    ---
-    
-    This PR removes pretty much all the remaining uses of boxed closures from the libraries. There are still boxed closures under the `test` directory, but I think those should be removed or replaced with unboxed closures at the same time we remove boxed closures from the language.
-    
-    In a few places I had to do some contortions (see the first commit for an example) to work around issue #19596. I have marked those workarounds with FIXMEs. In the future when `&amp;mut F where F: FnMut` implements the `FnMut` trait, we should be able to remove those workarounds. I've take care to avoid placing the workaround functions in the public API.
-    
-    Since `let f = || {}` always gets type checked as a boxed closure, I have explictly annotated those closures (with e.g. `|&amp;:| {}`) to force the compiler to type check them as unboxed closures.
-    
-    Instead of removing the type aliases (like `GetCrateDataCb`), I could have replaced them with newtypes. But this seemed like overcomplicating things for little to no gain.
-    
-    I think we should be able to remove the boxed closures from the languge after this PR lands. (I'm being optimistic here)
-    
-    r? @alexcrichton or @aturon
-    cc @nikomatsakis
 </pre></body></html>
