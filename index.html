@@ -1,6 +1,113 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 9492275106dd4d564a036517ff4726feacaf0720
+Merge: 43a2004 a828e79
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Wed Feb 11 14:02:24 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Feb 11 14:02:24 2015 -0800
+
+    rollup merge of #22188: alexcrichton/envv2
+    
+    This commit tweaks the interface of the `std::env` module to make it more
+    ergonomic for common usage:
+    
+    * `env::var` was renamed to `env::var_os`
+    * `env::var_string` was renamed to `env::var`
+    * `env::args` was renamed to `env::args_os`
+    * `env::args` was re-added as a panicking iterator over string values
+    * `env::vars` was renamed to `env::vars_os`
+    * `env::vars` was re-added as a panicking iterator over string values.
+    
+    This should make common usage (e.g. unicode values everywhere) more ergonomic
+    as well as "the default". This is also a breaking change due to the differences
+    of what's yielded from each of these functions, but migration should be fairly
+    easy as the defaults operate over `String` which is a common type to use.
+    
+    [breaking-change]
+
+commit a828e7948069f310dc5b33be8edb65e5e8e0cf9a
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Wed Feb 11 11:47:53 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Feb 11 13:46:35 2015 -0800
+
+    std: Tweak the std::env OsString/String interface
+    
+    This commit tweaks the interface of the `std::env` module to make it more
+    ergonomic for common usage:
+    
+    * `env::var` was renamed to `env::var_os`
+    * `env::var_string` was renamed to `env::var`
+    * `env::args` was renamed to `env::args_os`
+    * `env::args` was re-added as a panicking iterator over string values
+    * `env::vars` was renamed to `env::vars_os`
+    * `env::vars` was re-added as a panicking iterator over string values.
+    
+    This should make common usage (e.g. unicode values everywhere) more ergonomic
+    as well as "the default". This is also a breaking change due to the differences
+    of what's yielded from each of these functions, but migration should be fairly
+    easy as the defaults operate over `String` which is a common type to use.
+    
+    [breaking-change]
+
+commit bbbb571fee01532f63b105150654db8db0b01bf7
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Mon Feb 9 16:33:19 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Feb 11 12:14:59 2015 -0800
+
+    rustc: Fix a number of stability lint holes
+    
+    There are a number of holes that the stability lint did not previously cover,
+    including:
+    
+    * Types
+    * Bounds on type parameters on functions and impls
+    * Where clauses
+    * Imports
+    * Patterns (structs and enums)
+    
+    These holes have all been fixed by overriding the `visit_path` function on the
+    AST visitor instead of a few specialized cases. This change also necessitated a
+    few stability changes:
+    
+    * The `collections::fmt` module is now stable (it was already supposed to be).
+    * The `thread_local::imp::Key` type is now stable (it was already supposed to
+      be).
+    * The `std::rt::{begin_unwind, begin_unwind_fmt}` functions are now stable.
+      These are required via the `panic!` macro.
+    * The `std::old_io::stdio::{println, println_args}` functions are now stable.
+      These are required by the `print!` and `println!` macros.
+    * The `ops::{FnOnce, FnMut, Fn}` traits are now `#[stable]`. This is required to
+      make bounds with these traits stable. Note that manual implementations of
+      these traits are still gated by default, this stability only allows bounds
+      such as `F: FnOnce()`.
+    
+    Additionally, the compiler now has special logic to ignore its own generated
+    `__test` module for the `--test` harness in terms of stability.
+    
+    Closes #8962
+    Closes #16360
+    Closes #20327
+    
+    [breaking-change]
+
+commit f9a1087f2730ab021d5356a5df703baeccffc020
+Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+AuthorDate: Wed Feb 11 13:57:40 2015 +0100
+Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+CommitDate: Wed Feb 11 13:57:40 2015 +0100
+
+    Feature-gate the `#[unsafe_no_drop_flag]` attribute.
+    
+    See RFC 320, "Non-zeroing dynamic drops."
+    
+    Fix #22173
+    
+    [breaking-change]
+
 commit 105f70b50097a5776ef0d1a6da6753c25d191aa6
 Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
 AuthorDate: Tue Feb 10 22:49:56 2015 +0100
@@ -2845,108 +2952,4 @@ CommitDate: Thu Jan 1 22:04:46 2015 -0800
     [breaking-change]
     
     Closes #20352
-
-commit f3a7ec7028c76b3a1c6051131328f372b068e33a
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Dec 29 15:03:01 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Jan 1 22:02:59 2015 -0800
-
-    std: Second pass stabilization of sync
-    
-    This pass performs a second pass of stabilization through the `std::sync`
-    module, avoiding modules/types that are being handled in other PRs (e.g.
-    mutexes, rwlocks, condvars, and channels).
-    
-    The following items are now stable
-    
-    * `sync::atomic`
-    * `sync::atomic::ATOMIC_BOOL_INIT` (was `INIT_ATOMIC_BOOL`)
-    * `sync::atomic::ATOMIC_INT_INIT` (was `INIT_ATOMIC_INT`)
-    * `sync::atomic::ATOMIC_UINT_INIT` (was `INIT_ATOMIC_UINT`)
-    * `sync::Once`
-    * `sync::ONCE_INIT`
-    * `sync::Once::call_once` (was `doit`)
-      * C == `pthread_once(..)`
-      * Boost == `call_once(..)`
-      * Windows == `InitOnceExecuteOnce`
-    * `sync::Barrier`
-    * `sync::Barrier::new`
-    * `sync::Barrier::wait` (now returns a `bool`)
-    * `sync::Semaphore::new`
-    * `sync::Semaphore::acquire`
-    * `sync::Semaphore::release`
-    
-    The following items remain unstable
-    
-    * `sync::SemaphoreGuard`
-    * `sync::Semaphore::access` - it's unclear how this relates to the poisoning
-                                  story of mutexes.
-    * `sync::TaskPool` - the semantics of a failing task and whether a thread is
-                         re-attached to a thread pool are somewhat unclear, and the
-                         utility of this type in `sync` is question with respect to
-                         the jobs of other primitives. This type will likely become
-                         stable or move out of the standard library over time.
-    * `sync::Future` - futures as-is have yet to be deeply re-evaluated with the
-                       recent core changes to Rust's synchronization story, and will
-                       likely become stable in the future but are unstable until
-                       that time comes.
-    
-    [breaking-change]
-
-commit d45b5d2ed9b43b3ad573482fb8820a382f20289e
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Tue Dec 30 19:55:06 2014 +1300
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Fri Jan 2 10:28:19 2015 +1300
-
-    Disallow [_, ..n] syntax for fixed length arrays and repeating array constructors
-    
-    Closes #19999
-    
-    [breaking-change]
-    
-    Use [_; n] instead.
-
-commit 39d74026663597a8d4ad0ab04e6d117bf9fd6ad4
-Merge: c594959 41da99d
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Thu Jan 1 15:51:08 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Thu Jan 1 15:51:08 2015 +0000
-
-    auto merge of #20190 : cmr/rust/gate-macro-args, r=alexcrichton
-    
-    Uses the same approach as https://github.com/rust-lang/rust/pull/17286 (and
-    subsequent changes making it more correct), where the visitor will skip any
-    pieces of the AST that are from "foreign code", where the spans don't line up,
-    indicating that that piece of code is due to a macro expansion.
-    
-    If this breaks your code, read the error message to determine which feature
-    gate you should add to your crate.
-    
-    Closes #18102
-    
-    [breaking-change]
-
-commit 41da99dff417eadf8f296a93529d9810f79e1d1b
-Author:     Corey Richardson &lt;corey@octayn.net&gt;
-AuthorDate: Wed Dec 24 00:44:13 2014 -0500
-Commit:     Corey Richardson &lt;corey@octayn.net&gt;
-CommitDate: Thu Jan 1 07:06:46 2015 -0500
-
-    Feature gate macro arguments
-    
-    Uses the same approach as https://github.com/rust-lang/rust/pull/17286 (and
-    subsequent changes making it more correct), where the visitor will skip any
-    pieces of the AST that are from "foreign code", where the spans don't line up,
-    indicating that that piece of code is due to a macro expansion.
-    
-    If this breaks your code, read the error message to determine which feature
-    gate you should add to your crate, and bask in the knowledge that your code
-    won't mysteriously break should you try to use the 1.0 release.
-    
-    Closes #18102
-    
-    [breaking-change]
 </pre></body></html>
