@@ -1,6 +1,57 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 32d0dbd49a372b9d2e000587497de6ffca9e1cca
+Author:     Kevin Butler &lt;haqkrs@gmail.com&gt;
+AuthorDate: Fri Nov 14 15:14:52 2014 -0800
+Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+CommitDate: Thu Feb 12 13:55:08 2015 +0100
+
+    librustc: Forbid partial reinitialization of uninitialized structures or
+    enumerations that implement the `Drop` trait.
+    
+    This breaks code like:
+    
+        struct Struct {
+            f: String,
+            g: String,
+        }
+    
+        impl Drop for Struct { ... }
+    
+        fn main() {
+            let x = Struct { ... };
+            drop(x);
+            x.f = ...;
+        }
+    
+    Change this code to not create partially-initialized structures. For
+    example:
+    
+        struct Struct {
+            f: String,
+            g: String,
+        }
+    
+        impl Drop for Struct { ... }
+    
+        fn main() {
+            let x = Struct { ... };
+            drop(x);
+            x = Struct {
+                f: ...,
+                g: ...,
+            }
+        }
+    
+    Closes #18571.
+    
+    [breaking-change]
+    
+    ----
+    
+    (Joint authorship by pcwalton and Ryman; thanks all!)
+
 commit 9492275106dd4d564a036517ff4726feacaf0720
 Merge: 43a2004 a828e79
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2919,37 +2970,4 @@ CommitDate: Thu Jan 1 22:31:53 2015 -0800
     need to remove the import in their modules.
     
     [breaking-change]
-
-commit e423fcf0e0166da55f88233e0be5eacba55bc0bc
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Dec 12 10:59:41 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Jan 1 22:04:46 2015 -0800
-
-    std: Enforce Unicode in fmt::Writer
-    
-    This commit is an implementation of [RFC 526][rfc] which is a change to alter
-    the definition of the old `fmt::FormatWriter`. The new trait, renamed to
-    `Writer`, now only exposes one method `write_str` in order to guarantee that all
-    implementations of the formatting traits can only produce valid Unicode.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0526-fmt-text-writer.md
-    
-    One of the primary improvements of this patch is the performance of the
-    `.to_string()` method by avoiding an almost-always redundant UTF-8 check. This
-    is a breaking change due to the renaming of the trait as well as the loss of the
-    `write` method, but migration paths should be relatively easy:
-    
-    * All usage of `write` should move to `write_str`. If truly binary data was
-      being written in an implementation of `Show`, then it will need to use a
-      different trait or an altogether different code path.
-    
-    * All usage of `write!` should continue to work as-is with no modifications.
-    
-    * All usage of `Show` where implementations just delegate to another should
-      continue to work as-is.
-    
-    [breaking-change]
-    
-    Closes #20352
 </pre></body></html>
