@@ -1,6 +1,20 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit cf636c233dfeef5abf0de8fb35e23c0a161810d2
+Merge: ba2efe9 8ed58d8
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Feb 13 07:44:41 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Feb 13 07:44:41 2015 +0000
+
+    Auto merge of #22093 - petrochenkov:builtin, r=pnkfelix
+    
+    Names of structs, enums, traits, type aliases and type parameters (i.e. all identifiers that can be used as full paths in type position) are not allowed to match the names of primitive types.
+    See #20427 for more information.
+    
+    This is a minor [breaking-change]
+
 commit 32d0dbd49a372b9d2e000587497de6ffca9e1cca
 Author:     Kevin Butler &lt;haqkrs@gmail.com&gt;
 AuthorDate: Fri Nov 14 15:14:52 2014 -0800
@@ -2947,27 +2961,4 @@ CommitDate: Fri Jan 2 04:06:09 2015 -0500
     temporarily disable this rule in your crate by using
     `#![feature(old_orphan_check)]`. Note that the `old_orphan_check`
     feature will be removed before 1.0 is released.
-
-commit f2ccdfd8914b7b8f8f8f2053f9ecd98d54ef95a6
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Thu Jan 1 22:24:06 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Jan 1 22:31:53 2015 -0800
-
-    std: Second pass stabilization for `boxed`
-    
-    This commit performs a second pass over the `std::boxed` module, taking the
-    following actions:
-    
-    * `boxed` is now stable
-    * `Box` is now stable
-    * `BoxAny` is removed in favor of a direct `impl Box&lt;Any&gt;`
-    * `Box::downcast` remains unstable while the name of the `downcast` family of
-      methods is determined.
-    
-    This is a breaking change due to the removal of the `BoxAny` trait (note that
-    the `downcast` method still exists), and existing consumers of `BoxAny` simply
-    need to remove the import in their modules.
-    
-    [breaking-change]
 </pre></body></html>
