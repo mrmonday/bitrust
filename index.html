@@ -1,6 +1,22 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit b63cee4a11fcfecf20ed8419bc3bd6859e6496bc
+Merge: 3d1c1ad 07d00de
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Feb 14 17:01:11 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Feb 14 17:01:11 2015 +0000
+
+    Auto merge of #22158 - Kimundi:the_lonely_uppercase_keyword, r=pnkfelix
+    
+    It is only allowed in paths now, where it will either work inside a `trait`
+    or `impl` item, or not resolve outside of it.
+    
+    [breaking-change]
+    
+    Closes #22137
+
 commit cf636c233dfeef5abf0de8fb35e23c0a161810d2
 Merge: ba2efe9 8ed58d8
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -14,6 +30,21 @@ CommitDate: Fri Feb 13 07:44:41 2015 +0000
     See #20427 for more information.
     
     This is a minor [breaking-change]
+
+commit 07d00deab22dc07ffc58b8e74d45596242ca8b15
+Author:     Marvin Löbel &lt;loebel.marvin@gmail.com&gt;
+AuthorDate: Tue Feb 10 14:55:45 2015 +0100
+Commit:     Marvin Löbel &lt;loebel.marvin@gmail.com&gt;
+CommitDate: Thu Feb 12 22:04:31 2015 +0100
+
+    Made `Self` a keyword.
+    
+    It is only allowed in paths now, where it will either work inside a `trait`
+    or `impl` item, or not resolve outside of it.
+    
+    [breaking-change]
+    
+    Closes #22137
 
 commit 32d0dbd49a372b9d2e000587497de6ffca9e1cca
 Author:     Kevin Butler &lt;haqkrs@gmail.com&gt;
@@ -2892,73 +2923,4 @@ CommitDate: Fri Jan 2 23:05:22 2015 +1300
     [breaking-change]
     
     `deriving is still accepted, but gives a deprecation warning
-
-commit 74d11d26f4042ce04c56edfd6caafa003383147d
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Wed Dec 31 17:24:42 2014 +1300
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Fri Jan 2 23:05:22 2015 +1300
-
-    Accept `self` in place of `mod` in use items
-    
-    [breaking-change]
-    
-    `mod` is still accepted, but gives a deprecated warning
-
-commit c61a0092bc236c4be4cb691fcd50ff50e91ab0d6
-Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-AuthorDate: Fri Dec 26 03:30:51 2014 -0500
-Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-CommitDate: Fri Jan 2 04:06:09 2015 -0500
-
-    Fix orphan checking (cc #19470). (This is not a complete fix of #19470 because of the backwards compatibility feature gate.)
-    
-    This is a [breaking-change]. The new rules require that, for an impl of a trait defined
-    in some other crate, two conditions must hold:
-    
-    1. Some type must be local.
-    2. Every type parameter must appear "under" some local type.
-    
-    Here are some examples that are legal:
-    
-    ```rust
-    struct MyStruct&lt;T&gt; { ... }
-    
-    // Here `T` appears "under' `MyStruct`.
-    impl&lt;T&gt; Clone for MyStruct&lt;T&gt; { }
-    
-    // Here `T` appears "under' `MyStruct` as well. Note that it also appears
-    // elsewhere.
-    impl&lt;T&gt; Iterator&lt;T&gt; for MyStruct&lt;T&gt; { }
-    ```
-    
-    Here is an illegal example:
-    
-    ```rust
-    // Here `U` does not appear "under" `MyStruct` or any other local type.
-    // We call `U` "uncovered".
-    impl&lt;T,U&gt; Iterator&lt;U&gt; for MyStruct&lt;T&gt; { }
-    ```
-    
-    There are a couple of ways to rewrite this last example so that it is
-    legal:
-    
-    1. In some cases, the uncovered type parameter (here, `U`) should be converted
-       into an associated type. This is however a non-local change that requires access
-       to the original trait. Also, associated types are not fully baked.
-    2. Add `U` as a type parameter of `MyStruct`:
-       ```rust
-       struct MyStruct&lt;T,U&gt; { ... }
-       impl&lt;T,U&gt; Iterator&lt;U&gt; for MyStruct&lt;T,U&gt; { }
-       ```
-    3. Create a newtype wrapper for `U`
-       ```rust
-       impl&lt;T,U&gt; Iterator&lt;Wrapper&lt;U&gt;&gt; for MyStruct&lt;T,U&gt; { }
-       ```
-    
-    Because associated types are not fully baked, which in the case of the
-    `Hash` trait makes adhering to this rule impossible, you can
-    temporarily disable this rule in your crate by using
-    `#![feature(old_orphan_check)]`. Note that the `old_orphan_check`
-    feature will be removed before 1.0 is released.
 </pre></body></html>
