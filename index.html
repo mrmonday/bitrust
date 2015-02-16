@@ -1,6 +1,46 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit f58a1bfa981eee4ba4d4c3c801f94772e4ab0019
+Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+AuthorDate: Thu Feb 12 10:41:47 2015 -0500
+Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+CommitDate: Mon Feb 16 10:55:37 2015 -0500
+
+    Fix fallout in libsyntax from RFC 599. Clarity and efficiency seems to be mostly improved, to my eye.
+    Nonetheless, as this commit demonstrates, the previous commits was a [breaking-change].
+    
+    In practice, breakage is focused on functions of this form:
+    
+    ```rust
+    fn foo(..., object: Box&lt;FnMut()&gt;)
+    ````
+    
+    where `FnMut()` could be any trait object type. The older scheme defaulted objects in argument
+    position so that they were bounded by a fresh lifetime:
+    
+    ```rust
+    fn foo&lt;'a&gt;(..., object: Box&lt;FnMut()+'a&gt;)
+    ```
+    
+    This meant that the object could contain borrowed data. The newer
+    scheme defaults to a lifetime bound of `'static`:
+    
+    ```rust
+    fn foo(..., object: Box&lt;FnMut()+'static&gt;)
+    ```
+    
+    This means that the object cannot contain borrowed data. In some cases, the best fix
+    is to stop using `Box`:
+    
+    ```rust
+    fn foo(..., object: &amp;mut FnMut())
+    ```
+    
+    but another option is to write an explicit annotation for the `'a`
+    lifetime that used to be implicit.  Both fixes are demonstrated in
+    this commit.
+
 commit 16b24f15bd042c4f97e1d4826d82c992c0228684
 Merge: ed728ec dcd4cef
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2854,32 +2894,6 @@ Commit:     bors &lt;bors@rust-lang.org&gt;
 CommitDate: Mon Jan 5 14:51:03 2015 +0000
 
     auto merge of #20514 : alexcrichton/rust/serialize-associated-type, r=aturon
-    
-    This commit moves the libserialize crate (and will force the hand of the
-    rustc-serialize crate) to not require the `old_orphan_check` feature gate as
-    well as using associated types wherever possible. Concretely, the following
-    changes were made:
-    
-    * The error type of `Encoder` and `Decoder` is now an associated type, meaning
-      that these traits have no type parameters.
-    
-    * The `Encoder` and `Decoder` type parameters on the `Encodable` and `Decodable`
-      traits have moved to the corresponding method of the trait. This movement
-      alleviates the dependency on `old_orphan_check` but implies that
-      implementations can no longer be specialized for the type of encoder/decoder
-      being implemented.
-    
-    Due to the trait definitions changing, this is a:
-    
-    [breaking-change]
-
-commit 0cb7a4062a3c69bb0c54f0c9136889a1006e4f62
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Sat Jan 3 22:24:50 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Sun Jan 4 22:59:26 2015 -0800
-
-    serialize: Use assoc types + less old_orphan_check
     
     This commit moves the libserialize crate (and will force the hand of the
     rustc-serialize crate) to not require the `old_orphan_check` feature gate as
