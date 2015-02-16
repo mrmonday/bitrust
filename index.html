@@ -1,6 +1,105 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 16b24f15bd042c4f97e1d4826d82c992c0228684
+Merge: ed728ec dcd4cef
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sun Feb 15 18:36:20 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sun Feb 15 18:42:48 2015 +0530
+
+    Rollup merge of #22285 - kmcallister:pub-macro, r=nick29581
+    
+     It's not clear what this means, because a macro in item position can expand to zero or more items.  For now we disallow it, which is technically a
+    
+        [breaking-change]
+    
+    but is landing without an RFC.  The `pub` keyword previously had no effect, which seems quite unintended.
+    
+    Fixes #18317.
+    Fixes #14660.
+
+commit f7870b6faa43a9e63b5575d5d9663457003a8ac5
+Merge: 8acaaa9 b1cd769
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sun Feb 15 18:34:18 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sun Feb 15 18:42:47 2015 +0530
+
+    Rollup merge of #22339 - petrochenkov:int, r=huonw
+    
+     Some function signatures have changed, so this is a [breaking-change].
+    In particular, radixes and numerical values of digits are represented by `u32` now.
+    
+    Part of #22240
+
+commit 1b86ebe25751268aa39ef2ad5e2b0e650a6f0291
+Merge: 0f66e31 b19fda0
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sun Feb 15 18:30:56 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sun Feb 15 18:42:44 2015 +0530
+
+    Rollup merge of #22299 - bluss:range-64-is-not-exact-size, r=alexcrichton
+    
+     Fixes #22047
+    
+    `Range&lt;u64&gt;` and `Range&lt;i64&gt;` may be longer than usize::MAX on 32-bit
+    platforms, and thus they cannot fulfill the protocol for
+    ExactSizeIterator. We don't want a nonobvious platform dependency in
+    basic iterator traits, so the trait impl is removed.
+    
+    The logic of this change assumes that usize is at least 32-bit.
+    
+    This is technically a breaking change; note that `Range&lt;usize&gt;` and
+    `Range&lt;isize&gt;` are always ExactSizeIterators.
+    
+    [breaking-change]
+
+commit da1a1f515fbedb32cfd954e2dc9cbf93a02453c8
+Merge: d014548 e4a9eb9
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sun Feb 15 18:25:40 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sun Feb 15 18:25:40 2015 +0530
+
+    Rollup merge of #22254 - huonw:float-value--, r=aturon
+    
+     In `std::f32` and `std::f64`:
+    
+    - `MIN_VALUE` → `MIN`
+    - `MAX_VALUE` → `MAX`
+    - `MIN_POS_VALUE` → `MIN_POSITIVE`
+    
+    This matches the corresponding integer constants.
+    
+    [breaking-change]
+
+commit 8cc3fbd41dddbb11f442a17902cd0d276aa22566
+Merge: 63091ef 7a52932
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sun Feb 15 18:22:31 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sun Feb 15 18:22:31 2015 +0530
+
+    Rollup merge of #22218 - huonw:raw-docs, r=steveklabnik,huonw
+    
+    This overhauls the very meager docs that currently exist to clarify
+    various understandable confusions that I've noticed, e.g. people look in
+    `std::raw` for the "real" types of slices like `&amp;[T]`, or think that
+    `Slice&lt;T&gt;` refers to `[T]` (fixes #22214).
+    
+    This patch takes the liberty of offering some "style" guidance around
+    `raw::Slice`, since there's more restricted ways to duplicate all
+    functionality connected to it: `std::slice::from_raw_parts{,_mut}` for
+    construction and `.as_{,mut_}ptr` &amp; `.len` for deconstruction.
+    
+    It also deprecates the `std::raw::Closure` type which is now useless for
+    non-type-erased closures, and replaced by `TraitObject` for `&amp;Fn`, `&amp;mut
+    FnMut` etc, so I guess it should be called a:
+    
+    [breaking-change]
+
 commit b63cee4a11fcfecf20ed8419bc3bd6859e6496bc
 Merge: 3d1c1ad 07d00de
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -17,6 +116,89 @@ CommitDate: Sat Feb 14 17:01:11 2015 +0000
     
     Closes #22137
 
+commit 7a52932f4cd65f57bcc8d77f12e32066b2a9c432
+Author:     Ulrik Sverdrup &lt;root@localhost&gt;
+AuthorDate: Fri Feb 13 20:31:09 2015 +0100
+Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+CommitDate: Sat Feb 14 11:32:42 2015 +1100
+
+    Make std::raw::Repr an unsafe trait
+    
+    The default implementation of .repr() will call conveniently call
+    transmute_copy which should be appropriate for all implementors, but is
+    memory unsafe if used wrong.
+    
+    Fixes #22260
+    
+    You need to use `unsafe impl` to implement the Repr trait now.
+    
+    [breaking-change]
+
+commit 5e3ae102dbeeb646e8c7d2d423cea263337a76af
+Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+AuthorDate: Thu Feb 12 22:50:44 2015 +1100
+Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+CommitDate: Sat Feb 14 11:32:08 2015 +1100
+
+    Dramatically expand the docs of std::raw.
+    
+    This overhauls the very meager docs that currently exist to clarify
+    various understandable confusions that I've noticed, e.g. people look in
+    `std::raw` for the "real" types of slices like `&amp;[T]`, or think that
+    `Slice&lt;T&gt;` refers to `[T]` (fixes #22214).
+    
+    This patch takes the liberty of offering some "style" guidance around
+    `raw::Slice`, since there's more restricted ways to duplicate all
+    functionality connected to it: `std::slice::from_raw_parts{,_mut}` for
+    construction and `.as_{,mut_}ptr` &amp; `.len` for deconstruction.
+    
+    It also deprecates the `std::raw::Closure` type which is now useless for
+    non-type-erased closures, and replaced by `TraitObject` for `&amp;Fn`, `&amp;mut
+    FnMut` etc, so I guess it should be called a:
+    
+    [breaking-change]
+
+commit dcd4cef119dc2fdac43b86cfb3694756d8c23f9f
+Author:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
+AuthorDate: Thu Feb 12 20:43:57 2015 -0800
+Commit:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
+CommitDate: Fri Feb 13 13:48:09 2015 -0800
+
+    Forbid `pub mymacro!();`
+    
+    It's not clear what this means, because a macro in item position can expand to
+    zero or more items.  For now we disallow it, which is technically a
+    
+        [breaking-change]
+    
+    but is landing without an RFC.  The `pub` keyword previously had no effect,
+    which seems quite unintended.
+    
+    Fixes #18317.
+    Fixes #14660.
+
+commit b19fda0ceb820af57f00976951dba95a3c0419aa
+Author:     Ulrik Sverdrup &lt;root@localhost&gt;
+AuthorDate: Fri Feb 13 21:20:16 2015 +0100
+Commit:     Ulrik Sverdrup &lt;root@localhost&gt;
+CommitDate: Fri Feb 13 21:26:50 2015 +0100
+
+    Remove ExactSizeIterator from 64-bit ranges.
+    
+    Fixes #22047
+    
+    Range&lt;u64&gt; and Range&lt;i64&gt; may be longer than usize::MAX on 32-bit
+    platforms, and thus they cannot fulfill the protocol for
+    ExactSizeIterator. We don't want a nonobvious platform dependency in
+    basic iterator traits, so the trait impl is removed.
+    
+    The logic of this change assumes that usize is at least 32-bit.
+    
+    This is technically a breaking change; note that Range&lt;usize&gt; and
+    Range&lt;isize&gt; are always ExactSizeIterators.
+    
+    [breaking-change]
+
 commit cf636c233dfeef5abf0de8fb35e23c0a161810d2
 Merge: ba2efe9 8ed58d8
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -30,6 +212,24 @@ CommitDate: Fri Feb 13 07:44:41 2015 +0000
     See #20427 for more information.
     
     This is a minor [breaking-change]
+
+commit e4a9eb95ce4a457e800571d86942561ada28304a
+Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+AuthorDate: Fri Feb 13 14:40:57 2015 +1100
+Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+CommitDate: Fri Feb 13 14:40:57 2015 +1100
+
+    Remove `_VALUE` from the float extremes constants.
+    
+    In `std::f32` and `std::f64`:
+    
+    - `MIN_VALUE` → `MIN`
+    - `MAX_VALUE` → `MAX`
+    - `MIN_POS_VALUE` → `MIN_POSITIVE`
+    
+    This matches the corresponding integer constants.
+    
+    [breaking-change]
 
 commit 07d00deab22dc07ffc58b8e74d45596242ca8b15
 Author:     Marvin Löbel &lt;loebel.marvin@gmail.com&gt;
@@ -2698,229 +2898,4 @@ CommitDate: Sun Jan 4 22:59:26 2015 -0800
     Due to the trait definitions changing, this is a:
     
     [breaking-change]
-
-commit bf6c007760169e9c382d3700fd1cdd20037e4343
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Fri Dec 5 15:56:25 2014 -0800
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Mon Jan 5 16:14:17 2015 +1100
-
-    Change `&amp;` pat to only work with &amp;T, and `&amp;mut` with &amp;mut T.
-    
-    This implements RFC 179 by making the pattern `&amp;&lt;pat&gt;` require matching
-    against a variable of type `&amp;T`, and introducing the pattern `&amp;mut
-    &lt;pat&gt;` which only works with variables of type `&amp;mut T`.
-    
-    The pattern `&amp;mut x` currently parses as `&amp;(mut x)` i.e. a pattern match
-    through a `&amp;T` or a `&amp;mut T` that binds the variable `x` to have type
-    `T` and to be mutable. This should be rewritten as follows, for example,
-    
-        for &amp;mut x in slice.iter() {
-    
-    becomes
-    
-        for &amp;x in slice.iter() {
-            let mut x = x;
-    
-    Due to this, this is a
-    
-    [breaking-change]
-    
-    Closes #20496.
-
-commit 0302d379776fca82d3eb693046239dc66998f691
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Tue Dec 30 13:58:31 2014 +1100
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Mon Jan 5 12:30:51 2015 +1100
-
-    Merge `UnicodeChar` and `CharExt`.
-    
-    This "reexports" all the functionality of `core::char::CharExt` as
-    methods on `unicode::u_char::UnicodeChar` (renamed to `CharExt`).
-    
-    Imports may need to be updated (one now just imports
-    `unicode::CharExt`, or `std::char::CharExt` rather than two traits from
-    either), so this is a
-    
-    [breaking-change]
-
-commit 19120209d8e532514203d16a2cff0ad3b44de3bb
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Tue Dec 30 13:53:20 2014 +1100
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Mon Jan 5 12:30:30 2015 +1100
-
-    Rename `core::char::Char` to `CharExt` to match prelude guidelines.
-    
-    Imports may need to be updated so this is a
-    
-    [breaking-change]
-
-commit c6c786671d692d7b13c2e5c68a53001327b4b125
-Merge: 496dc4e ce8f748
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sun Jan 4 00:50:59 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sun Jan 4 00:50:59 2015 +0000
-
-    auto merge of #20490 : japaric/rust/assoc-types, r=aturon
-    
-    closes #20486
-    closes #20474
-    closes #20441
-    
-    [breaking-change]
-    
-    The `Index[Mut]` traits now have one less input parameter, as the return type of the indexing operation is an associated type. This breaks all existing implementations.
-    
-    ---
-    
-    binop traits (`Add`, `Sub`, etc) now have an associated type for their return type. Also, the RHS input parameter now defaults to `Self` (except for the `Shl` and `Shr` traits). For example, the `Add` trait now looks like this:
-    
-    ``` rust
-    trait Add&lt;Rhs=Self&gt; {
-        type Output;
-    
-        fn add(self, Rhs) -&gt; Self::Output;
-    }
-    ```
-    
-    The `Neg` and `Not` traits now also have an associated type for their return type.
-    
-    This breaks all existing implementations of these traits.
-    
-    ---
-    Affected traits:
-    
-    - `Iterator { type Item }`
-    - `IteratorExt` no input/output types, uses `&lt;Self as Iterator&gt;::Item` in its methods
-    - `DoubleEndedIterator` no input/output types, uses `&lt;Self as Iterator&gt;::Item` in its methods
-    - `DoubleEndedIteratorExt` no input/output types, uses `&lt;Self as Iterator&gt;::Item` in its methods
-    - `RandomAccessIterator` no input/output types
-    - `ExactSizeIterator` no input/output types, uses `&lt;Self as Iterator&gt;::Item` in its methods
-    
-    This breaks all the implementations of these traits.
-
-commit f031285c3a76b86525695bbb5b46daa9e77df200
-Author:     Corey Farwell &lt;coreyf@rwell.org&gt;
-AuthorDate: Fri Jan 2 19:31:50 2015 -0800
-Commit:     Corey Farwell &lt;coreyf@rwell.org&gt;
-CommitDate: Fri Jan 2 19:35:56 2015 -0800
-
-    Remove graphviz::LabelText::* public reexport
-    
-    Part of #19253
-    
-    [breaking-change]
-
-commit 9c3e6082e71618c088afd93f7a4a9a7708c9dcbd
-Merge: a6b1097 d9769ec
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sat Jan 3 03:25:21 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sat Jan 3 03:25:21 2015 +0000
-
-    auto merge of #20154 : P1start/rust/qualified-assoc-type-generics, r=nikomatsakis
-    
-    This modifies `Parser::eat_lt` to always split up `&lt;&lt;`s, instead of doing so only when a lifetime name followed or the `force` parameter (now removed) was `true`. This is because `Foo&lt;&lt;TYPE` is now a valid start to a type, whereas previously only `Foo&lt;&lt;LIFETIME` was valid.
-    
-    This is a [breaking-change]. Change code that looks like this:
-    
-    ```rust
-    let x = foo as bar &lt;&lt; 13;
-    ```
-    
-    to use parentheses, like this:
-    
-    ```rust
-    let x = (foo as bar) &lt;&lt; 13;
-    ```
-    
-    Closes #17362.
-
-commit 9ca8076cb77a7d7738162c80e1d240ef2ad0b73a
-Merge: 073fd5b f9ce6f5
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Jan 2 09:22:37 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Jan 2 09:22:37 2015 -0800
-
-    rollup merge of #20386: frewsxcv/rm-reexports
-    
-    Part of #19253
-    
-    [breaking-change]
-
-commit 56290a004493a5d2e211f056601533253497df60
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Dec 22 09:04:23 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Jan 2 08:54:06 2015 -0800
-
-    std: Stabilize the prelude module
-    
-    This commit is an implementation of [RFC 503][rfc] which is a stabilization
-    story for the prelude. Most of the RFC was directly applied, removing reexports.
-    Some reexports are kept around, however:
-    
-    * `range` remains until range syntax has landed to reduce churn.
-    * `Path` and `GenericPath` remain until path reform lands. This is done to
-      prevent many imports of `GenericPath` which will soon be removed.
-    * All `io` traits remain until I/O reform lands so imports can be rewritten all
-      at once to `std::io::prelude::*`.
-    
-    This is a breaking change because many prelude reexports have been removed, and
-    the RFC can be consulted for the exact list of removed reexports, as well as to
-    find the locations of where to import them.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0503-prelude-stabilization.md
-    [breaking-change]
-    
-    Closes #20068
-
-commit 71b46b18a274edc7f7fb60b490e5ebbb9c911462
-Merge: 1f887c8 8dbaa71
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri Jan 2 15:51:25 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri Jan 2 15:51:25 2015 +0000
-
-    auto merge of #20356 : Gankro/rust/stab, r=aturon
-    
-    This stabilizes most of libcollections, carefully avoiding sections of API which are being managed in other PRs. APIs which are not stable are marked explicitly unstable with a reason.
-    
-    Deprecates:
-    
-    * DList
-      * rotate_forward
-      * rotate_backward
-      * prepend
-      * insert_when
-      * insert_ordered
-      * merge
-    
-    * VecMap
-      * update
-      * update_with_key
-    
-    * Renames and newtypes the Bitv and BitvSet iterators to match conventions.
-    
-    * Removes the Copy impl from DList's Iter.
-    
-    as such this is a
-    
-    [breaking-change]
-
-commit 7506fe52696c5b3b628f173d74dc4a13b5ccc1f3
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Wed Dec 31 17:25:18 2014 +1300
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Fri Jan 2 23:05:22 2015 +1300
-
-    Accept `derive` instead of `deriving`
-    
-    [breaking-change]
-    
-    `deriving is still accepted, but gives a deprecation warning
 </pre></body></html>
