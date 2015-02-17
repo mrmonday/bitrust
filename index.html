@@ -1,6 +1,21 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit f9aeea7cb7865a2b82e7102837daabbe549177ea
+Merge: f1bb6c2 bc9084b
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Feb 17 15:55:55 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Feb 17 15:55:55 2015 +0000
+
+    Auto merge of #22311 - lfairy:consistent-fmt, r=alexcrichton
+    
+    This brings it in line with its namesake in `std::io`.
+    
+    [breaking-change]
+    
+    r? @aturon
+
 commit d264ef2b11683337c24cfb16e0335ab386df02ab
 Merge: e337a57 e727378
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -242,6 +257,18 @@ CommitDate: Sat Feb 14 11:32:08 2015 +1100
     It also deprecates the `std::raw::Closure` type which is now useless for
     non-type-erased closures, and replaced by `TraitObject` for `&amp;Fn`, `&amp;mut
     FnMut` etc, so I guess it should be called a:
+    
+    [breaking-change]
+
+commit bc9084b9b7f21140ffbc051ecb2a0cd08e88f3bb
+Author:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
+AuthorDate: Sat Feb 14 12:56:32 2015 +1300
+Commit:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
+CommitDate: Sat Feb 14 12:56:32 2015 +1300
+
+    Rename `fmt::Writer` to `fmt::Write`
+    
+    This brings it in line with its namesake in `std::io`.
     
     [breaking-change]
 
@@ -2882,54 +2909,4 @@ CommitDate: Mon Jan 5 14:01:05 2015 -0800
     Because of the trait merging, this is a:
     
     [breaking-change]
-
-commit ec7a50d20dff416d9fec837a6492dfe244f5f3ab
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Nov 25 13:28:35 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Jan 5 08:00:13 2015 -0800
-
-    std: Redesign c_str and c_vec
-    
-    This commit is an implementation of [RFC 494][rfc] which removes the entire
-    `std::c_vec` module and redesigns the `std::c_str` module as `std::ffi`.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0494-c_str-and-c_vec-stability.md
-    
-    The interface of the new `CString` is outlined in the linked RFC, the primary
-    changes being:
-    
-    * The `ToCStr` trait is gone, meaning the `with_c_str` and `to_c_str` methods
-      are now gone. These two methods are replaced with a `CString::from_slice`
-      method.
-    * The `CString` type is now just a wrapper around `Vec&lt;u8&gt;` with a static
-      guarantee that there is a trailing nul byte with no internal nul bytes. This
-      means that `CString` now implements `Deref&lt;Target = [c_char]&gt;`, which is where
-      it gains most of its methods from. A few helper methods are added to acquire a
-      slice of `u8` instead of `c_char`, as well as including a slice with the
-      trailing nul byte if necessary.
-    * All usage of non-owned `CString` values is now done via two functions inside
-      of `std::ffi`, called `c_str_to_bytes` and `c_str_to_bytes_with_nul`. These
-      functions are now the one method used to convert a `*const c_char` to a Rust
-      slice of `u8`.
-    
-    Many more details, including newly deprecated methods, can be found linked in
-    the RFC. This is a:
-    
-    [breaking-change]
-    Closes #20444
-
-commit c8868942e845254abfd3623a709847d65e015a2f
-Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-AuthorDate: Sat Jan 3 04:40:33 2015 -0500
-Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-CommitDate: Mon Jan 5 10:14:35 2015 -0500
-
-    Treat associated types the same as type parameters when it comes to region bounding. Fixes #20303.
-    
-    Strictly speaking, this is a [breaking-change] (if you are using
-    associated types). You are no longer free to wantonly violate the type
-    system rules by closing associated types into objects without any form
-    of region bound. Instead you should add region bounds like `T::X :
-    'a`, just as you would with a normal type parameter.
 </pre></body></html>
