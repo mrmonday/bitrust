@@ -1,6 +1,53 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit d264ef2b11683337c24cfb16e0335ab386df02ab
+Merge: e337a57 e727378
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Mon Feb 16 11:30:21 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Tue Feb 17 06:23:40 2015 +0530
+
+    Rollup merge of #22313 - japaric:iter, r=aturon
+    
+     `IntoIterator` now has an extra associated item:
+    
+    ``` rust
+    trait IntoIterator {
+        type Item;
+        type IntoIter: Iterator&lt;Self=Self::Item&gt;;
+    }
+    ```
+    
+    This lets you bind the iterator \"`Item`\" directly when writing generic functions:
+    
+    ``` rust
+    // hypothetical change, not included in this PR
+    impl Extend&lt;T&gt; for Vec&lt;T&gt; {
+        // you can now write
+        fn extend&lt;I&gt;(&amp;mut self, it: I) where I: IntoIterator&lt;Item=T&gt; { .. }
+        // instead of
+        fn extend&lt;I: IntoIterator&gt;(&amp;mut self, it: I) where I::IntoIter: Iterator&lt;Item=T&gt; { .. }
+    }
+    ```
+    
+    The downside is that now you have to write an extra associated type in your `IntoIterator` implementations:
+    
+    ``` diff
+     impl&lt;T&gt; IntoIterator for Vec&lt;T&gt; {
+    +    type Item = T;
+         type IntoIter = IntoIter&lt;T&gt;;
+    
+         fn into_iter(self) -&gt; IntoIter&lt;T&gt; { .. }
+     }
+    ```
+    
+    Because this breaks all downstream implementations of `IntoIterator`, this is a [breaking-change]
+    
+    ---
+    
+    r? @aturon
+
 commit f58a1bfa981eee4ba4d4c3c801f94772e4ab0019
 Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
 AuthorDate: Thu Feb 12 10:41:47 2015 -0500
@@ -2885,31 +2932,4 @@ CommitDate: Mon Jan 5 10:14:35 2015 -0500
     system rules by closing associated types into objects without any form
     of region bound. Instead you should add region bounds like `T::X :
     'a`, just as you would with a normal type parameter.
-
-commit 03268bbf35d3ff2350d987fe7b60375839abdf2e
-Merge: 8e83af6 0cb7a40
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Mon Jan 5 14:51:03 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Mon Jan 5 14:51:03 2015 +0000
-
-    auto merge of #20514 : alexcrichton/rust/serialize-associated-type, r=aturon
-    
-    This commit moves the libserialize crate (and will force the hand of the
-    rustc-serialize crate) to not require the `old_orphan_check` feature gate as
-    well as using associated types wherever possible. Concretely, the following
-    changes were made:
-    
-    * The error type of `Encoder` and `Decoder` is now an associated type, meaning
-      that these traits have no type parameters.
-    
-    * The `Encoder` and `Decoder` type parameters on the `Encodable` and `Decodable`
-      traits have moved to the corresponding method of the trait. This movement
-      alleviates the dependency on `old_orphan_check` but implies that
-      implementations can no longer be specialized for the type of encoder/decoder
-      being implemented.
-    
-    Due to the trait definitions changing, this is a:
-    
-    [breaking-change]
 </pre></body></html>
