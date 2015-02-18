@@ -1,6 +1,143 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit eca2453a02548042fcb7082063149367a3343dd7
+Merge: 5be2b89 4a9dd3f
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Feb 17 15:13:53 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Feb 17 15:13:53 2015 -0800
+
+    rollup merge of #22208: aturon/expose-more-path
+    
+    This commit exposes the `is_sep` function and `MAIN_SEP` constant, as
+    well as Windows path prefixes. The path prefix enum is safely exposed on
+    all platforms, but it only yielded as a component for Windows.
+    
+    Exposing the prefix enum as part of prefix components involved changing
+    the type from `OsStr` to the `Prefix` enum, which is a:
+    
+    [breaking-change]
+
+commit 5be2b8964c624ee619d2f8518215d3a3b13514e1
+Merge: 311fc36 6f5944b
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Feb 17 15:13:46 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Feb 17 15:13:46 2015 -0800
+
+    rollup merge of #22191: nagisa/target-ptr-width-json
+    
+    This aligns json target specification to match terminology used elsewhere in the code base.
+    
+    [breaking-change] for custom target json users. Change all appearances of target-word-size
+    to target-pointer-width.
+
+commit f492095eb4ac061f1b4898b92880095d23dc9c86
+Merge: 096b105 235f35b
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Feb 17 15:13:20 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Feb 17 15:13:20 2015 -0800
+
+    rollup merge of #22024: alexcrichton/ascii
+    
+    * Move the type parameter on the `AsciiExt` trait to an associated type named
+      `Owned`.
+    * Move `ascii::escape_default` to using an iterator.
+    
+    This is a breaking change due to the removal of the type parameter on the
+    `AsciiExt` trait as well as the modifications to the `escape_default` function
+    to returning an iterator. Manual implementations of `AsciiExt` (or `AsciiExt`
+    bounds) should be adjusted to remove the type parameter and using the new
+    `escape_default` should be relatively straightforward.
+    
+    [breaking-change]
+
+commit d8f8f7a58c7c8b3352c1c577347865f5a823fee3
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Tue Feb 17 01:08:53 2015 -0800
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Tue Feb 17 14:33:29 2015 -0800
+
+    Revise std::thread semantics
+    
+    This commit makes several changes to `std::thread` in preparation for
+    final stabilization:
+    
+    * It removes the ability to handle panics from `scoped` children; see
+      #20807 for discussion
+    
+    * It adds a `JoinHandle` structure, now returned from `spawn`, which
+      makes it possible to join on children that do not share data from
+      their parent's stack. The child is automatically detached when the
+      handle is dropped, and the handle cannot be copied due to Posix
+      semantics.
+    
+    * It moves all static methods from `std::thread::Thread` to free
+      functions in `std::thread`. This was done in part because, due to the
+      above changes, there are effectively no direct `Thread` constructors,
+      and the static methods have tended to feel a bit awkward.
+    
+    * Adds an `io::Result` around the `Builder` methods `scoped` and
+      `spawn`, making it possible to handle OS errors when creating
+      threads. The convenience free functions entail an unwrap.
+    
+    * Stabilizes the entire module. Despite the fact that the API is
+      changing somewhat here, this is part of a long period of baking and
+      the changes are addressing all known issues prior to alpha2. If
+      absolutely necessary, further breaking changes can be made prior to beta.
+    
+    Closes #20807
+    
+    [breaking-change]
+
+commit a2ebb24ee6cc76791ef834cb2d17ecac95756499
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Feb 17 11:05:44 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Feb 17 14:02:45 2015 -0800
+
+    std: Rename io/path features with old_ prefix
+    
+    This commit renames the features for the `std::old_io` and `std::old_path`
+    modules to `old_io` and `old_path` to help facilitate migration to the new APIs.
+    
+    This is a breaking change as crates which mention the old feature names now need
+    to be renamed to use the new feature names.
+    
+    [breaking-change]
+
+commit 235f35b0b724a38a5583112825d46f50c5dde980
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Feb 17 13:58:34 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Feb 17 13:58:34 2015 -0800
+
+    std: Stabilize the `ascii` module
+    
+    This commit performs a stabilization pass over the `std::ascii` module taking
+    the following actions:
+    
+    * the module name is now stable
+    * `AsciiExt` is now stable after moving its type parameter to an `Owned`
+      associated type
+    * `AsciiExt::is_ascii` is now stable
+    * `AsciiExt::to_ascii_uppercase` is now stable
+    * `AsciiExt::to_ascii_lowercase` is now stable
+    * `AsciiExt::eq_ignore_ascii_case` is now stable
+    * `AsciiExt::make_ascii_uppercase` is added to possibly replace
+      `OwnedAsciiExt::into_ascii_uppercase` (similarly for lowercase variants).
+    * `escape_default` now returns an iterator and is stable
+    * `EscapeDefault` is now stable
+    
+    Trait implementations are now also marked stable.
+    
+    Primarily it is still unstable to *implement* the `AsciiExt` trait due to it
+    containing some unstable methods.
+    
+    [breaking-change]
+
 commit f9aeea7cb7865a2b82e7102837daabbe549177ea
 Merge: f1bb6c2 bc9084b
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -15,6 +152,63 @@ CommitDate: Tue Feb 17 15:55:55 2015 +0000
     [breaking-change]
     
     r? @aturon
+
+commit 020e4e4ad981ce0518bd8e3464ac592717c41143
+Merge: 0e89228 dc0797c
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Tue Feb 17 15:54:25 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Tue Feb 17 17:33:20 2015 +0530
+
+    Rollup merge of #22383 - pnkfelix:pass-features-along-during-expansion, r=huonw
+    
+     Pass features along during expansion
+    
+    Use the set of passed features to detect uses of feature-gated macros without the corresponding feature enabled.
+    
+    Fix #22234.
+    
+    ----
+    
+    Also, the framework this add (passing along a reference to the features in the expansion context) is a necessary precursor for landing a properly feature-gated desugaring-based overloaded-`box` and placement-`in` (#22181).
+    
+    ----
+    
+    This is fixing a bug, but since there might be code out there that is unknowingly taking advantage of that bug, I feel obligated to mark this as a:
+    
+    [breaking-change]
+
+commit bf52f2eef578e6fff83611a6276a3aa9f284e1c5
+Merge: 4647d89 bc9084b
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Tue Feb 17 15:52:01 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Tue Feb 17 17:33:20 2015 +0530
+
+    Rollup merge of #22311 - lfairy:consistent-fmt, r=alexcrichton
+    
+     This brings it in line with its namesake in `std::io`.
+    
+    [breaking-change]
+    
+    r? @aturon
+
+commit 4647d89205992383f8122e8fde0e2615497572bc
+Merge: 1a1ac6c f64d71b
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Tue Feb 17 15:51:53 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Tue Feb 17 17:33:19 2015 +0530
+
+    Rollup merge of #22364 - Manishearth:rfc-572-forbid-attr, r=nikomatsakis
+    
+     fixes #22203
+    
+    r? @nikomatsakis
+    
+    This breaks code that might be using attributes randomly, so it's technically a
+    
+    [breaking-change]
 
 commit d264ef2b11683337c24cfb16e0335ab386df02ab
 Merge: e337a57 e727378
@@ -62,6 +256,23 @@ CommitDate: Tue Feb 17 06:23:40 2015 +0530
     ---
     
     r? @aturon
+
+commit 4a9dd3f8403f84ad518b0119fa2312c379df5dd7
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Wed Feb 11 16:57:23 2015 -0800
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Mon Feb 16 13:53:09 2015 -0800
+
+    Expose more of std::path
+    
+    This commit exposes the `is_sep` function and `MAIN_SEP` constant, as
+    well as Windows path prefixes. The path prefix enum is safely exposed on
+    all platforms, but it only yielded as a component for Windows.
+    
+    Exposing the prefix enum as part of prefix components involved changing
+    the type from `OsStr` to the `Prefix` enum, which is a:
+    
+    [breaking-change]
 
 commit f58a1bfa981eee4ba4d4c3c801f94772e4ab0019
 Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
@@ -461,6 +672,19 @@ CommitDate: Wed Feb 11 13:46:35 2015 -0800
     easy as the defaults operate over `String` which is a common type to use.
     
     [breaking-change]
+
+commit 6f5944bfcff96509e3f3de227570382056153392
+Author:     Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
+AuthorDate: Wed Feb 11 21:53:31 2015 +0200
+Commit:     Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
+CommitDate: Wed Feb 11 22:29:16 2015 +0200
+
+    Change target-word-size to target-pointer-width
+    
+    This aligns json target specification to match terminology used elsewhere in the code base.
+    
+    [breaking-change] for custom target json users. Change all appearances of target-word-size
+    to target-pointer-width.
 
 commit bbbb571fee01532f63b105150654db8db0b01bf7
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2495,418 +2719,4 @@ CommitDate: Tue Jan 6 17:17:48 2015 -0500
     control). In that case, for the time being, you can opt out of these
     rules by using `#[old_impl_check]` on the impl and adding a
     `#![feature(old_impl_check)]` to your crate declaration.
-
-commit 503709708c72401dbe091ed5c7e0494efabe0669
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Tue Jan 6 14:03:46 2015 +1300
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Wed Jan 7 09:45:28 2015 +1300
-
-    Change `std::kinds` to `std::markers`; flatten `std::kinds::marker`
-    
-    [breaking-change]
-
-commit f67b81e8d4dc198ad10ad50a7624e43cc1e25802
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Mon Jan 5 15:45:18 2015 -0800
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Tue Jan 6 09:04:48 2015 -0800
-
-    Stabilize std::thread
-    
-    This commit takes a first pass at stabilizing `std::thread`:
-    
-    * It removes the `detach` method in favor of two constructors -- `spawn`
-      for detached threads, `scoped` for "scoped" (i.e., must-join)
-      threads. This addresses some of the surprise/frustrating debug
-      sessions with the previous API, in which `spawn` produced a guard that
-      on destruction joined the thread (unless `detach` was called).
-    
-      The reason to have the division in part is that `Send` will soon not
-      imply `'static`, which means that `scoped` thread creation can take a
-      closure over *shared stack data* of the parent thread. On the other
-      hand, this means that the parent must not pop the relevant stack
-      frames while the child thread is running. The `JoinGuard` is used to
-      prevent this from happening by joining on drop (if you have not
-      already explicitly `join`ed.) The APIs around `scoped` are
-      future-proofed for the `Send` changes by taking an additional lifetime
-      parameter. With the current definition of `Send`, this is forced to be
-      `'static`, but when `Send` changes these APIs will gain their full
-      flexibility immediately.
-    
-      Threads that are `spawn`ed, on the other hand, are detached from the
-      start and do not yield an RAII guard.
-    
-      The hope is that, by making `scoped` an explicit opt-in with a very
-      suggestive name, it will be drastically less likely to be caught by a
-      surprising deadlock due to an implicit join at the end of a scope.
-    
-    * The module itself is marked stable.
-    
-    * Existing methods other than `spawn` and `scoped` are marked stable.
-    
-    The migration path is:
-    
-    ```rust
-    Thread::spawn(f).detached()
-    ```
-    
-    becomes
-    
-    ```rust
-    Thread::spawn(f)
-    ```
-    
-    while
-    
-    ```rust
-    let res = Thread::spawn(f);
-    res.join()
-    ```
-    
-    becomes
-    
-    ```rust
-    let res = Thread::scoped(f);
-    res.join()
-    ```
-    
-    [breaking-change]
-
-commit 6680c9c5c797101fc5e0608cb2c3657517333148
-Author:     Corey Richardson &lt;corey@octayn.net&gt;
-AuthorDate: Fri Jan 2 16:41:24 2015 -0500
-Commit:     Corey Richardson &lt;corey@octayn.net&gt;
-CommitDate: Tue Jan 6 12:03:12 2015 -0500
-
-    syntax: implement 'macro input future proofing'
-    
-    See RFC 550 (https://github.com/rust-lang/rfcs/pull/550) for the motivation
-    and details.
-    
-    If this breaks your code, add one of the listed tokens after the relevant
-    non-terminal in your matcher.
-    
-    [breaking-change]
-
-commit ae4762761c995494726e8c9f41b05e99e6c7c81b
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Mon Jan 5 21:14:50 2015 +1100
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Tue Jan 6 23:21:27 2015 +1100
-
-    Merge core::num::Float and std::num::FloatMath.
-    
-    `FloatMath` no longer exists and all functionality from both traits is
-    available under `Float`. Change from
-    
-        use std::num::{Float, FloatMath};
-    
-    to
-    
-        use std::num::Float;
-    
-    [breaking-change]
-
-commit cd4ed38404384bdb13500f1d2e782d32ece2b239
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Mon Jan 5 18:30:55 2015 +1100
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Tue Jan 6 23:21:01 2015 +1100
-
-    Deprecate the constant-returning functions in Float.
-    
-    These are replaced by the equivalent constants in `std::f32` and
-    `std::f64` respectively.
-    
-    [breaking-change]
-
-commit 25d5a3a19423fee01787de87a56d185dd4e0a4e7
-Merge: 743d926 ec7a50d
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Jan 5 18:37:22 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Jan 5 18:37:22 2015 -0800
-
-    rollup merge of #20507: alexcrichton/issue-20444
-    
-    This commit is an implementation of [RFC 494][rfc] which removes the entire
-    `std::c_vec` module and redesigns the `std::c_str` module as `std::ffi`.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0494-c_str-and-c_vec-stability.md
-    
-    The interface of the new `CString` is outlined in the linked RFC, the primary
-    changes being:
-    
-    * The `ToCStr` trait is gone, meaning the `with_c_str` and `to_c_str` methods
-      are now gone. These two methods are replaced with a `CString::from_slice`
-      method.
-    * The `CString` type is now just a wrapper around `Vec&lt;u8&gt;` with a static
-      guarantee that there is a trailing nul byte with no internal nul bytes. This
-      means that `CString` now implements `Deref&lt;Target = [c_char]&gt;`, which is where
-      it gains most of its methods from. A few helper methods are added to acquire a
-      slice of `u8` instead of `c_char`, as well as including a slice with the
-      trailing nul byte if necessary.
-    * All usage of non-owned `CString` values is now done via two functions inside
-      of `std::ffi`, called `c_str_to_bytes` and `c_str_to_bytes_with_nul`. These
-      functions are now the one method used to convert a `*const c_char` to a Rust
-      slice of `u8`.
-    
-    Many more details, including newly deprecated methods, can be found linked in
-    the RFC. This is a:
-    
-    [breaking-change]
-    Closes #20444
-
-commit 88b4c8e0d347921673e61bf1770ba0acd4c7d824
-Merge: 059566b 5caf847
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Jan 5 18:36:34 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Jan 5 18:36:34 2015 -0800
-
-    rollup merge of #20465: nikomatsakis/assoc-types-regions-20303
-    
-    Treat associated types the same as type parameters when it comes to region bounding. Fixes #20303.
-    
-    Strictly speaking, this is a [breaking-change] (if you are using
-    associated types). You are no longer free to wantonly violate the type
-    system rules by closing associated types into objects without any form
-    of region bound. Instead you should add region bounds like `T::X :
-    'a`, just as you would with a normal type parameter.
-    
-    r? @aturon
-
-commit 48f50e1e98691d74427e23e82694f528b3fb4d56
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Tue Jan 6 09:44:33 2015 +1300
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Tue Jan 6 14:20:47 2015 +1300
-
-    Obsolete `Sized? T`
-    
-    [breaking-change]
-    
-    Use `T: ?Sized`
-
-commit c7dd3c4d69aee1c4ad8cc220c194b176bba2ab62
-Merge: f11f3e7 eb2506c
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Mon Jan 5 23:51:00 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Mon Jan 5 23:51:00 2015 +0000
-
-    auto merge of #20578 : japaric/rust/no-more-bc, r=nmatsakis
-    
-    This PR removes boxed closures from the language, the closure type syntax (`let f: |int| -&gt; bool = /* ... */`) has been obsoleted. Move all your uses of closures to the new unboxed closure system (i.e. `Fn*` traits).
-    
-    [breaking-change] patterns
-    
-    - `lef f = || {}`
-    
-    This binding used to type check to a boxed closure. Now that boxed closures are gone, you need to annotate the "kind" of the unboxed closure, i.e. you need pick one of these: `|&amp;:| {}`, `|&amp;mut:| {}` or `|:| {}`.
-    
-    In the (near) future we'll have closure "kind" inference, so the compiler will infer which `Fn*` trait to use based on how the closure is used. Once this inference machinery is in place, we'll be able to remove the kind annotation from most closures.
-    
-    - `type Alias&lt;'a&gt; = |int|:'a -&gt; bool`
-    
-    Use a trait object: `type Alias&lt;'a&gt; = Box&lt;FnMut(int) -&gt; bool + 'a&gt;`. Use the `Fn*` trait that makes sense for your use case.
-    
-    - `fn foo(&amp;self, f: |uint| -&gt; bool)`
-    
-    In this case you can use either a trait object or an unboxed closure:
-    
-    ``` rust
-    fn foo(&amp;self, f: F) where F: FnMut(uint) -&gt; bool;
-    // or
-    fn foo(&amp;self, f: Box&lt;FnMut(uint) -&gt; bool&gt;);
-    ```
-    
-    - `struct Struct&lt;'a&gt; { f: |uint|:'a -&gt; bool }`
-    
-    Again, you can use either a trait object or an unboxed closure:
-    
-    ``` rust
-    struct Struct&lt;F&gt; where F: FnMut(uint) -&gt; bool { f: F }
-    // or
-    struct Struct&lt;'a&gt; { f: Box&lt;FnMut(uint) -&gt; bool + 'a&gt; }
-    ```
-    
-    - Using `|x, y| f(x, y)` for closure "borrows"
-    
-    This comes up in recursive functions, consider the following (contrived) example:
-    
-    ``` rust
-    fn foo(x: uint, f: |uint| -&gt; bool) -&gt; bool {
-        //foo(x / 2, f) &amp;&amp; f(x)  // can't use this because `f` gets moved away in the `foo` call
-        foo(x / 2, |x| f(x)) &amp;&amp; f(x)  // instead "borrow" `f` in the `foo` call
-    }
-    ```
-    
-    If you attempt to do the same with unboxed closures you'll hit ""error: reached the recursion limit during monomorphization" (see #19596):
-    
-    ``` rust
-    fn foo&lt;F&gt;(x: uint, mut f: F) -&gt; bool where F: FnMut(uint) -&gt; bool {
-        foo(x / 2, |x| f(x)) &amp;&amp; f(x)
-        //~^ error: reached the recursion limit during monomorphization
-    }
-    ```
-    
-    Instead you *should* be able to write this:
-    
-    ``` rust
-    fn foo&lt;F&gt;(x: uint, mut f: F) -&gt; bool where F: FnMut(uint) -&gt; bool {
-        foo(x / 2, &amp;mut f) &amp;&amp; f(x)
-        //~^ error: the trait `FnMut` is not implemented for the type `&amp;mut F`
-    }
-    ```
-    
-    But as you see above `&amp;mut F` doesn't implement the `FnMut` trait. `&amp;mut F` *should* implement the `FnMut` and the above code *should* work, but due to a bug (see #18835) it doesn't (for now).
-    
-    You can work around the issue by rewriting the function to take `&amp;mut F` instead of `F`:
-    
-    ``` rust
-    fn foo&lt;F&gt;(x: uint, f: &amp;mut F) -&gt; bool where F: FnMut(uint) -&gt; bool {
-        foo(x / 2, f) &amp;&amp; (*f)(x)
-    }
-    ```
-    
-    This finally works! However writing `foo(0, &amp;mut |x| x == 0)` is unergonomic. So you can use a private helper function to avoid this:
-    
-    ``` rust
-    // public API function
-    pub fn foo&lt;F&gt;(x: uint, mut f: F) -&gt; bool where F: FnMut(uint) -&gt; bool {
-        foo_(x, &amp;mut f)
-    }
-    
-    // private helper function
-    fn foo_&lt;F&gt;(x: uint, f: &amp;mut F) -&gt; bool where F: FnMut(uint) -&gt; bool {
-        foo_(x / 2, f) &amp;&amp; (*f)(x)
-    }
-    ```
-    
-    Closes #14798
-    
-    ---
-    
-    There is more cleanup to do: like renaming functions/types from `unboxed_closure` to just `closure`, removing more dead code, simplify functions which now have unused arguments, update the documentation, etc. But that can be done in another PR.
-    
-    r? @nikomatsakis @aturon (You probably want to focus on the deleted/modified tests.)
-    cc @eddyb
-
-commit 6e68fd09edc7ed37fd76f703247b5410cd338bfe
-Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-AuthorDate: Sun Jan 4 20:35:06 2015 -0500
-Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-CommitDate: Mon Jan 5 17:17:26 2015 -0500
-
-    Implement new orphan rule that requires that impls of remote traits meet the following two criteria:
-    
-    - the self type includes some local type; and,
-    - type parameters in the self type must be constrained by a local type.
-    
-    A type parameter is called *constrained* if it appears in some type-parameter of a local type.
-    
-    Here are some examples that are accepted. In all of these examples, I
-    assume that `Foo` is a trait defined in another crate. If `Foo` were
-    defined in the local crate, then all the examples would be legal.
-    
-    - `impl Foo for LocalType`
-    - `impl&lt;T&gt; Foo&lt;T&gt; for LocalType` -- T does not appear in Self, so it is OK
-    - `impl&lt;T&gt; Foo&lt;T&gt; for LocalType&lt;T&gt;` -- T here is constrained by LocalType
-    - `impl&lt;T&gt; Foo&lt;T&gt; for (LocalType&lt;T&gt;, T)` -- T here is constrained by LocalType
-    
-    Here are some illegal examples (again, these examples assume that
-    `Foo` is not local to the current crate):
-    
-    - `impl Foo for int` -- the Self type is not local
-    - `impl&lt;T&gt; Foo for T` -- T appears in Self unconstrained by a local type
-    - `impl&lt;T&gt; Foo for (LocalType, T)` -- T appears in Self unconstrained by a local type
-    
-    This is a [breaking-change]. For the time being, you can opt out of
-    the new rules by placing `#[old_orphan_check]` on the trait (and
-    enabling the feature gate where the trait is defined). Longer term,
-    you should restructure your traits to avoid the problem. Usually this
-    means changing the order of parameters so that the "central" type
-    parameter is in the `Self` position.
-    
-    As an example of that refactoring, consider the `BorrowFrom` trait:
-    
-    ```rust
-    pub trait BorrowFrom&lt;Sized? Owned&gt; for Sized? {
-        fn borrow_from(owned: &amp;Owned) -&gt; &amp;Self;
-    }
-    ```
-    
-    As defined, this trait is commonly implemented for custom pointer
-    types, such as `Arc`. Those impls follow the pattern:
-    
-    ```rust
-    impl&lt;T&gt; BorrowFrom&lt;Arc&lt;T&gt;&gt; for T {...}
-    ```
-    
-    Unfortunately, this impl is illegal because the self type `T` is not
-    local to the current crate. Therefore, we are going to change the order of the parameters,
-    so that `BorrowFrom` becomes `Borrow`:
-    
-    ```rust
-    pub trait Borrow&lt;Sized? Borrowed&gt; for Sized? {
-        fn borrow_from(owned: &amp;Self) -&gt; &amp;Borrowed;
-    }
-    ```
-    
-    Now the `Arc` impl is written:
-    
-    ```rust
-    impl&lt;T&gt; Borrow&lt;T&gt; for Arc&lt;T&gt; { ... }
-    ```
-    
-    This impl is legal because the self type (`Arc&lt;T&gt;`) is local.
-
-commit 64ec47c9d2a75c8150d153450e7e7b7db60208dc
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Sun Jan 4 08:43:27 2015 -0800
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Mon Jan 5 14:01:05 2015 -0800
-
-    Final alpha stabilization of core::iter
-    
-    This commit wraps up the adjustments to the iterator for recent language
-    changes.
-    
-    * Moves `rposition` from `ExactSizeIterator` to `IteratorExt` using a
-      `where` clause, thereby removing the `ExactSizeIterator:
-      DoubleEndedIterator` constraint.
-    
-    * Merges `MutableDoubleEndedIterator` into `IteratorExt`, renaming
-      `reverse_` to `reverse_in_place`.
-    
-    * Merges `IteratorOrdExt`, `IteratorCloneExt` and `CloneIteratorExt`
-      into `IteratorExt` using `where` clauses.
-    
-    Marks as `#[stable]`:
-    
-    * the `iter` module itself
-    * `FromIterator`, `Extend`
-    * `Iterator`, `IteratorExt`
-    * `map`
-    * `filter`
-    * `filter_map`
-    * `skip_while`
-    * `take_while`
-    * `scan`
-    * `flat_map`
-    * `inspect`
-    * `collect`
-    * `fold`
-    * `all`
-    * `any`
-    * `find`
-    * `rposition`
-    * `max`, `min`
-    * Various adapter types related to the above methods
-    
-    Because of the trait merging, this is a:
-    
-    [breaking-change]
 </pre></body></html>
