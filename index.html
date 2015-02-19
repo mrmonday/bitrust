@@ -1,6 +1,253 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit a99e698628cbd396c8100ef776d10ac61d911847
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Wed Feb 11 23:16:32 2015 -0800
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Wed Feb 18 15:23:58 2015 -0800
+
+    Stabilize std::borrow
+    
+    This commit stabilizes `std::borrow`, making the following modifications
+    to catch up the API with language changes:
+    
+    * It renames `BorrowFrom` to `Borrow`, as was originally intended (but
+      blocked for technical reasons), and reorders the parameters
+      accordingly.
+    
+    * It moves the type parameter of `ToOwned` to an associated type. This
+      is somewhat less flexible, in that each borrowed type must have a
+      unique owned type, but leads to a significant simplification for
+      `Cow`. Flexibility can be regained by using newtyped slices, which is
+      advisable for other reasons anyway.
+    
+    * It removes the owned type parameter from `Cow`, making the type much
+      less verbose.
+    
+    * Deprecates the `is_owned` and `is_borrowed` predicates in favor of
+      direct matching.
+    
+    The above API changes are relatively minor; the basic functionality
+    remains the same, and essentially the whole module is now marked
+    `#[stable]`.
+    
+    [breaking-change]
+
+commit f3657170b1cbe80393d9ccde8608872f7bdc68f2
+Merge: 9774b7e 1860ee5
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Wed Feb 18 14:32:10 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Feb 18 14:32:10 2015 -0800
+
+    rollup merge of #22482: alexcrichton/cstr-changes
+    
+    This commit is an implementation of [RFC 592][r592] and [RFC 840][r840]. These
+    two RFCs tweak the behavior of `CString` and add a new `CStr` unsized slice type
+    to the module.
+    
+    [r592]: https://github.com/rust-lang/rfcs/blob/master/text/0592-c-str-deref.md
+    [r840]: https://github.com/rust-lang/rfcs/blob/master/text/0840-no-panic-in-c-string.md
+    
+    The new `CStr` type is only constructable via two methods:
+    
+    1. By `deref`'ing from a `CString`
+    2. Unsafely via `CStr::from_ptr`
+    
+    The purpose of `CStr` is to be an unsized type which is a thin pointer to a
+    `libc::c_char` (currently it is a fat pointer slice due to implementation
+    limitations). Strings from C can be safely represented with a `CStr` and an
+    appropriate lifetime as well. Consumers of `&amp;CString` should now consume `&amp;CStr`
+    instead to allow producers to pass in C-originating strings instead of just
+    Rust-allocated strings.
+    
+    A new constructor was added to `CString`, `new`, which takes `T: IntoBytes`
+    instead of separate `from_slice` and `from_vec` methods (both have been
+    deprecated in favor of `new`). The `new` method returns a `Result` instead of
+    panicking.  The error variant contains the relevant information about where the
+    error happened and bytes (if present). Conversions are provided to the
+    `io::Error` and `old_io::IoError` types via the `FromError` trait which
+    translate to `InvalidInput`.
+    
+    This is a breaking change due to the modification of existing `#[unstable]` APIs
+    and new deprecation, and more detailed information can be found in the two RFCs.
+    Notable breakage includes:
+    
+    * All construction of `CString` now needs to use `new` and handle the outgoing
+      `Result`.
+    * Usage of `CString` as a byte slice now explicitly needs a `.as_bytes()` call.
+    * The `as_slice*` methods have been removed in favor of just having the
+      `as_bytes*` methods.
+    
+    Closes #22469
+    Closes #22470
+    [breaking-change]
+
+commit 9774b7e64b7ff8323b4f8160cc38eb793f447217
+Merge: 261364d f83e23a
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Wed Feb 18 14:32:03 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Feb 18 14:32:03 2015 -0800
+
+    rollup merge of #22480: alexcrichton/hashv3
+    
+    This commit is an implementation of [RFC 823][rfc] which is another pass over
+    the `std::hash` module for stabilization. The contents of the module were not
+    entirely marked stable, but some portions which remained quite similar to the
+    previous incarnation are now marked `#[stable]`. Specifically:
+    
+    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0823-hash-simplification.md
+    
+    * `std::hash` is now stable (the name)
+    * `Hash` is now stable
+    * `Hash::hash` is now stable
+    * `Hasher` is now stable
+    * `SipHasher` is now stable
+    * `SipHasher::new` and `new_with_keys` are now stable
+    * `Hasher for SipHasher` is now stable
+    * Many `Hash` implementations are now stable
+    
+    All other portions of the `hash` module remain `#[unstable]` as they are less
+    commonly used and were recently redesigned.
+    
+    This commit is a breaking change due to the modifications to the `std::hash` API
+    and more details can be found on the [RFC][rfc].
+    
+    Closes #22467
+    [breaking-change]
+
+commit 1860ee521aa6096eb7f5410a64b53311fb0d2d0e
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Feb 17 22:47:40 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Feb 18 14:15:43 2015 -0800
+
+    std: Implement CString-related RFCs
+    
+    This commit is an implementation of [RFC 592][r592] and [RFC 840][r840]. These
+    two RFCs tweak the behavior of `CString` and add a new `CStr` unsized slice type
+    to the module.
+    
+    [r592]: https://github.com/rust-lang/rfcs/blob/master/text/0592-c-str-deref.md
+    [r840]: https://github.com/rust-lang/rfcs/blob/master/text/0840-no-panic-in-c-string.md
+    
+    The new `CStr` type is only constructable via two methods:
+    
+    1. By `deref`'ing from a `CString`
+    2. Unsafely via `CStr::from_ptr`
+    
+    The purpose of `CStr` is to be an unsized type which is a thin pointer to a
+    `libc::c_char` (currently it is a fat pointer slice due to implementation
+    limitations). Strings from C can be safely represented with a `CStr` and an
+    appropriate lifetime as well. Consumers of `&amp;CString` should now consume `&amp;CStr`
+    instead to allow producers to pass in C-originating strings instead of just
+    Rust-allocated strings.
+    
+    A new constructor was added to `CString`, `new`, which takes `T: IntoBytes`
+    instead of separate `from_slice` and `from_vec` methods (both have been
+    deprecated in favor of `new`). The `new` method returns a `Result` instead of
+    panicking.  The error variant contains the relevant information about where the
+    error happened and bytes (if present). Conversions are provided to the
+    `io::Error` and `old_io::IoError` types via the `FromError` trait which
+    translate to `InvalidInput`.
+    
+    This is a breaking change due to the modification of existing `#[unstable]` APIs
+    and new deprecation, and more detailed information can be found in the two RFCs.
+    Notable breakage includes:
+    
+    * All construction of `CString` now needs to use `new` and handle the outgoing
+      `Result`.
+    * Usage of `CString` as a byte slice now explicitly needs a `.as_bytes()` call.
+    * The `as_slice*` methods have been removed in favor of just having the
+      `as_bytes*` methods.
+    
+    Closes #22469
+    Closes #22470
+    [breaking-change]
+
+commit 66613e26b95438c02e2f5c273c557515454121f7
+Author:     Alexis &lt;a.beingessner@gmail.com&gt;
+AuthorDate: Wed Feb 18 13:06:21 2015 -0500
+Commit:     Alexis &lt;a.beingessner@gmail.com&gt;
+CommitDate: Wed Feb 18 14:01:47 2015 -0500
+
+    make FromIterator use IntoIterator
+    
+    This breaks all implementors of FromIterator, as they must now accept IntoIterator instead of Iterator. The fix for this is generally trivial (change the bound, and maybe call into_iter() on the argument to get the old argument).
+    
+    Users of FromIterator should be unaffected because Iterators are IntoIterator.
+    
+    [breaking-change]
+
+commit 4a9d190423f67a00053f4b5c9869f0ccbdfcc689
+Author:     Alexis &lt;a.beingessner@gmail.com&gt;
+AuthorDate: Wed Feb 18 10:04:30 2015 -0500
+Commit:     Alexis &lt;a.beingessner@gmail.com&gt;
+CommitDate: Wed Feb 18 14:01:47 2015 -0500
+
+    make Extend use IntoIterator
+    
+    This breaks all implementors of Extend, as they must now accept IntoIterator instead of Iterator. The fix for this is generally trivial (change the bound, and maybe call into_iter() on the argument to get the old argument).
+    
+    Users of Extend should be unaffected because Iterators are IntoIterator.
+    
+    [breaking-change]
+
+commit 5fa9de16df87ab844452821acff1b6c74e948327
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Tue Feb 17 23:44:55 2015 -0800
+Commit:     Alexis &lt;a.beingessner@gmail.com&gt;
+CommitDate: Wed Feb 18 14:01:46 2015 -0500
+
+    Implement RFC 580
+    
+    This commit implements RFC 580 by renaming:
+    
+    * DList -&gt; LinkedList
+    * Bitv -&gt; BitVec
+    * BitvSet -&gt; BitSet
+    * RingBuf -&gt; VecDeque
+    
+    More details are in [the
+    RFC](https://github.com/rust-lang/rfcs/pull/580)
+    
+    [breaking-change]
+
+commit f83e23ad7c464c242c2d7ace7212d323980b2bca
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Feb 17 20:48:07 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Feb 18 08:26:20 2015 -0800
+
+    std: Stabilize the `hash` module
+    
+    This commit is an implementation of [RFC 823][rfc] which is another pass over
+    the `std::hash` module for stabilization. The contents of the module were not
+    entirely marked stable, but some portions which remained quite similar to the
+    previous incarnation are now marked `#[stable]`. Specifically:
+    
+    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0823-hash-simplification.md
+    
+    * `std::hash` is now stable (the name)
+    * `Hash` is now stable
+    * `Hash::hash` is now stable
+    * `Hasher` is now stable
+    * `SipHasher` is now stable
+    * `SipHasher::new` and `new_with_keys` are now stable
+    * `Hasher for SipHasher` is now stable
+    * Many `Hash` implementations are now stable
+    
+    All other portions of the `hash` module remain `#[unstable]` as they are less
+    commonly used and were recently redesigned.
+    
+    This commit is a breaking change due to the modifications to the `std::hash` API
+    and more details can be found on the [RFC][rfc].
+    
+    Closes #22467
+    [breaking-change]
+
 commit eca2453a02548042fcb7082063149367a3343dd7
 Merge: 5be2b89 4a9dd3f
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2420,303 +2667,4 @@ CommitDate: Thu Jan 8 00:41:43 2015 +0100
     match, deref, and then the rest of the match.)
     
     [breaking-change]
-
-commit 63a9bd5e0adc03652e10506055564077aa00eeaa
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Thu Jan 8 08:30:33 2015 +1300
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Thu Jan 8 11:25:00 2015 +1300
-
-    Fix precedence for ranges.
-    
-    Technically this is a
-    
-    [breaking-change]
-    
-    but it probably shouldn't affect your code.
-    
-    Closes #20256
-
-commit 209c701bf9e95542aec69455bc12c7ca295109c4
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Jan 6 11:07:09 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Jan 7 12:56:16 2015 -0800
-
-    std: Stablize the macros module
-    
-    This commit performs a pass over the `std::macros` module, applying stability
-    attributes where necessary. In particular, this audits macros for patterns such
-    as:
-    
-    * Standard use of forward-to-format-args via `$($arg:tt)*` (or `+`)
-    * Prevent macro-defined identifiers from leaking into expression arguments as
-      hygiene is not perfectly implemented.
-    * Wherever possible, `$crate` is used now.
-    
-    Specifically, the following actions were taken:
-    
-    * The `std::macros` module itself is no longer public.
-    * The `panic!` macro is stable
-    * The `assert!` macro is stable
-    * The `assert_eq!` macro is stable
-    * The `debug_assert!` macro is stable
-    * The `debug_assert_eq!` macro is stable
-    * The `unreachable!` macro is stable after removing the extra forms to bring the
-      definition in line with the `unimplemented!` macro.
-    * The `try!` macro is stable
-    * The `vec!` macro is stable
-    
-    [breaking-change]
-
-commit 511f0b8a3de5a166fc96aba5170782c9abf92101
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Dec 9 12:37:23 2014 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Jan 7 12:18:08 2015 -0800
-
-    std: Stabilize the std::hash module
-    
-    This commit aims to prepare the `std::hash` module for alpha by formalizing its
-    current interface whileholding off on adding `#[stable]` to the new APIs.  The
-    current usage with the `HashMap` and `HashSet` types is also reconciled by
-    separating out composable parts of the design. The primary goal of this slight
-    redesign is to separate the concepts of a hasher's state from a hashing
-    algorithm itself.
-    
-    The primary change of this commit is to separate the `Hasher` trait into a
-    `Hasher` and a `HashState` trait. Conceptually the old `Hasher` trait was
-    actually just a factory for various states, but hashing had very little control
-    over how these states were used. Additionally the old `Hasher` trait was
-    actually fairly unrelated to hashing.
-    
-    This commit redesigns the existing `Hasher` trait to match what the notion of a
-    `Hasher` normally implies with the following definition:
-    
-        trait Hasher {
-            type Output;
-            fn reset(&amp;mut self);
-            fn finish(&amp;self) -&gt; Output;
-        }
-    
-    This `Hasher` trait emphasizes that hashing algorithms may produce outputs other
-    than a `u64`, so the output type is made generic. Other than that, however, very
-    little is assumed about a particular hasher. It is left up to implementors to
-    provide specific methods or trait implementations to feed data into a hasher.
-    
-    The corresponding `Hash` trait becomes:
-    
-        trait Hash&lt;H: Hasher&gt; {
-            fn hash(&amp;self, &amp;mut H);
-        }
-    
-    The old default of `SipState` was removed from this trait as it's not something
-    that we're willing to stabilize until the end of time, but the type parameter is
-    always required to implement `Hasher`. Note that the type parameter `H` remains
-    on the trait to enable multidispatch for specialization of hashing for
-    particular hashers.
-    
-    Note that `Writer` is not mentioned in either of `Hash` or `Hasher`, it is
-    simply used as part `derive` and the implementations for all primitive types.
-    
-    With these definitions, the old `Hasher` trait is realized as a new `HashState`
-    trait in the `collections::hash_state` module as an unstable addition for
-    now. The current definition looks like:
-    
-        trait HashState {
-            type Hasher: Hasher;
-            fn hasher(&amp;self) -&gt; Hasher;
-        }
-    
-    The purpose of this trait is to emphasize that the one piece of functionality
-    for implementors is that new instances of `Hasher` can be created.  This
-    conceptually represents the two keys from which more instances of a
-    `SipHasher` can be created, and a `HashState` is what's stored in a
-    `HashMap`, not a `Hasher`.
-    
-    Implementors of custom hash algorithms should implement the `Hasher` trait, and
-    only hash algorithms intended for use in hash maps need to implement or worry
-    about the `HashState` trait.
-    
-    The entire module and `HashState` infrastructure remains `#[unstable]` due to it
-    being recently redesigned, but some other stability decision made for the
-    `std::hash` module are:
-    
-    * The `Writer` trait remains `#[experimental]` as it's intended to be replaced
-      with an `io::Writer` (more details soon).
-    * The top-level `hash` function is `#[unstable]` as it is intended to be generic
-      over the hashing algorithm instead of hardwired to `SipHasher`
-    * The inner `sip` module is now private as its one export, `SipHasher` is
-      reexported in the `hash` module.
-    
-    And finally, a few changes were made to the default parameters on `HashMap`.
-    
-    * The `RandomSipHasher` default type parameter was renamed to `RandomState`.
-      This renaming emphasizes that it is not a hasher, but rather just state to
-      generate hashers. It also moves away from the name "sip" as it may not always
-      be implemented as `SipHasher`. This type lives in the
-      `std::collections::hash_map` module as `#[unstable]`
-    
-    * The associated `Hasher` type of `RandomState` is creatively called...
-      `Hasher`! This concrete structure lives next to `RandomState` as an
-      implemenation of the "default hashing algorithm" used for a `HashMap`. Under
-      the hood this is currently implemented as `SipHasher`, but it draws an
-      explicit interface for now and allows us to modify the implementation over
-      time if necessary.
-    
-    There are many breaking changes outlined above, and as a result this commit is
-    a:
-    
-    [breaking-change]
-
-commit dd3e89aaf25c667fa8207f8800c4b60d70d76c1b
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Wed Jan 7 17:26:55 2015 +1300
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Thu Jan 8 09:07:55 2015 +1300
-
-    Rename `target_word_size` to `target_pointer_width`
-    
-    Closes #20421
-    
-    [breaking-change]
-
-commit 7deb9abd1b45f3e56ca6b13432866ae89886f21f
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Wed Jan 7 10:39:37 2015 -0800
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Wed Jan 7 11:40:11 2015 -0800
-
-    Add isize, usize modules, deprecate int, uint modules
-    
-    This PR introduces `isize` and `usize` modules to `core` and `std`, and
-    deprecates the existing `int` and `uint` modules. The rustdoc primitive
-    type links now point to these new modules.
-    
-    Due to deprecation this is a:
-    
-    [breaking-change]
-
-commit 36f5d122b80682de473aeda2e20f14b6ceb86d74
-Merge: 0631b46 caca9b2
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Jan 6 15:38:38 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Jan 6 15:38:38 2015 -0800
-
-    rollup merge of #20615: aturon/stab-2-thread
-    
-    This commit takes a first pass at stabilizing `std::thread`:
-    
-    * It removes the `detach` method in favor of two constructors -- `spawn`
-      for detached threads, `scoped` for "scoped" (i.e., must-join)
-      threads. This addresses some of the surprise/frustrating debug
-      sessions with the previous API, in which `spawn` produced a guard that
-      on destruction joined the thread (unless `detach` was called).
-    
-      The reason to have the division in part is that `Send` will soon not
-      imply `'static`, which means that `scoped` thread creation can take a
-      closure over *shared stack data* of the parent thread. On the other
-      hand, this means that the parent must not pop the relevant stack
-      frames while the child thread is running. The `JoinGuard` is used to
-      prevent this from happening by joining on drop (if you have not
-      already explicitly `join`ed.) The APIs around `scoped` are
-      future-proofed for the `Send` changes by taking an additional lifetime
-      parameter. With the current definition of `Send`, this is forced to be
-      `'static`, but when `Send` changes these APIs will gain their full
-      flexibility immediately.
-    
-      Threads that are `spawn`ed, on the other hand, are detached from the
-      start and do not yield an RAII guard.
-    
-      The hope is that, by making `scoped` an explicit opt-in with a very
-      suggestive name, it will be drastically less likely to be caught by a
-      surprising deadlock due to an implicit join at the end of a scope.
-    
-    * The module itself is marked stable.
-    
-    * Existing methods other than `spawn` and `scoped` are marked stable.
-    
-    The migration path is:
-    
-    ```rust
-    Thread::spawn(f).detached()
-    ```
-    
-    becomes
-    
-    ```rust
-    Thread::spawn(f)
-    ```
-    
-    while
-    
-    ```rust
-    let res = Thread::spawn(f);
-    res.join()
-    ```
-    
-    becomes
-    
-    ```rust
-    let res = Thread::scoped(f);
-    res.join()
-    ```
-    
-    [breaking-change]
-
-commit 44440e5c18a1dbcc9685866ffffe00c508929079
-Author:     Sean McArthur &lt;sean.monstar@gmail.com&gt;
-AuthorDate: Sat Dec 20 00:09:35 2014 -0800
-Commit:     Sean McArthur &lt;sean.monstar@gmail.com&gt;
-CommitDate: Tue Jan 6 14:49:42 2015 -0800
-
-    core: split into fmt::Show and fmt::String
-    
-    fmt::Show is for debugging, and can and should be implemented for
-    all public types. This trait is used with `{:?}` syntax. There still
-    exists #[derive(Show)].
-    
-    fmt::String is for types that faithfully be represented as a String.
-    Because of this, there is no way to derive fmt::String, all
-    implementations must be purposeful. It is used by the default format
-    syntax, `{}`.
-    
-    This will break most instances of `{}`, since that now requires the type
-    to impl fmt::String. In most cases, replacing `{}` with `{:?}` is the
-    correct fix. Types that were being printed specifically for users should
-    receive a fmt::String implementation to fix this.
-    
-    Part of #20013
-    
-    [breaking-change]
-
-commit 2375a79152b8a6554c3e97a3f127fedd75f7495f
-Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-AuthorDate: Mon Jan 5 06:17:42 2015 -0500
-Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-CommitDate: Tue Jan 6 17:17:48 2015 -0500
-
-    Implement impl reachability rules. This is a [breaking-change]. Type
-    parameters on impls must now also appear in the trait ref, self type,
-    or some associated type declared on the impl. This ensures that they
-    are constrianed in some way and that the semantics of the trait system
-    are well-defined (always a good thing).
-    
-    There are three major ways to fix this error:
-    
-    1. Convert the trait to use associated types; most often the type
-       parameters are not constrained because they are in fact outputs of
-       the impl.
-    
-    2. Move the type parameters to methods.
-    
-    3. Add an additional type parameter to the self type or trait so that
-       the unused parameter can appear there.
-    
-    In some cases, it is not possible to fix the impl because the trait
-    definition needs to be changed first (and that may be out of your
-    control). In that case, for the time being, you can opt out of these
-    rules by using `#[old_impl_check]` on the impl and adding a
-    `#![feature(old_impl_check)]` to your crate declaration.
 </pre></body></html>
