@@ -1,6 +1,46 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 98ec45ee0b5f38f06b4ac5adfb9aff198f157bdd
+Merge: 9fe2d21 be0dc49
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sun Feb 22 01:50:53 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sun Feb 22 01:50:53 2015 +0530
+
+    Rollup merge of #22542 - ipetkov:unsafe-lint, r=huonw
+    
+     This allows warning or forbidding all uses of unsafe code, whereas
+    previously only unsafe blocks were caught by the lint.
+    
+    The lint has been renamed from `unsafe-blocks` to `unsafe-code` to
+    reflect its new purpose.
+    
+    This is a minor [breaking-change]
+    
+    Closes #22430
+
+commit be0dc49675ff38b4bc2e73f68bff298168bc6875
+Author:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
+AuthorDate: Thu Feb 19 10:04:56 2015 -0800
+Commit:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
+CommitDate: Thu Feb 19 20:43:09 2015 -0800
+
+    Unsafe lint will also check for other unsafe code
+    
+    Checks include declaration/implementation of unsafe functions, traits,
+    and methods.
+    
+    This allows warning or forbidding all uses of unsafe code, whereas
+    previously only unsafe blocks were caught by the lint.
+    
+    The lint has been renamed from `unsafe-blocks` to `unsafe-code` to
+    reflect its new purpose.
+    
+    This is a minor [breaking-change]
+    
+    Closes #22430
+
 commit a99e698628cbd396c8100ef776d10ac61d911847
 Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
 AuthorDate: Wed Feb 11 23:16:32 2015 -0800
@@ -2549,122 +2589,4 @@ CommitDate: Wed Jan 7 17:17:23 2015 -0800
     [breaking-change]
     
     r? @brson
-
-commit 8bf3ee7c5c44fa5aa0a1003e8fe61a0af1527927
-Merge: b1c23f6 511f0b8
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Jan 7 17:17:19 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Jan 7 17:17:19 2015 -0800
-
-    rollup merge of #20654: alexcrichton/stabilize-hash
-    
-    This commit aims to prepare the `std::hash` module for alpha by formalizing its
-    current interface whileholding off on adding `#[stable]` to the new APIs.  The
-    current usage with the `HashMap` and `HashSet` types is also reconciled by
-    separating out composable parts of the design. The primary goal of this slight
-    redesign is to separate the concepts of a hasher's state from a hashing
-    algorithm itself.
-    
-    The primary change of this commit is to separate the `Hasher` trait into a
-    `Hasher` and a `HashState` trait. Conceptually the old `Hasher` trait was
-    actually just a factory for various states, but hashing had very little control
-    over how these states were used. Additionally the old `Hasher` trait was
-    actually fairly unrelated to hashing.
-    
-    This commit redesigns the existing `Hasher` trait to match what the notion of a
-    `Hasher` normally implies with the following definition:
-    
-        trait Hasher {
-            type Output;
-            fn reset(&amp;mut self);
-            fn finish(&amp;self) -&gt; Output;
-        }
-    
-    This `Hasher` trait emphasizes that hashing algorithms may produce outputs other
-    than a `u64`, so the output type is made generic. Other than that, however, very
-    little is assumed about a particular hasher. It is left up to implementors to
-    provide specific methods or trait implementations to feed data into a hasher.
-    
-    The corresponding `Hash` trait becomes:
-    
-        trait Hash&lt;H: Hasher&gt; {
-            fn hash(&amp;self, &amp;mut H);
-        }
-    
-    The old default of `SipState` was removed from this trait as it's not something
-    that we're willing to stabilize until the end of time, but the type parameter is
-    always required to implement `Hasher`. Note that the type parameter `H` remains
-    on the trait to enable multidispatch for specialization of hashing for
-    particular hashers.
-    
-    Note that `Writer` is not mentioned in either of `Hash` or `Hasher`, it is
-    simply used as part `derive` and the implementations for all primitive types.
-    
-    With these definitions, the old `Hasher` trait is realized as a new `HashState`
-    trait in the `collections::hash_state` module as an unstable addition for
-    now. The current definition looks like:
-    
-        trait HashState {
-            type Hasher: Hasher;
-            fn hasher(&amp;self) -&gt; Hasher;
-        }
-    
-    The purpose of this trait is to emphasize that the one piece of functionality
-    for implementors is that new instances of `Hasher` can be created.  This
-    conceptually represents the two keys from which more instances of a
-    `SipHasher` can be created, and a `HashState` is what's stored in a
-    `HashMap`, not a `Hasher`.
-    
-    Implementors of custom hash algorithms should implement the `Hasher` trait, and
-    only hash algorithms intended for use in hash maps need to implement or worry
-    about the `HashState` trait.
-    
-    The entire module and `HashState` infrastructure remains `#[unstable]` due to it
-    being recently redesigned, but some other stability decision made for the
-    `std::hash` module are:
-    
-    * The `Writer` trait remains `#[experimental]` as it's intended to be replaced
-      with an `io::Writer` (more details soon).
-    * The top-level `hash` function is `#[unstable]` as it is intended to be generic
-      over the hashing algorithm instead of hardwired to `SipHasher`
-    * The inner `sip` module is now private as its one export, `SipHasher` is
-      reexported in the `hash` module.
-    
-    And finally, a few changes were made to the default parameters on `HashMap`.
-    
-    * The `RandomSipHasher` default type parameter was renamed to `RandomState`.
-      This renaming emphasizes that it is not a hasher, but rather just state to
-      generate hashers. It also moves away from the name "sip" as it may not always
-      be implemented as `SipHasher`. This type lives in the
-      `std::collections::hash_map` module as `#[unstable]`
-    
-    * The associated `Hasher` type of `RandomState` is creatively called...
-      `Hasher`! This concrete structure lives next to `RandomState` as an
-      implemenation of the "default hashing algorithm" used for a `HashMap`. Under
-      the hood this is currently implemented as `SipHasher`, but it draws an
-      explicit interface for now and allows us to modify the implementation over
-      time if necessary.
-    
-    There are many breaking changes outlined above, and as a result this commit is
-    a:
-    
-    [breaking-change]
-
-commit 4a31aaddb364f5ab8280242a1016bdd3d10dcaed
-Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-AuthorDate: Wed Jan 7 15:15:34 2015 +0100
-Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-CommitDate: Thu Jan 8 00:41:43 2015 +0100
-
-    Added `box_syntax` feature gate; added to std and rustc crates for bootstrap.
-    
-    To avoid using the feauture, change uses of `box &lt;expr&gt;` to
-    `Box::new(&lt;expr&gt;)` alternative, as noted by the feature gate message.
-    
-    (Note that box patterns have no analogous trivial replacement, at
-    least not in general; you need to revise the code to do a partial
-    match, deref, and then the rest of the match.)
-    
-    [breaking-change]
 </pre></body></html>
