@@ -1,6 +1,27 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 67eb38ee4cfd7b28f8498b5b6492da172768dcb9
+Merge: dcc6ce2 c8dd2d0
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Feb 22 22:45:46 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Feb 22 22:45:46 2015 +0000
+
+    Auto merge of #22466 - Kimundi:str_pattern_ai_safe, r=aturon
+    
+    This is not a complete implementation of the RFC:
+    
+    - only existing methods got updated, no new ones added
+    - doc comments are not extensive enough yet
+    - optimizations got lost and need to be reimplemented
+    
+    See https://github.com/rust-lang/rfcs/pull/528
+    
+    Technically a
+    
+    [breaking-change]
+
 commit 98ec45ee0b5f38f06b4ac5adfb9aff198f157bdd
 Merge: 9fe2d21 be0dc49
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2574,19 +2595,4 @@ CommitDate: Thu Jan 8 12:27:28 2015 +1100
     Per RFC 459.
     
     Closes #19390.
-
-commit 6301c7878ebcaa45e77315db2a9afd8b5d1425c8
-Merge: f3b67af dd3e89a
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Jan 7 17:17:23 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Jan 7 17:17:23 2015 -0800
-
-    rollup merge of #20680: nick29581/target-word
-    
-    Closes #20421
-    
-    [breaking-change]
-    
-    r? @brson
 </pre></body></html>
