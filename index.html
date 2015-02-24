@@ -1,6 +1,18 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 717a91d6651598994834d056c69e6c4bf2b74b9f
+Author:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
+AuthorDate: Mon Feb 23 11:07:37 2015 -0800
+Commit:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
+CommitDate: Mon Feb 23 11:07:37 2015 -0800
+
+    Update missing-docs lint to check associated type declarations
+    
+    [breaking-change]
+    
+    Fixes #20648
+
 commit 67eb38ee4cfd7b28f8498b5b6492da172768dcb9
 Merge: dcc6ce2 c8dd2d0
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2571,28 +2583,4 @@ CommitDate: Thu Jan 8 09:22:06 2015 -0800
     rollup merge of #20740: FlaPer87/remove-opt-out-copy
     
     [breaking-change] code using this feature will break.
-
-commit 92cd8ea96ad2a1da51863b7f089baec41ed10ce9
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Thu Jan 8 11:39:45 2015 +1100
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Thu Jan 8 12:27:28 2015 +1100
-
-    Prohibit type parameter shadowing with a clunky hammer.
-    
-    This is a [breaking-change].
-    
-    Change
-    
-        impl&lt;T&gt; Foo&lt;T&gt; {
-            fn bar&lt;T&gt;(...
-    
-    to (for example)
-    
-        impl&lt;T&gt; Foo&lt;T&gt; {
-            fn bar&lt;U&gt;(...
-    
-    Per RFC 459.
-    
-    Closes #19390.
 </pre></body></html>
