@@ -1,6 +1,41 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 0bd15657d93c932611f3aee351b6521cdfa77731
+Merge: c9ace05 0c6d1f3
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Feb 24 17:56:09 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Feb 24 17:56:09 2015 +0000
+
+    Auto merge of #22172 - eddyb:almost-there, r=nikomatsakis
+    
+    Adds `&lt;module::Type&gt;::method` support and makes `module::Type::method` a shorthand for it.
+    This is most of #16293, except that chaining multiple associated types is not yet supported.
+    It also fixes #22563 as `impl`s are no longer treated as modules in resolve.
+    
+    Unfortunately, this is still a *[breaking-change]*:
+    * If you used a global path to a primitive type, i.e. `::bool`, `::i32` etc. - that was a bug I had to fix.
+    Solution: remove the leading `::`.
+    * If you passed explicit `impl`-side type parameters to an inherent method, e.g.:
+    ```rust
+    struct Foo&lt;T&gt;(T);
+    impl&lt;A, B&gt; Foo&lt;(A, B)&gt; {
+        fn pair(a: A, b: B) -&gt; Foo&lt;(A, B)&gt; { Foo((a, b)) }
+    }
+    Foo::&lt;A, B&gt;::pair(a, b)
+    // Now that is sugar for:
+    &lt;Foo&lt;A, B&gt;&gt;::pair(a, b)
+    // Which isn't valid because `Foo` has only one type parameter.
+    // Solution: replace with:
+    Foo::&lt;(A, B)&gt;::pair(a, b)
+    // And, if possible, remove the explicit type param entirely:
+    Foo::pair(a, b)
+    ```
+    * If you used the `QPath`-related `AstBuilder` methods @hugwijst added in #21943.
+    The methods still exist, but `QPath` was replaced by `QSelf`, with the actual path stored separately.
+    Solution: unpack the pair returned by `cx.qpath` to get the two arguments for `cx.expr_qpath`.
+
 commit 717a91d6651598994834d056c69e6c4bf2b74b9f
 Author:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
 AuthorDate: Mon Feb 23 11:07:37 2015 -0800
@@ -2572,15 +2607,4 @@ CommitDate: Sat Jan 10 17:32:54 2015 -0800
     should be easy.
     
     [breaking-change]
-
-commit daee409b60cdb17040122343e0a184049c62180b
-Merge: e40f62d 0d0869a
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Thu Jan 8 09:22:06 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Jan 8 09:22:06 2015 -0800
-
-    rollup merge of #20740: FlaPer87/remove-opt-out-copy
-    
-    [breaking-change] code using this feature will break.
 </pre></body></html>
