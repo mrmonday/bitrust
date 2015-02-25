@@ -1,6 +1,112 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 6c6f2317bae63261123cd94ebe214e80fb6ad78e
+Merge: b18584c ab45694
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Wed Feb 25 10:29:46 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Wed Feb 25 10:29:46 2015 +0530
+
+    Rollup merge of #22729 - alexcrichton:ptr-stabilization, r=aturon
+    
+     Specifically, the following actions were takend:
+    
+    * The `copy_memory` and `copy_nonoverlapping_memory` functions
+      to drop the `_memory` suffix (as it's implied by the functionality). Both
+      functions are now marked as `#[stable]`.
+    * The `set_memory` function was renamed to `write_bytes` and is now stable.
+    * The `zero_memory` function is now deprecated in favor of `write_bytes`
+      directly.
+    * The `Unique` pointer type is now behind its own feature gate called `unique`
+      to facilitate future stabilization.
+    
+    [breaking-change]
+
+commit b18584cbd942e2559e718d6318fdbc494e9047bd
+Merge: 7b7cf84 2d200c9
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Wed Feb 25 10:29:39 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Wed Feb 25 10:29:39 2015 +0530
+
+    Rollup merge of #22727 - alexcrichton:prep-env, r=aturon
+    
+     This commit moves `std::env` away from the `std::old_io` error type as well as
+    the `std::old_path` module. Methods returning an error now return `io::Error`
+    and methods consuming or returning paths use `std::path` instead of
+    `std::old_path`. This commit does not yet mark these APIs as `#[stable]`.
+    
+    This commit also migrates `std::old_io::TempDir` to `std::fs::TempDir` with
+    essentially the exact same API. This type was added to interoperate with the new
+    path API and has its own `tempdir` feature.
+    
+    Finally, this commit reverts the deprecation of `std::os` APIs returning the old
+    path API types. This deprecation can come back once the entire `std::old_path`
+    module is deprecated.
+    
+    [breaking-change]
+
+commit 24fc50d29545e7ea89320d3c9544cd9043894d7d
+Merge: 9692f3b 27f8708
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Wed Feb 25 10:27:11 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Wed Feb 25 10:27:11 2015 +0530
+
+    Rollup merge of #22783 - alexcrichton:deprecate-taskpool, r=alexcrichton
+    
+     Rather than stabilize on the current API, we're going to punt this
+    concern to crates.io, to allow for faster iteration.
+    
+    [breaking-change]
+
+commit 2d200c9c8bd6659720a68ab8dd74218b1e58c1e9
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Mon Feb 23 10:59:17 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Feb 24 15:27:42 2015 -0800
+
+    std: Move std::env to the new I/O APIs
+    
+    This commit moves `std::env` away from the `std::old_io` error type as well as
+    the `std::old_path` module. Methods returning an error now return `io::Error`
+    and methods consuming or returning paths use `std::path` instead of
+    `std::old_path`. This commit does not yet mark these APIs as `#[stable]`.
+    
+    This commit also migrates `std::old_io::TempDir` to `std::fs::TempDir` with
+    essentially the exact same API. This type was added to interoperate with the new
+    path API and has its own `tempdir` feature.
+    
+    Finally, this commit reverts the deprecation of `std::os` APIs returning the old
+    path API types. This deprecation can come back once the entire `std::old_path`
+    module is deprecated.
+    
+    [breaking-change]
+
+commit ab45694198356ae78972025e0d3beece297431d1
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Mon Feb 23 11:39:16 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Feb 24 14:22:33 2015 -0800
+
+    std: Stabilize some `ptr` functions
+    
+    Specifically, the following actions were taken:
+    
+    * The `copy_memory` and `copy_nonoverlapping_memory` functions
+      to drop the `_memory` suffix (as it's implied by the functionality). Both
+      functions are now marked as `#[stable]`.
+    * The `set_memory` function was renamed to `write_bytes` and is now stable.
+    * The `zero_memory` function is now deprecated in favor of `write_bytes`
+      directly.
+    * The `Unique` pointer type is now behind its own feature gate called `unique`
+      to facilitate future stabilization.
+    * All type parameters now are `T: ?Sized` wherever possible and new clauses were
+      added to the `offset` functions to require that the type is sized.
+    
+    [breaking-change]
+
 commit 0bd15657d93c932611f3aee351b6521cdfa77731
 Merge: c9ace05 0c6d1f3
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -611,6 +717,21 @@ CommitDate: Tue Feb 17 06:23:40 2015 +0530
     ---
     
     r? @aturon
+
+commit efd2a1780b2ee1909e84df0c3b398adb024ee375
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Mon Feb 16 16:33:55 2015 -0800
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Mon Feb 16 16:42:06 2015 -0800
+
+    Deprecate std::sync::TaskPool
+    
+    Rather than stabilize on the current API, we're going to punt this
+    concern to crates.io, to allow for faster iteration.
+    
+    If you need this functionality, you might look at https://github.com/carllerche/syncbox
+    
+    [breaking-change]
 
 commit 4a9dd3f8403f84ad518b0119fa2312c379df5dd7
 Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
@@ -2495,116 +2616,6 @@ CommitDate: Fri Jan 16 08:48:16 2015 -0800
     As a result of this fix, this is a likely a breaking change for a number of
     Cargo packages. If the compiler starts informing that a crate can no longer be
     found, it likely means that the dependency was forgotten in your Cargo.toml.
-    
-    [breaking-change]
-
-commit ee2bfae011e368e224d6d4f4c9fad13606ee99da
-Merge: f3d71be cb85223
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri Jan 16 13:10:59 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri Jan 16 13:10:59 2015 +0000
-
-    auto merge of #20972 : FlaPer87/rust/oibit-send-and-friends, r=nikomatsakis
-    
-    This PR adds rules for negative implementations. It follows pretty much what the [RFC](https://github.com/rust-lang/rfcs/blob/master/text/0019-opt-in-builtin-traits.md) says with 1 main difference:
-    
-    Instead of positive implementations override negative implementations, this have been implemented in a way that a negative implementation of `Trait` for `T` will overlap with a positive implementation, causing a coherence error.
-    
-    @nikomatsakis r?
-    
-    cc #13231
-    
-    [breaking-change]
-
-commit 0419b4ab1225595b022d8ed4e425526b4d850995
-Merge: 7be39b0 de7b3cf
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Thu Jan 15 14:12:00 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Jan 15 14:12:00 2015 -0800
-
-    rollup merge of #21167: FlaPer87/coherence-impls
-    
-    Fixes #21080
-    
-    r? @nikomatsakis
-    
-    [breaking-change]
-
-commit 3d0d9bb6fbdf6ead9396f0874cf38f3ef7c9be5c
-Merge: 3a44a19 8b6cda3
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Mon Jan 12 22:56:20 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Mon Jan 12 22:56:20 2015 +0000
-
-    auto merge of #20896 : sfackler/rust/atomic-rename, r=alexcrichton
-    
-    Change any use of AtomicInt to AtomicIsize and AtomicUint to AtomicUsize
-    
-    Closes #20893
-    
-    [breaking-change]
-
-commit 8b6cda3ce681d4d95c3097d12ed754975b4a07f6
-Author:     Steven Fackler &lt;sfackler@gmail.com&gt;
-AuthorDate: Sat Jan 10 13:42:48 2015 -0800
-Commit:     Steven Fackler &lt;sfackler@gmail.com&gt;
-CommitDate: Sun Jan 11 11:47:44 2015 -0800
-
-    Rename AtomicInt and AtomicUint
-    
-    Change any use of AtomicInt to AtomicIsize and AtomicUint to AtomicUsize
-    
-    Closes #20893
-    
-    [breaking-change]
-
-commit 2e4cef4e78253beb4c08ed35416fad076d978344
-Merge: 2127e0d b4fae2f
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sun Jan 11 16:45:48 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sun Jan 11 16:45:48 2015 +0000
-
-    auto merge of #20910 : sfackler/rust/show-impls, r=alexcrichton
-    
-    A derived implementation would not be appropriate for the Buffered types
-    since the buffer is both huge (64k by default) and full of uninitialized
-    memory. Instead of printing the whole thing, we display how full it is.
-    
-    I also altered `MultiWriter` to make it generic over Writers instead of
-    taking `Box&lt;Writer&gt;` trait objects. `Box&lt;Writer&gt;` implements `Writer` so
-    existing use cases should continue to work, and this enables a more
-    useful Show implementation in applicable cases.
-    
-    The change to `MultiWriter` may break code that uses it, but any fixes
-    should be easy.
-    
-    [breaking-change]
-    
-    r? @alexcrichton
-
-commit b4fae2fba99e713a6d6a8a59caaf1cfba847b50e
-Author:     Steven Fackler &lt;sfackler@gmail.com&gt;
-AuthorDate: Sat Jan 10 17:32:54 2015 -0800
-Commit:     Steven Fackler &lt;sfackler@gmail.com&gt;
-CommitDate: Sat Jan 10 17:32:54 2015 -0800
-
-    Implement Show for types in std::io::{buffered,util}
-    
-    A derived implementation would not be appropriate for the Buffered types
-    since the buffer is both huge (64k by default) and full of uninitialized
-    memory. Instead of printing the whole thing, we display how full it is.
-    
-    I also altered MultiWriter to make it generic over Writers instead of
-    taking Box&lt;Writer&gt; trait objects. Box&lt;Writer&gt; implements Writer so
-    existing use cases should continue to work, and this enables a more
-    useful Show implementation in applicable cases.
-    
-    The change to MultiWriter may break code that uses it, but any fixes
-    should be easy.
     
     [breaking-change]
 </pre></body></html>
