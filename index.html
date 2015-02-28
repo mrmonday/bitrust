@@ -1,6 +1,85 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit ce5f1b3216be790be590ad71eabccc16c9b86c74
+Merge: ef80ade 07dc8d6
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Fri Feb 27 11:44:19 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Feb 27 22:07:03 2015 +0530
+
+    Rollup merge of #22817 - jmesmon:result-or-type, r=huonw
+    
+     Changes .or() so that it can return a Result with a different E type
+    than the one it is called on.
+    
+    Essentially:
+    
+        fn or(self, res: Result&lt;T, E&gt;) -&gt; Result&lt;T, E&gt;
+    
+    becomes
+    
+        fn or&lt;F&gt;(self, res: Result&lt;T, F&gt;) -&gt; Result&lt;T, F&gt;
+    
+    This brings `or` in line with the existing `and` &amp; `or_else`
+    
+    This is a
+    [breaking-change]
+    Due to some code needing additional type annotations.
+
+commit 91569a95f16580f05f9dcb4b6d6eff50203cdde8
+Merge: fb92e31 18878b1
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Fri Feb 27 11:43:57 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Feb 27 22:07:02 2015 +0530
+
+    Rollup merge of #22795 - alexcrichton:issue-22617, r=huonw
+    
+     Keeps the method consistent with `Iterator::any`.
+    
+    Closes #22617
+    [breaking-change]
+
+commit 07dc8d67c92017f950eef3951ec901cb2a3add7e
+Author:     Cody P Schafer &lt;dev@codyps.com&gt;
+AuthorDate: Wed Feb 25 13:37:22 2015 -0500
+Commit:     Cody P Schafer &lt;dev@codyps.com&gt;
+CommitDate: Wed Feb 25 17:38:28 2015 -0500
+
+    Result::or : avoid over-specializing the type
+    
+    Changes .or() so that it can return a Result with a different E type
+    than the one it is called on.
+    
+    Essentially:
+    
+        fn or(self, res: Result&lt;T, E&gt;) -&gt; Result&lt;T, E&gt;
+    
+    becomes
+    
+        fn or&lt;F&gt;(self, res: Result&lt;T, F&gt;) -&gt; Result&lt;T, F&gt;
+    
+    This brings `or` in line with the existing `and` and `or_else` member
+    types.
+    
+    This is a
+    [breaking-change]
+    Due to some code needing additional type annotations.
+
+commit 18878b155ebf3c70445f2a461582475f5ef72c92
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Feb 24 21:52:27 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Feb 24 22:04:21 2015 -0800
+
+    std: Require `&amp;mut self` for Iterator::all
+    
+    Keeps the method consistent with `Iterator::any`.
+    
+    Closes #22617
+    [breaking-change]
+
 commit 6c6f2317bae63261123cd94ebe214e80fb6ad78e
 Merge: b18584c ab45694
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2508,114 +2587,4 @@ CommitDate: Sun Jan 18 18:25:55 2015 -0800
     
     [breaking-change]
     Closes #6936
-
-commit d053ccb45fafc12a52629f209122c1ce9bbfabed
-Author:     klutzy &lt;klutzytheklutzy@gmail.com&gt;
-AuthorDate: Sat Jan 10 22:53:22 2015 +0900
-Commit:     klutzy &lt;klutzytheklutzy@gmail.com&gt;
-CommitDate: Mon Jan 19 00:12:45 2015 +0900
-
-    std::dynamic_lib: Fix Windows error handling
-    
-    This is a [breaking-change] since `std::dynamic_lib::dl` is now
-    private.
-    
-    When `LoadLibraryW()` fails, original code called `errno()` to get error
-    code.  However, there was local allocation of `Vec` before
-    `LoadLibraryW()`, and it drops before `errno()`, and the drop
-    (deallocation) changed `errno`! Therefore `dynamic_lib::open()` thought
-    it always succeeded.
-    This commit fixes the issue.
-    
-    This commit also sets Windows error mode during `LoadLibrary()` to
-    prevent "dll load failed" dialog.
-
-commit 34fa70fba5425cbbb96bce783e9fd5c23dd9b471
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Jan 16 12:20:03 2015 -0800
-Commit:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
-CommitDate: Sat Jan 17 10:51:07 2015 -0500
-
-    std: Move the bitflags! macro to a gated crate
-    
-    In accordance with [collections reform part 2][rfc] this macro has been moved to
-    an external [bitflags crate][crate] which is [available though
-    crates.io][cratesio]. Inside the standard distribution the macro has been moved
-    to a crate called `rustc_bitflags` for current users to continue using.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0509-collections-reform-part-2.md
-    [crate]: https://github.com/rust-lang/bitflags
-    [cratesio]: http://crates.io/crates/bitflags
-    
-    The major user of `bitflags!` in terms of a public-facing possibly-stable API
-    today is the `FilePermissions` structure inside of `std::io`. This user,
-    however, will likely no longer use `bitflags!` after I/O reform has landed. To
-    prevent breaking APIs today, this structure remains as-is.
-    
-    Current users of the `bitflags!` macro should add this to their `Cargo.toml`:
-    
-        bitflags = "0.1"
-    
-    and this to their crate root:
-    
-        #[macro_use] extern crate bitflags;
-    
-    Due to the removal of a public macro, this is a:
-    
-    [breaking-change]
-
-commit 873ae555e9a42fd12b0a92134112ec000d749ab2
-Author:     Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
-AuthorDate: Thu Jan 15 22:56:53 2015 +0200
-Commit:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
-CommitDate: Sat Jan 17 10:49:49 2015 -0500
-
-    Revert stability for Bitv and BitvSet
-    
-    The collections were promoted to stable by mistake and do not match RFC 509.
-    This reverts the stability back to unstable.
-    
-    [breaking-change] since previously stable API became unstable.
-    
-    Fixes #21193
-
-commit cbeb77ec7a42b988703fa0b0c857f26d464fdc2f
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Jan 6 08:46:07 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Jan 16 08:48:16 2015 -0800
-
-    rustc: Fix a leak in dependency= paths
-    
-    With the addition of separate search paths to the compiler, it was intended that
-    applications such as Cargo could require a `--extern` flag per `extern crate`
-    directive in the source. The system can currently be subverted, however, due to
-    the `existing_match()` logic in the crate loader.
-    
-    When loading crates we first attempt to match an `extern crate` directive
-    against all previously loaded crates to avoid reading metadata twice. This "hit
-    the cache if possible" step was erroneously leaking crates across the search
-    path boundaries, however. For example:
-    
-        extern crate b;
-        extern crate a;
-    
-    If `b` depends on `a`, then it will load crate `a` when the `extern crate b`
-    directive is being processed. When the compiler reaches `extern crate a` it will
-    use the previously loaded version no matter what. If the compiler was not
-    invoked with `-L crate=path/to/a`, it will still succeed.
-    
-    This behavior is allowing `extern crate` declarations in Cargo without a
-    corresponding declaration in the manifest of a dependency, which is considered
-    a bug.
-    
-    This commit fixes this problem by keeping track of the origin search path for a
-    crate. Crates loaded from the dependency search path are not candidates for
-    crates which are loaded from the crate search path.
-    
-    As a result of this fix, this is a likely a breaking change for a number of
-    Cargo packages. If the compiler starts informing that a crate can no longer be
-    found, it likely means that the dependency was forgotten in your Cargo.toml.
-    
-    [breaking-change]
 </pre></body></html>
