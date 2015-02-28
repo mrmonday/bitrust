@@ -1,6 +1,45 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 040a811b9190d2c2c595e09b5d1db07bedffdde9
+Merge: 37760c1 7ad2e22
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sat Feb 28 13:56:29 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sat Feb 28 19:19:00 2015 +0530
+
+    Rollup merge of #22884 - japaric:obsolete, r=alexcrichton
+    
+     This is leftover from #21843
+    
+    If you still have `|&amp;:| {}` closures in your code, simply remove the `&amp;:` part.
+    
+    [breaking-change]
+
+commit 37760c1f25fc55814a92cce1c98edefdc0740188
+Merge: a0f5ed9 f66a3f7
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sat Feb 28 13:56:15 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sat Feb 28 19:18:59 2015 +0530
+
+    Rollup merge of #22875 - kmcallister:maceager, r=sfackler
+    
+     MacEager is a MacResult implementation for the common case where you've already built each form of AST that you might return.
+    
+    Fixes #17637. Based on #18814.
+    
+    This is a [breaking-change] for syntax extensions:
+    
+      * MacExpr::new becomes MacEager::expr.
+    
+      * MacPat::new becomes MacEager::pat.
+    
+      * MacItems::new becomes MacEager::items. It takes a SmallVector directly,
+        not an iterator.
+    
+    r? @sfackler
+
 commit 48aeaba9347a25b2e3848e0dcbc1d8f6b0076718
 Merge: 1c93934 3909253
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -77,6 +116,28 @@ CommitDate: Sat Feb 28 15:33:59 2015 +1100
     `rustc_lint::register_builtins` on their return value.
     
     This should make #22206 easier.
+
+commit f66a3f7bba378d4a308e02a860a11ab5f9f8e4ad
+Author:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
+AuthorDate: Fri Feb 27 11:14:42 2015 -0800
+Commit:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
+CommitDate: Fri Feb 27 11:17:05 2015 -0800
+
+    Replace MacExpr / MacPat / MacItems with MacEager
+    
+    MacEager is a MacResult implementation for the common case where you've already
+    built each form of AST that you might return.
+    
+    Fixes #17637. Based on #18814.
+    
+    This is a [breaking-change] for syntax extensions:
+    
+      * MacExpr::new becomes MacEager::expr.
+    
+      * MacPat::new becomes MacEager::pat.
+    
+      * MacItems::new becomes MacEager::items. It takes a SmallVector directly,
+        not an iterator.
 
 commit ce5f1b3216be790be590ad71eabccc16c9b86c74
 Merge: ef80ade 07dc8d6
@@ -2581,57 +2642,4 @@ CommitDate: Wed Jan 21 02:16:51 2015 +0900
     [breaking-change]
     
     r? @Gankro
-
-commit e63443d536a0e6157dce0cfb39dfcd2d614fb357
-Merge: 409c997 97a2b26
-Author:     Barosl LEE &lt;github@barosl.com&gt;
-AuthorDate: Wed Jan 21 02:16:47 2015 +0900
-Commit:     Barosl LEE &lt;github@barosl.com&gt;
-CommitDate: Wed Jan 21 02:16:47 2015 +0900
-
-    Rollup merge of #21312 - michaelsproul:remove-error-send-bound, r=aturon
-    
-    As discussed with @aturon, this PR removes the `Send` bound from `std::error::Error`, allowing us to implement `Error` for error types containing non-`Send` types. Current examples include `PoisonError` and `TryLockError` from `std::sync` which contain a Guard that we don't want sent between tasks.
-    
-    [breaking-change]
-
-commit cda3490f8fb099a1ddd1f253a75c29110042dc01
-Merge: 43f2c19 3121c04
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Mon Jan 19 15:44:41 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Mon Jan 19 15:44:41 2015 +0000
-
-    Auto merge of #21269 - alexcrichton:issue-6936, r=pnkfelix
-    
-    This commit modifies resolve to prevent conflicts with typedef names in the same
-    method that conflits are prevented with enum names. This is a breaking change
-    due to the differing semantics in resolve, and any errors generated on behalf of
-    this change require that a conflicting typedef, module, or structure to be
-    renamed so they do not conflict.
-    
-    [breaking-change]
-    Closes #6936
-
-commit 7b87900d72cf53037119e3bac1506a9786ca508a
-Merge: 135cac8 d053ccb
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Mon Jan 19 10:19:23 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Mon Jan 19 10:19:23 2015 +0000
-
-    Auto merge of #20874 - klutzy:windows-dynamic-lib, r=alexcrichton
-    
-    This is a [breaking-change] since `std::dynamic_lib::dl` is now
-    private.
-    
-    When `LoadLibraryW()` fails, original code called `errno()` to get error
-    code.  However, there was local allocation of `Vec` before
-    `LoadLibraryW()`, and it drops before `errno()`, and the drop
-    (deallocation) changed `errno`! Therefore `dynamic_lib::open()` thought
-    it always succeeded.
-    This commit fixes the issue.
-    
-    This commit also sets Windows error mode during `LoadLibrary()` to
-    prevent "dll load failed" dialog.
 </pre></body></html>
