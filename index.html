@@ -1,6 +1,83 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 48aeaba9347a25b2e3848e0dcbc1d8f6b0076718
+Merge: 1c93934 3909253
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Feb 28 06:06:18 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Feb 28 06:06:18 2015 +0000
+
+    Auto merge of #22801 - huonw:crateify-lint, r=kmcallister
+    
+    This pulls out the implementations of most built-in lints into a
+    separate crate, to reduce edit-compile-test iteration times with
+    librustc_lint and increase parallelism. This should enable lints to be
+    refactored, added and deleted much more easily as it slashes the
+    edit-compile cycle to get a minimal working compiler to test with (`make
+    rustc-stage1`) from
+    
+        librustc -&gt; librustc_typeck -&gt; ... -&gt; librustc_driver -&gt;
+            libcore -&gt; ... -&gt; libstd
+    
+    to
+    
+        librustc_lint -&gt; librustc_driver -&gt; libcore -&gt; ... libstd
+    
+    which is significantly faster, mainly due to avoiding the librustc build
+    itself.
+    
+    The intention would be to move as much as possible of the infrastructure
+    into the crate too, but the plumbing is deeply intertwined with librustc
+    itself at the moment. Also, there are lints for which diagnostics are
+    registered directly in the compiler code, not in their own crate
+    traversal, and their definitions have to remain in librustc.
+    
+    This is a [breaking-change] for direct users of the compiler APIs:
+    callers of `rustc::session::build_session` or
+    `rustc::session::build_session_` need to manually call
+    `rustc_lint::register_builtins` on their return value.
+    
+    This should make #22206 easier.
+
+commit 532cd5f85a93921f74f5991db2e419c6da58b188
+Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+AuthorDate: Wed Feb 25 22:44:44 2015 +1100
+Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+CommitDate: Sat Feb 28 15:33:59 2015 +1100
+
+    Separate most of rustc::lint::builtin into a separate crate.
+    
+    This pulls out the implementations of most built-in lints into a
+    separate crate, to reduce edit-compile-test iteration times with
+    librustc_lint and increase parallelism. This should enable lints to be
+    refactored, added and deleted much more easily as it slashes the
+    edit-compile cycle to get a minimal working compiler to test with (`make
+    rustc-stage1`) from
+    
+        librustc -&gt; librustc_typeck -&gt; ... -&gt; librustc_driver -&gt;
+            libcore -&gt; ... -&gt; libstd
+    
+    to
+    
+        librustc_lint -&gt; librustc_driver -&gt; libcore -&gt; ... libstd
+    
+    which is significantly faster, mainly due to avoiding the librustc build
+    itself.
+    
+    The intention would be to move as much as possible of the infrastructure
+    into the crate too, but the plumbing is deeply intertwined with librustc
+    itself at the moment. Also, there are lints for which diagnostics are
+    registered directly in the compiler code, not in their own crate
+    traversal, and their definitions have to remain in librustc.
+    
+    This is a [breaking-change] for direct users of the compiler APIs:
+    callers of `rustc::session::build_session` or
+    `rustc::session::build_session_` need to manually call
+    `rustc_lint::register_builtins` on their return value.
+    
+    This should make #22206 easier.
+
 commit ce5f1b3216be790be590ad71eabccc16c9b86c74
 Merge: ef80ade 07dc8d6
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2557,34 +2634,4 @@ CommitDate: Mon Jan 19 10:19:23 2015 +0000
     
     This commit also sets Windows error mode during `LoadLibrary()` to
     prevent "dll load failed" dialog.
-
-commit 2366dee8e9cb41d963900c8d5128f810a87fc6bb
-Author:     Adolfo Ochagavía &lt;aochagavia92@gmail.com&gt;
-AuthorDate: Mon Jan 19 10:48:01 2015 +0100
-Commit:     Adolfo Ochagavía &lt;aochagavia92@gmail.com&gt;
-CommitDate: Mon Jan 19 10:48:01 2015 +0100
-
-    Make VecMap::into_iter consume the VecMap
-    
-    This is a breaking change. To fix it you should pass the VecMap by value
-    instead of by reference.
-    
-    [breaking-change]
-
-commit 2549cbec9dfe02cdc93a3cf3bfe9638e5a4c2948
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Jan 16 14:25:45 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Sun Jan 18 18:25:55 2015 -0800
-
-    rustc_resolve: Do not allow mods to shadow types
-    
-    This commit modifies resolve to prevent conflicts with typedef names in the same
-    method that conflits are prevented with enum names. This is a breaking change
-    due to the differing semantics in resolve, and any errors generated on behalf of
-    this change require that a conflicting typedef, module, or structure to be
-    renamed so they do not conflict.
-    
-    [breaking-change]
-    Closes #6936
 </pre></body></html>
