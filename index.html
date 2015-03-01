@@ -1,6 +1,20 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 157614249594f187f421cd97f928e64c5ab5c1fa
+Merge: 0eb0ba3 d79e910
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Mar 1 14:22:58 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Mar 1 14:22:58 2015 +0000
+
+    Auto merge of #22880 - alexcrichton:deprecate-io-extensions, r=huonw
+    
+    The `u64_from_be_bytes` and `u64_to_be_bytes` functions are being deprecated
+    with no replacement for now.
+    
+    [breaking-change]
+
 commit d9fb9765a13d44f051cae9a9a7d010621b8e42cb
 Merge: 9dc9fcc d11b48c
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -157,6 +171,19 @@ CommitDate: Sat Feb 28 15:33:59 2015 +1100
     `rustc_lint::register_builtins` on their return value.
     
     This should make #22206 easier.
+
+commit d79e91033770fc5a760d34511769f5ba6c872c77
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Feb 27 15:46:02 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Fri Feb 27 16:26:33 2015 -0800
+
+    std: Deprecated the `old_io::extensions` module
+    
+    The `u64_from_be_bytes` and `u64_to_be_bytes` functions are being deprecated
+    with no replacement for now.
+    
+    [breaking-change]
 
 commit f66a3f7bba378d4a308e02a860a11ab5f9f8e4ad
 Author:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
@@ -2576,57 +2603,6 @@ CommitDate: Fri Jan 23 14:11:34 2015 -0800
     
     This commit is a breaking change and any breakage should be mitigated by
     ensuring that `Debug` is implemented on the relevant type.
-    
-    [breaking-change]
-
-commit 092ba6a8563b5c95f5aa53a705eaba6cc94e2da7
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Sat Jan 17 16:15:47 2015 -0800
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Wed Jan 21 07:45:45 2015 -0800
-
-    Deprecate slicing methods in favor of notation
-    
-    This commit deprecates `slice`, `slice_from`, `slice_to` and their
-    mutable variants in favor of slice notation.
-    
-    The `as_slice` methods are left intact, for now.
-    
-    [breaking-change]
-
-commit fba0bf63a90379e8825012a817167774e14a627f
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Thu Jan 15 20:00:09 2015 -0800
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Wed Jan 21 07:45:45 2015 -0800
-
-    Stabilize Index traits and most range notation
-    
-    This commit marks as `#[stable]`:
-    
-    * The `Index` and `IndexMut` traits. These are stabilized as taking the
-      index itself *by reference*; after extensive discussion it was
-      determined that this is a better match with our choices
-      elsewhere (e.g. making comparison operators auto-reference), and that
-      the use cases for by-value indices are better handled through
-      `IndexSet`.
-    
-    * The `Range`, `RangeFrom` and `RangeTo` structs, introduced for range
-      notation.
-    
-    * Various impls of `Index` and `IndexMut`.
-    
-    The `FullRange` struct is left unstable as we may wish to rename it to
-    `RangeFull` in the future.
-    
-    This commit also *removes* the `Step` trait in favor of direct
-    implementation of iterator traits on ranges for integers. The `Step`
-    trait was not a terribly useful factoring internally, and it is likely
-    that external integer types are best off implementing range iterators
-    directly. It was removed to simplify the API surface. We can always
-    reintroduce `Step` later if it turns out to be useful.
-    
-    Due to this removal, this is a:
     
     [breaking-change]
 </pre></body></html>
