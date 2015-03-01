@@ -1,6 +1,47 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit d9fb9765a13d44f051cae9a9a7d010621b8e42cb
+Merge: 9dc9fcc d11b48c
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sun Mar 1 01:19:26 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sun Mar 1 09:49:48 2015 +0530
+
+    Rollup merge of #22907 - dotdash:static_assert_bool, r=eddyb
+    
+     static_assert is documented as working on static with type `bool`, but
+    we currently accept it on any const static and crash when the const has
+    an non-integral type.
+    
+    This is a breaking-change for anyone who used static_assert on types
+    likes i32, which happened to work but seems like an unintended
+    consequence of the missing error checking.
+    
+    [breaking-change]
+    
+    Fixes #22056
+
+commit d11b48c85c1cceb559ab8a08815ba3f7b3312c44
+Author:     Björn Steinbrink &lt;bsteinbr@gmail.com&gt;
+AuthorDate: Sat Feb 28 19:22:24 2015 +0100
+Commit:     Björn Steinbrink &lt;bsteinbr@gmail.com&gt;
+CommitDate: Sat Feb 28 19:28:49 2015 +0100
+
+    Error out when using static_assert on a non-boolean value
+    
+    static_assert is documented as working on static with type `bool`, but
+    we currently accept it on any const static and crash when the const has
+    an non-integral type.
+    
+    This is a breaking-change for anyone who used static_assert on types
+    likes i32, which happened to work but seems like an unintended
+    consequence of the missing error checking.
+    
+    [breaking-change]
+    
+    Fixes #22056
+
 commit 040a811b9190d2c2c595e09b5d1db07bedffdde9
 Merge: 37760c1 7ad2e22
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2588,58 +2629,4 @@ CommitDate: Wed Jan 21 07:45:45 2015 -0800
     Due to this removal, this is a:
     
     [breaking-change]
-
-commit 3cb9fa26ef9905c00a29ea577fb55a12a91c8e7b
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Jan 20 15:45:07 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Jan 20 22:36:13 2015 -0800
-
-    std: Rename Show/String to Debug/Display
-    
-    This commit is an implementation of [RFC 565][rfc] which is a stabilization of
-    the `std::fmt` module and the implementations of various formatting traits.
-    Specifically, the following changes were performed:
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0565-show-string-guidelines.md
-    
-    * The `Show` trait is now deprecated, it was renamed to `Debug`
-    * The `String` trait is now deprecated, it was renamed to `Display`
-    * Many `Debug` and `Display` implementations were audited in accordance with the
-      RFC and audited implementations now have the `#[stable]` attribute
-      * Integers and floats no longer print a suffix
-      * Smart pointers no longer print details that they are a smart pointer
-      * Paths with `Debug` are now quoted and escape characters
-    * The `unwrap` methods on `Result` now require `Display` instead of `Debug`
-    * The `Error` trait no longer has a `detail` method and now requires that
-      `Display` must be implemented. With the loss of `String`, this has moved into
-      libcore.
-    * `impl&lt;E: Error&gt; FromError&lt;E&gt; for Box&lt;Error&gt;` now exists
-    * `derive(Show)` has been renamed to `derive(Debug)`. This is not currently
-      warned about due to warnings being emitted on stage1+
-    
-    While backwards compatibility is attempted to be maintained with a blanket
-    implementation of `Display` for the old `String` trait (and the same for
-    `Show`/`Debug`) this is still a breaking change due to primitives no longer
-    implementing `String` as well as modifications such as `unwrap` and the `Error`
-    trait. Most code is fairly straightforward to update with a rename or tweaks of
-    method calls.
-    
-    [breaking-change]
-    Closes #21436
-
-commit 8d05f6c74c34c1d72fd91be3057fe7d4581aca3a
-Merge: 3d6568f b4090aa
-Author:     Barosl LEE &lt;github@barosl.com&gt;
-AuthorDate: Wed Jan 21 02:16:51 2015 +0900
-Commit:     Barosl LEE &lt;github@barosl.com&gt;
-CommitDate: Wed Jan 21 02:16:51 2015 +0900
-
-    Rollup merge of #21388 - aochagavia:collections, r=Gankro
-    
-    **Breaking change**: `VecMap::into_iter` now consumes the `VecMap`. To fix it you should pass the VecMap by value instead of by reference.
-    
-    [breaking-change]
-    
-    r? @Gankro
 </pre></body></html>
