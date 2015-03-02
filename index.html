@@ -1,6 +1,20 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit ef8b20a564bab2050403f2f5c1dab90e0941adf7
+Merge: 85bdb31 2fc6224
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Mon Mar 2 03:53:54 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Mon Mar 2 03:53:54 2015 +0530
+
+    Rollup merge of #22821 - ipetkov:lint-method-rename, r=eddyb
+    
+     Traits can have associated types and not just methods. This
+    clarification reflects the the type of the input the method accepts.
+    
+    [breaking-change]
+
 commit 157614249594f187f421cd97f928e64c5ab5c1fa
 Merge: 0eb0ba3 d79e910
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -35,6 +49,19 @@ CommitDate: Sun Mar 1 09:49:48 2015 +0530
     [breaking-change]
     
     Fixes #22056
+
+commit 2fc62244113d01e9524ed712210ba52e8471e2a9
+Author:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
+AuthorDate: Sat Feb 28 13:56:37 2015 -0800
+Commit:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
+CommitDate: Sat Feb 28 13:56:37 2015 -0800
+
+    Rename LintPass::check_trait_method to check_trait_item
+    
+    Traits can have associated types and not just methods. This
+    clarification reflects the the type of the input the method accepts.
+    
+    [breaking-change]
 
 commit d11b48c85c1cceb559ab8a08815ba3f7b3312c44
 Author:     Björn Steinbrink &lt;bsteinbr@gmail.com&gt;
@@ -2564,38 +2591,6 @@ Commit:     bors &lt;bors@rust-lang.org&gt;
 CommitDate: Sun Jan 25 05:50:30 2015 +0000
 
     Auto merge of #21558 - alexcrichton:result-debug, r=aturon
-    
-    This commit relaxes the bound on `Result::unwrap` and `Result::unwrap_err` from
-    the `Display` trait to the `Debug` trait for generating an error message about
-    the unwrapping operation.
-    
-    This commit is a breaking change and any breakage should be mitigated by
-    ensuring that `Debug` is implemented on the relevant type.
-    
-    [breaking-change]
-
-commit e5c1f166a8282072089de2ad62a5b2427bd2bebf
-Merge: 4be79d6 6c29708
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sat Jan 24 05:12:15 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sat Jan 24 05:12:15 2015 +0000
-
-    Auto merge of #21458 - alexcrichton:remove-some-code, r=brson
-    
-    The base64 support can be trivially removed (there are no in-tree users) and the regex support is a whopping 4k lines of code to maintain for a few non-critical uses in-tree. This commit migrates all current users in-tree away from regexes to custom matching code.
-    
-    The most critical application affected by this migration is that the testing framework no longer considers filter arguments as regexes, but rather just a substring matching. It is expected that more featureful testing frameworks can evolve outside of the in-tree libtest version over time which can properly depend on libregex from crates.io.
-    
-    [breaking-change]
-
-commit 08246520c0fef902b169233e26e15cf58ef1cd8b
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Jan 23 10:38:50 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Jan 23 14:11:34 2015 -0800
-
-    std: Relax Result::unwrap() to Debug
     
     This commit relaxes the bound on `Result::unwrap` and `Result::unwrap_err` from
     the `Display` trait to the `Debug` trait for generating an error message about
