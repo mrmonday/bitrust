@@ -1,6 +1,95 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 393ce1820e3f639b43d6058d2681b9757123ac1b
+Merge: d0fcb1f f35f973
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Tue Mar 3 14:12:53 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Tue Mar 3 17:02:20 2015 +0530
+
+    Rollup merge of #22876 - Florob:const, r=nikomatsakis
+    
+     This changes the type of some public constants/statics in libunicode.
+    Notably some `&amp;'static &amp;'static [(char, char)]` have changed
+    to `&amp;'static [(char, char)]`. The regexp crate seems to be the
+    sole user of these, yet this is technically a [breaking-change]
+
+commit d0fcb1f53c9f81fbcae5379dd1c0577a8605172c
+Merge: ea208a8 89776ae
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Tue Mar 3 14:12:44 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Tue Mar 3 17:01:16 2015 +0530
+
+    Rollup merge of #22990 - japaric:privATe, r=alexcrichton
+    
+     Associated types are now treated as part of the public API by the privacy checker.
+    
+    If you were exposing a private type in your public API via an associated type, make that type public:
+    
+    ``` diff
+      pub struct PublicType { .. }
+    
+    - struct Struct { .. }
+    + pub struct Struct { .. }
+    
+      pub trait PublicTrait {
+          type Output;
+    
+          fn foo(&amp;self) -&gt; Self::Output;
+      }
+    
+      impl PublicTrait for PublicType {
+          type Output = Struct;
+    
+          fn foo(&amp;self) -&gt; Struct {  // `Struct` is part of the public API, it must be marked as `pub`lic
+              ..
+          }
+      }
+    ```
+    
+    [breaking-change]
+    
+    ---
+    
+    r? @nikomatsakis
+    closes #22912
+
+commit 3b30b74692cfee533b45e0380591d237975ec215
+Merge: 63a91c2 2b03718
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Tue Mar 3 14:12:12 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Tue Mar 3 17:01:15 2015 +0530
+
+    Rollup merge of #22943 - ipetkov:lint-recursion, r=alexcrichton
+    
+     * The lint visitor's visit_ty method did not recurse, and had a
+      reference to the now closed #10894
+    * The newly enabled recursion has only affected the `deprectated` lint
+      which now detects uses of deprecated items in trait impls and
+      function return types
+    * Renamed some references to `CowString` and `CowVec` to `Cow&lt;str&gt;` and
+      `Cow&lt;[T]&gt;`, respectively, which appear outside of the crate which
+      defines them
+    * Replaced a few instances of `InvariantType&lt;T&gt;` with
+      `PhantomData&lt;Cell&lt;T&gt;&gt;`
+    * Disabled the `deprecated` lint in several places that
+      reference/implement traits on deprecated items which will get cleaned
+      up in the future
+    * Unfortunately, this means that if a library declares
+      `#![deny(deprecated)]` and marks anything as deprecated, it will have
+      to disable the lint for any uses of said item, e.g. any impl the now
+      deprecated item
+    
+    For any library that denies deprecated items but has deprecated items
+    of its own, this is a [breaking-change]
+    
+    I had originally intended for the lint to ignore uses of deprecated items that are declared in the same crate, but this goes against some previous test cases that expect the lint to capture *all* uses of deprecated items, so I maintained the previous approach to avoid changing the expected behavior of the lint.
+    
+    Tested locally on OS X, so hopefully there aren't any deprecated item uses behind a `cfg` that I may have missed.
+
 commit 76e9fa63ba0b6d892aa880db9c8373ede3e67c03
 Author:     Brian Anderson &lt;banderson@mozilla.com&gt;
 AuthorDate: Thu Feb 19 21:05:35 2015 -0800
@@ -16,6 +105,51 @@ CommitDate: Mon Mar 2 16:12:46 2015 -0800
     Doesn't touch pow because there's another PR for it.
     
     [breaking-change]
+
+commit 2b03718618d66e7e672663230be1ee857d3fb89a
+Author:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
+AuthorDate: Sat Feb 28 23:24:05 2015 -0800
+Commit:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
+CommitDate: Mon Mar 2 15:35:48 2015 -0800
+
+    Enable recursion for visit_ty in lint visitor
+    
+    * The lint visitor's visit_ty method did not recurse, and had a
+      reference to the now closed #10894
+    * The newly enabled recursion has only affected the `deprectated` lint
+      which now detects uses of deprecated items in trait impls and
+      function return types
+    * Renamed some references to `CowString` and `CowVec` to `Cow&lt;str&gt;` and
+      `Cow&lt;[T]&gt;`, respectively, which appear outside of the crate which
+      defines them
+    * Replaced a few instances of `InvariantType&lt;T&gt;` with
+      `PhantomData&lt;Cell&lt;T&gt;&gt;`
+    * Disabled the `deprecated` lint in several places that
+      reference/implement traits on deprecated items which will get cleaned
+      up in the future
+    * Disabled the `exceeding_bitshifts` lint for
+      compile-fail/huge-array-simple test so it doesn't shadow the expected
+      error on 32bit systems
+    * Unfortunately, this means that if a library declares
+      `#![deny(deprecated)]` and marks anything as deprecated, it will have
+      to disable the lint for any uses of said item, e.g. any impl the now
+      deprecated item
+    
+    For any library that denies deprecated items but has deprecated items
+    of its own, this is a [breaking-change]
+
+commit f35f973cb700c444d8c029ee13b37dc16d560225
+Author:     Florian Zeitz &lt;florob@babelmonkeys.de&gt;
+AuthorDate: Fri Feb 27 15:36:53 2015 +0100
+Commit:     Florian Zeitz &lt;florob@babelmonkeys.de&gt;
+CommitDate: Mon Mar 2 17:11:51 2015 +0100
+
+    Use `const`s instead of `static`s where appropriate
+    
+    This changes the type of some public constants/statics in libunicode.
+    Notably some `&amp;'static &amp;'static [(char, char)]` have changed
+    to `&amp;'static [(char, char)]`. The regexp crate seems to be the
+    sole user of these, yet this is technically a [breaking-change]
 
 commit 93613a543f0cae68ea82e6a66b9b9cdfa13b673e
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2294,300 +2428,5 @@ CommitDate: Fri Jan 30 09:21:56 2015 -0800
     this likely will not have much impact on existing programs.
     
     Closes #20661
-    [breaking-change]
-
-commit a9d465fec902588b71937de96e66d160d2adebf5
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Wed Jan 28 14:27:28 2015 +1300
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Fri Jan 30 12:00:20 2015 +1300
-
-    Use absolute path to FullRange, rather than assuming it is in the prelude
-    
-    Closes #21263
-    
-    [breaking-change]
-    
-    If you are using `core::ops::FullRange` you should change to using `core::ops::RangeFull`
-
-commit d77f6d5366b330f9c2061cad0d3ff638c9cc05b7
-Merge: e365e4c d6bf04a
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Jan 27 11:07:26 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Jan 27 11:07:26 2015 +0000
-
-    Auto merge of #21657 - pnkfelix:block-remainder-extents, r=nikomatsakis
-    
-     Add `CodeExtent::Remainder` variant; pre-req for new scoping/drop rules.
-    
-    This new enum variant introduces finer-grain code extents, i.e. we now track that a binding lives only for a suffix of a block, and (importantly) will be dropped when it goes out of scope *before* the bindings that occurred earlier in the block.
-    
-    Both of these notions are neatly captured by marking the block (and each suffix) as an enclosing scope of the next suffix beneath it.
-    
-    This is work that is part of the foundation for issue #8861.
-    
-    (It actually has been seen in earlier posted pull requests, in particular #21022; I have just factored it out into its own PR to ease my own near-future rebasing, and also get people used to the new rules.)
-    
-    ----
-    
-    These finer grained scopes do mean that some code is newly rejected by `rustc`; for example:
-    
-    ```rust
-    let mut map : HashMap&lt;u8, &amp;u8&gt; = HashMap::new();
-    let tmp = Box::new(2);
-    map.insert(43, &amp;*tmp);
-    ```
-    
-    This will now fail to compile with a message that `*tmp` does not live long enough, because the scope of `tmp` is now strictly smaller than
-    that of `map`, and the use of `&amp;u8` in map's type requires that the borrowed references are all to data that live at least as long as the map.
-    
-    The usual fix for a case like this is to move the binding for `tmp` up above that of `map`; note that you can still leave the initialization in the original spot, like so:
-    
-    ```rust
-    let tmp;
-    let mut map : HashMap&lt;u8, &amp;u8&gt; = HashMap::new();
-    tmp = box 2;
-    map.insert(43, &amp;*tmp);
-    ```
-    
-    Similarly, one can encounter an analogous situation with `Vec`: one would need to rewrite:
-    
-    ```rust
-    let mut vec = Vec::new();
-    let tmp = 'c';
-    vec.push(&amp;tmp);
-    ```
-    
-    as:
-    
-    ```rust
-    let tmp;
-    let mut vec = Vec::new();
-    tmp = 'c';
-    vec.push(&amp;tmp);
-    ```
-    
-    ----
-    
-    In some corner cases, it does not suffice to reorder the bindings; in particular, when the types for both bindings need to reflect exactly the *same* code extent, and a parent/child relationship between them does not work.
-    
-    In pnkfelix's experience this has arisen most often when mixing uses of cyclic data structures while also allowing a lifetime parameter `'a` to flow into a type parameter context where the type is *invariant* with respect to the type parameter. An important instance of this is `arena::TypedArena&lt;T&gt;`, which is invariant with respect to `T`.
-    
-    (The reason that variance is relevant is this: *if* `TypedArena` were covariant with respect to its type parameter, then we could assign it
-    the longer lifetime when it is initialized, and then convert it to a subtype (via covariance) with a shorter lifetime when necessary.  But `TypedArena` is invariant with respect to its type parameter, and thus if `S` is a subtype of `T` (in particular, if `S` has a lifetime parameter that is shorter than that of `T`), then a `TypedArena&lt;S&gt;` is unrelated to `TypedArena&lt;T&gt;`.)
-    
-    Concretely, consider code like this:
-    
-    ```rust
-    struct Node&lt;'a&gt; { sibling: Option&lt;&amp;'a Node&lt;'a&gt;&gt; }
-    struct Context&lt;'a&gt; {
-        // because of this field, `Context&lt;'a&gt;` is invariant with respect to `'a`.
-        arena: &amp;'a TypedArena&lt;Node&lt;'a&gt;&gt;,
-        ...
-    }
-    fn new_ctxt&lt;'a&gt;(arena: &amp;'a TypedArena&lt;Node&lt;'a&gt;&gt;) -&gt; Context&lt;'a&gt; { ... }
-    fn use_ctxt&lt;'a&gt;(fcx: &amp;'a Context&lt;'a&gt;) { ... }
-    
-    let arena = TypedArena::new();
-    let ctxt = new_ctxt(&amp;arena);
-    
-    use_ctxt(&amp;ctxt);
-    ```
-    
-    In these situations, if you try to introduce two bindings via two distinct `let` statements, each is (with this commit) assigned a distinct extent, and the region inference system cannot find a single region to assign to the lifetime `'a` that works for both of the bindings. So you get an error that `ctxt` does not live long enough; but moving its binding up above that of `arena` just shifts the error so now the compiler complains that `arena` does not live long enough.
-    
-     * SO: What to do? The easiest fix in this case is to ensure that the two bindings *do* get assigned the same static extent, by stuffing both
-    bindings into the same let statement, like so:
-    
-    ```rust
-    let (arena, ctxt): (TypedArena, Context);
-    arena = TypedArena::new();
-    ctxt = new_ctxt(&amp;arena);
-    
-    use_ctxt(&amp;ctxt);
-    ```
-    
-    ----
-    
-    Due to the new code restrictions outlined above, this is a ...
-    
-    [breaking-change]
-
-commit d6bf04a22e78afbe62e9d81e3578418f420123bc
-Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-AuthorDate: Mon Jan 26 12:48:19 2015 +0100
-Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-CommitDate: Tue Jan 27 10:26:52 2015 +0100
-
-    Add `CodeExtent::Remainder` variant; pre-req for new scoping/drop rules.
-    
-    This new variant introduces finer-grain code extents, i.e. we now
-    track that a binding lives only for a suffix of a block, and
-    (importantly) will be dropped when it goes out of scope *before* the
-    bindings that occurred earlier in the block.
-    
-    Both of these notions are neatly captured by marking the block (and
-    each suffix) as an enclosing scope of the next suffix beneath it.
-    
-    This is work that is part of the foundation for issue #8861.
-    
-    (It actually has been seen in earlier posted pull requests; I have
-    just factored it out into its own PR to ease my own rebasing.)
-    
-    ----
-    
-    These finer grained scopes do mean that some code is newly rejected by
-    `rustc`; for example:
-    
-    ```rust
-    let mut map : HashMap&lt;u8, &amp;u8&gt; = HashMap::new();
-    let tmp = Box::new(2);
-    map.insert(43, &amp;*tmp);
-    ```
-    
-    This will now fail to compile with a message that `*tmp` does not live
-    long enough, because the scope of `tmp` is now strictly smaller than
-    that of `map`, and the use of `&amp;u8` in map's type requires that the
-    borrowed references are all to data that live at least as long as the
-    map.
-    
-    The usual fix for a case like this is to move the binding for `tmp`
-    up above that of `map`; note that you can still leave the initialization
-    in the original spot, like so:
-    
-    ```rust
-    let tmp;
-    let mut map : HashMap&lt;u8, &amp;u8&gt; = HashMap::new();
-    tmp = box 2;
-    map.insert(43, &amp;*tmp);
-    ```
-    
-    Similarly, one can encounter an analogous situation with `Vec`: one
-    would need to rewrite:
-    
-    ```rust
-    let mut vec = Vec::new();
-    let tmp = 'c';
-    vec.push(&amp;tmp);
-    ```
-    
-    as:
-    
-    ```
-    let tmp;
-    let mut vec = Vec::new();
-    tmp = 'c';
-    vec.push(&amp;tmp);
-    ```
-    
-    ----
-    
-    In some corner cases, it does not suffice to reorder the bindings; in
-    particular, when the types for both bindings need to reflect exactly
-    the *same* code extent, and a parent/child relationship between them
-    does not work.
-    
-    In pnkfelix's experience this has arisen most often when mixing uses
-    of cyclic data structures while also allowing a lifetime parameter
-    `'a` to flow into a type parameter context where the type is
-    *invariant* with respect to the type parameter. An important instance
-    of this is `arena::TypedArena&lt;T&gt;`, which is invariant with respect
-    to `T`.
-    
-    (The reason that variance is relevant is this: *if* `TypedArena` were
-    covariant with respect to its type parameter, then we could assign it
-    the longer lifetime when it is initialized, and then convert it to a
-    subtype (via covariance) with a shorter lifetime when necessary.  But
-    `TypedArena` is invariant with respect to its type parameter, and thus
-    if `S` is a subtype of `T` (in particular, if `S` has a lifetime
-    parameter that is shorter than that of `T`), then a `TypedArena&lt;S&gt;` is
-    unrelated to `TypedArena&lt;T&gt;`.)
-    
-    Concretely, consider code like this:
-    
-    ```rust
-    struct Node&lt;'a&gt; { sibling: Option&lt;&amp;'a Node&lt;'a&gt;&gt; }
-    struct Context&lt;'a&gt; {
-        // because of this field, `Context&lt;'a&gt;` is invariant with respect to `'a`.
-        arena: &amp;'a TypedArena&lt;Node&lt;'a&gt;&gt;,
-        ...
-    }
-    fn new_ctxt&lt;'a&gt;(arena: &amp;'a TypedArena&lt;Node&lt;'a&gt;&gt;) -&gt; Context&lt;'a&gt; { ... }
-    fn use_ctxt&lt;'a&gt;(fcx: &amp;'a Context&lt;'a&gt;) { ... }
-    
-    let arena = TypedArena::new();
-    let ctxt = new_ctxt(&amp;arena);
-    
-    use_ctxt(&amp;ctxt);
-    ```
-    
-    In these situations, if you try to introduce two bindings via two
-    distinct `let` statements, each is (with this commit) assigned a
-    distinct extent, and the region inference system cannot find a single
-    region to assign to the lifetime `'a` that works for both of the
-    bindings. So you get an error that `ctxt` does not live long enough;
-    but moving its binding up above that of `arena` just shifts the error
-    so now the compiler complains that `arena` does not live long enough.
-    
-    SO: What to do? The easiest fix in this case is to ensure that the two
-    bindings *do* get assigned the same static extent, by stuffing both
-    bindings into the same let statement, like so:
-    
-    ```rust
-    let (arena, ctxt): (TypedArena, Context);
-    arena = TypedArena::new();
-    ctxt = new_ctxt(&amp;arena);
-    
-    use_ctxt(&amp;ctxt);
-    ```
-    
-    Due to the new code rejections outlined above, this is a ...
-    
-    [breaking-change]
-
-commit a6a6fadbb97268d2b3e47649d91053fbb4827266
-Merge: a637365 5d836cd
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Jan 27 02:46:09 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Jan 27 02:46:09 2015 +0000
-
-    Auto merge of #21543 - alexcrichton:old-io, r=aturon
-    
-    In preparation for the I/O rejuvination of the standard library, this commit
-    renames the current `io` module to `old_io` in order to make room for the new
-    I/O modules. It is expected that the I/O RFCs will land incrementally over time
-    instead of all at once, and this provides a fresh clean path for new modules to
-    enter into as well as guaranteeing that all old infrastructure will remain in
-    place for some time.
-    
-    As each `old_io` module is replaced it will be deprecated in-place for new
-    structures in `std::{io, fs, net}` (as appropriate).
-    
-    This commit does *not* leave a reexport of `old_io as io` as the deprecation
-    lint does not currently warn on this form of use. This is quite a large breaking
-    change for all imports in existing code, but all functionality is retained
-    precisely as-is and path statements simply need to be renamed from `io` to
-    `old_io`.
-    
-    [breaking-change]
-
-commit 5d836cdf8666ce0af6911a0c89dffea4da74b374
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Jan 23 10:46:14 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Jan 26 16:01:58 2015 -0800
-
-    std: Rename Writer::write to Writer::write_all
-    
-    In preparation for upcoming changes to the `Writer` trait (soon to be called
-    `Write`) this commit renames the current `write` method to `write_all` to match
-    the semantics of the upcoming `write_all` method. The `write` method will be
-    repurposed to return a `usize` indicating how much data was written which
-    differs from the current `write` semantics. In order to head off as much
-    unintended breakage as possible, the method is being deprecated now in favor of
-    a new name.
-    
     [breaking-change]
 </pre></body></html>
