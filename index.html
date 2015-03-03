@@ -90,6 +90,22 @@ CommitDate: Tue Mar 3 17:01:15 2015 +0530
     
     Tested locally on OS X, so hopefully there aren't any deprecated item uses behind a `cfg` that I may have missed.
 
+commit cdfff9db35d037c51dfd5c2bac2174f651294adb
+Author:     Corey Richardson &lt;corey@octayn.net&gt;
+AuthorDate: Tue Jan 6 00:56:30 2015 -0500
+Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+CommitDate: Tue Mar 3 12:09:07 2015 +0100
+
+    rustc: implement arithmetic overflow checking
+    
+    Adds overflow checking to integer addition, multiplication, and subtraction
+    when `-Z force-overflow-checks` is true, or if `--cfg ndebug` is not passed to
+    the compiler. On overflow, it panics with `arithmetic operation overflowed`.
+    Also adds `overflowing_add`, `overflowing_sub`, and `overflowing_mul`
+    intrinsics for doing unchecked arithmetic.
+    
+    [breaking-change]
+
 commit 76e9fa63ba0b6d892aa880db9c8373ede3e67c03
 Author:     Brian Anderson &lt;banderson@mozilla.com&gt;
 AuthorDate: Thu Feb 19 21:05:35 2015 -0800
@@ -2327,106 +2343,4 @@ CommitDate: Fri Jan 30 12:02:44 2015 -0800
     r? @nikomatsakis @aturon
     cc #18424
     closes #18045
-
-commit 62273575139a80c2b208a3a27e0c2392b1425be6
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Jan 13 15:42:53 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Jan 30 09:21:56 2015 -0800
-
-    std: Stabilize the std::fmt module
-    
-    This commit performs a final stabilization pass over the std::fmt module,
-    marking all necessary APIs as stable. One of the more interesting aspects of
-    this module is that it exposes a good deal of its runtime representation to the
-    outside world in order for `format_args!` to be able to construct the format
-    strings. Instead of hacking the compiler to assume that these items are stable,
-    this commit instead lays out a story for the stabilization and evolution of
-    these APIs.
-    
-    There are three primary details used by the `format_args!` macro:
-    
-    1. `Arguments` - an opaque package of a "compiled format string". This structure
-       is passed around and the `write` function is the source of truth for
-       transforming a compiled format string into a string at runtime. This must be
-       able to be constructed in stable code.
-    
-    2. `Argument` - an opaque structure representing an argument to a format string.
-       This is *almost* a trait object as it's just a pointer/function pair, but due
-       to the function originating from one of many traits, it's not actually a
-       trait object. Like `Arguments`, this must be constructed from stable code.
-    
-    3. `fmt::rt` - this module contains the runtime type definitions primarily for
-       the `rt::Argument` structure. Whenever an argument is formatted with
-       nonstandard flags, a corresponding `rt::Argument` is generated describing how
-       the argument is being formatted. This can be used to construct an
-       `Arguments`.
-    
-    The primary interface to `std::fmt` is the `Arguments` structure, and as such
-    this type name is stabilize as-is today. It is expected for libraries to pass
-    around an `Arguments` structure to represent a pending formatted computation.
-    
-    The remaining portions are largely "cruft" which would rather not be stabilized,
-    but due to the stability checks they must be. As a result, almost all pieces
-    have been renamed to represent that they are "version 1" of the formatting
-    representation. The theory is that at a later date if we change the
-    representation of these types we can add new definitions called "version 2" and
-    corresponding constructors for `Arguments`.
-    
-    One of the other remaining large questions about the fmt module were how the
-    pending I/O reform would affect the signatures of methods in the module. Due to
-    [RFC 526][rfc], however, the writers of fmt are now incompatible with the
-    writers of io, so this question has largely been solved. As a result the
-    interfaces are largely stabilized as-is today.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0526-fmt-text-writer.md
-    
-    Specifically, the following changes were made:
-    
-    * The contents of `fmt::rt` were all moved under `fmt::rt::v1`
-    * `fmt::rt` is stable
-    * `fmt::rt::v1` is stable
-    * `Error` is stable
-    * `Writer` is stable
-    * `Writer::write_str` is stable
-    * `Writer::write_fmt` is stable
-    * `Formatter` is stable
-    * `Argument` has been renamed to `ArgumentV1` and is stable
-    * `ArgumentV1::new` is stable
-    * `ArgumentV1::from_uint` is stable
-    * `Arguments::new_v1` is stable (renamed from `new`)
-    * `Arguments::new_v1_formatted` is stable (renamed from `with_placeholders`)
-    * All formatting traits are now stable, as well as the `fmt` method.
-    * `fmt::write` is stable
-    * `fmt::format` is stable
-    * `Formatter::pad_integral` is stable
-    * `Formatter::pad` is stable
-    * `Formatter::write_str` is stable
-    * `Formatter::write_fmt` is stable
-    * Some assorted top level items which were only used by `format_args!` were
-      removed in favor of static functions on `ArgumentV1` as well.
-    * The formatting-flag-accessing methods remain unstable
-    
-    Within the contents of the `fmt::rt::v1` module, the following actions were
-    taken:
-    
-    * Reexports of all enum variants were removed
-    * All prefixes on enum variants were removed
-    * A few miscellaneous enum variants were renamed
-    * Otherwise all structs, fields, and variants were marked stable.
-    
-    In addition to these actions in the `std::fmt` module, many implementations of
-    `Show` and `String` were stabilized as well.
-    
-    In some other modules:
-    
-    * `ToString` is now stable
-    * `ToString::to_string` is now stable
-    * `Vec` no longer implements `fmt::Writer` (this has moved to `String`)
-    
-    This is a breaking change due to all of the changes to the `fmt::rt` module, but
-    this likely will not have much impact on existing programs.
-    
-    Closes #20661
-    [breaking-change]
 </pre></body></html>
