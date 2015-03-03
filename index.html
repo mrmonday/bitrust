@@ -1,6 +1,24 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 93613a543f0cae68ea82e6a66b9b9cdfa13b673e
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Feb 27 16:23:21 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Sun Mar 1 20:41:37 2015 -0800
+
+    std: Stabilize the `process` module
+    
+    This commits blanket marks the API of the `std::process` module as `#[stable]`.
+    The module's API is very similar to the old `std::old_io::process` API and has
+    generally had quite a bit of time to bake both before and after the new module
+    landed.
+    
+    The one modification made to the API is that `Stdio::capture` is now named
+    `stdio::piped`.
+    
+    [breaking-change]
+
 commit ef8b20a564bab2050403f2f5c1dab90e0941adf7
 Merge: 85bdb31 2fc6224
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2580,24 +2598,6 @@ CommitDate: Mon Jan 26 16:01:16 2015 -0800
     change for all imports in existing code, but all functionality is retained
     precisely as-is and path statements simply need to be renamed from `io` to
     `old_io`.
-    
-    [breaking-change]
-
-commit 43046becce78147fa43808626bbb48569086b6a5
-Merge: 70b13a7 0824652
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sun Jan 25 05:50:30 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sun Jan 25 05:50:30 2015 +0000
-
-    Auto merge of #21558 - alexcrichton:result-debug, r=aturon
-    
-    This commit relaxes the bound on `Result::unwrap` and `Result::unwrap_err` from
-    the `Display` trait to the `Debug` trait for generating an error message about
-    the unwrapping operation.
-    
-    This commit is a breaking change and any breakage should be mitigated by
-    ensuring that `Debug` is implemented on the relevant type.
     
     [breaking-change]
 </pre></body></html>
