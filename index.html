@@ -1,6 +1,22 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 76e9fa63ba0b6d892aa880db9c8373ede3e67c03
+Author:     Brian Anderson &lt;banderson@mozilla.com&gt;
+AuthorDate: Thu Feb 19 21:05:35 2015 -0800
+Commit:     Brian Anderson &lt;banderson@mozilla.com&gt;
+CommitDate: Mon Mar 2 16:12:46 2015 -0800
+
+    core: Audit num module for int/uint
+    
+    * count_ones/zeros, trailing_ones/zeros return u32, not usize
+    * rotate_left/right take u32, not usize
+    * RADIX, MANTISSA_DIGITS, DIGITS, BITS, BYTES are u32, not usize
+    
+    Doesn't touch pow because there's another PR for it.
+    
+    [breaking-change]
+
 commit 93613a543f0cae68ea82e6a66b9b9cdfa13b673e
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
 AuthorDate: Fri Feb 27 16:23:21 2015 -0800
@@ -2572,32 +2588,6 @@ CommitDate: Mon Jan 26 16:01:58 2015 -0800
     differs from the current `write` semantics. In order to head off as much
     unintended breakage as possible, the method is being deprecated now in favor of
     a new name.
-    
-    [breaking-change]
-
-commit f72b1645103e12b581f7022b893c37b5fe41aef7
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Thu Jan 22 16:27:48 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Jan 26 16:01:16 2015 -0800
-
-    std: Rename io to old_io
-    
-    In preparation for the I/O rejuvination of the standard library, this commit
-    renames the current `io` module to `old_io` in order to make room for the new
-    I/O modules. It is expected that the I/O RFCs will land incrementally over time
-    instead of all at once, and this provides a fresh clean path for new modules to
-    enter into as well as guaranteeing that all old infrastructure will remain in
-    place for some time.
-    
-    As each `old_io` module is replaced it will be deprecated in-place for new
-    structures in `std::{io, fs, net}` (as appropriate).
-    
-    This commit does *not* leave a reexport of `old_io as io` as the deprecation
-    lint does not currently warn on this form of use. This is quite a large breaking
-    change for all imports in existing code, but all functionality is retained
-    precisely as-is and path statements simply need to be renamed from `io` to
-    `old_io`.
     
     [breaking-change]
 </pre></body></html>
