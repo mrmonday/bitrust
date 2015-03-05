@@ -1,6 +1,25 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit f0c74f85f363a8081b31f9ab696463717ce312d5
+Merge: 68740b4 9b332ff
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Mar 5 17:52:21 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Mar 5 17:52:21 2015 +0000
+
+    Auto merge of #23026 - nikomatsakis:issue-20220-supertrait, r=nikomatsakis
+    
+    The main gist of this PR is commit 1077efb which removes the list of supertraits from the `TraitDef` and pulls them into a separate table, which is accessed via `lookup_super_predicates`. This is analogous to `lookup_predicates`, which gets the complete where clause. This allows us to create the `TraitDef`, which contains the list generics and so forth, without fully knowing the list of supertraits. This in turn allows the *supertrait listing* to contain references to associated types like `&lt;Self as Foo&gt;::Item`, which were previously impossible because conversion required having the `TraitDef` for `Foo`.
+    
+    We do not yet support `Self::Item` in a supertrait listing. This doesn't work because to convert that, it attempts to expand out the full set of supertraits, which are in the process of being created. This could potentially be worked out by having the expansion of supertraits proceed in a lazy fashion, but we'd have to define shadowing rules for associated types which we don't currently have.
+    
+    Along the way (in 9de9ec5) I also removed the restriction against duplicate bounds and generalized the code so that it can handle having the same supertrait multiple times with different arguments, e.g. `Foo : Bar&lt;i32&gt; + Bar&lt;u32&gt;`. This restriction was serving no particular purpose, since the same trait could be extended multiple times indirectly, and in the era of multidispatch it is actively harmful.
+    
+    This is technically a [breaking-change] because it affects the definition of a super-trait. Anything in a where clause that looks like `where Self : Foo` is now considered a supertrait. Because cycles are disallowed in supertraits, that could lead to some errors. This has not been observed in any existing code.
+    
+    r? @nrc
+
 commit cc722a4dd3e8110a8bf7e62eea977e99e3a3d128
 Merge: 3b3bb0e 95d9046
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2256,23 +2275,4 @@ CommitDate: Sun Feb 1 11:08:15 2015 -0800
         #![feature(env)]
     
     [breaking-change]
-
-commit f1f9cb705df95171fce4e575374c959509e58dea
-Merge: fe4340a c3841b9
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sun Feb 1 10:14:51 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sun Feb 1 10:14:51 2015 +0000
-
-    Auto merge of #21809 - japaric:no-copy, r=alexcrichton
-    
-    Removes `Copy` from `ops::Range` (`a..b`) and `ops::RangeFrom` (`a..`)
-    
-    [breaking-change]
-    
-    ---
-    
-    I forgot about these two in #20790, this PR also adds `Clone` to the `Peekable` adapter which used to be `Copy`able.
-    
-    r? @nikomatsakis or anyone
 </pre></body></html>
