@@ -1,6 +1,25 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit cc722a4dd3e8110a8bf7e62eea977e99e3a3d128
+Merge: 3b3bb0e 95d9046
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Mar 5 01:19:15 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Mar 5 01:19:15 2015 +0000
+
+    Auto merge of #22873 - alexcrichton:deprecate-fs, r=aturon
+    
+    This commit deprecates the majority of std::old_io::fs in favor of std::fs and
+    its new functionality. Some functions remain non-deprecated but are now behind a
+    feature gate called `old_fs`. These functions will be deprecated once
+    suitable replacements have been implemented.
+    
+    The compiler has been migrated to new `std::fs` and `std::path` APIs where
+    appropriate as part of this change.
+    
+    [breaking-change]
+
 commit 393ce1820e3f639b43d6058d2681b9757123ac1b
 Merge: d0fcb1f f35f973
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2256,91 +2275,4 @@ CommitDate: Sun Feb 1 10:14:51 2015 +0000
     I forgot about these two in #20790, this PR also adds `Clone` to the `Peekable` adapter which used to be `Copy`able.
     
     r? @nikomatsakis or anyone
-
-commit 341e858bd882061b823dac236fd718d473f8ab2e
-Merge: 1a51eb9 b9a9030
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Jan 30 12:02:44 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Jan 30 12:02:44 2015 -0800
-
-    rollup merge of #20790: japaric/for-loops
-    
-    As per [RFC #235][rfc], you can now do:
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0235-collections-conventions.md#intoiterator-and-iterable
-    
-    ``` rust
-    let mut v = vec![1];
-    
-    // iterate over immutable references
-    for x in &amp;v {
-        assert_eq!(x, &amp;1);
-    }
-    
-    // iterate over mutable references
-    for x in &amp;mut v {
-        assert_eq!(x, &amp;mut 1);
-    }
-    
-    // iterate over values, this consumes `v`
-    for x in v {
-        assert_eq!(x, 1);
-    }
-    ```
-    
-    [breaking-change]s
-    
-    For loops now "consume" (move) the iterator, this breaks iterating over mutable references to iterators, and also breaks multiple iterations over the same iterator:
-    
-    ``` rust
-    fn foo(mut it: &amp;mut Iter) {  // `Iter` implements `Iterator`
-        for x in it { .. }  //~ error: `&amp;mut Iter` doesn't implement Iterator
-    }
-    
-    fn bar() {
-        for x in it { .. }  //~ note: `it` moved here
-        for x in it { .. }  //~ error: `it` has been moved
-    }
-    ```
-    
-    Both cases can be fixed using the `by_ref()` adapter to create an iterator from the mutable reference:
-    
-    ``` rust
-    fn foo(mut it: &amp;mut Iter) {
-        for x in it.by_ref() { .. }
-    }
-    
-    fn bar() {
-        for x in it.by_ref() { .. }
-        for x in it { .. }
-    }
-    ```
-    
-    This PR also makes iterator non-implicitly copyable, as this was source of subtle bugs in the libraries. You can still use `clone()` to explictly copy the iterator.
-    
-    Finally, since the for loops are implemented in the frontend and use global paths to `IntoIterator`, `Iterator` and `Option` variants, users of the `core` crate will have to use add an `std` module to the root of their crate to be able to use for loops:
-    
-    ``` rust
-    #![no_std]
-    
-    extern crate core;
-    
-    fn main() {
-        for x in 0..10 {}
-    }
-    
-    #[doc(hidden)]
-    mod std {
-        // these imports are needed to use for-loops
-        pub use core::iter;
-        pub use core::option;
-    }
-    ```
-    
-    ---
-    
-    r? @nikomatsakis @aturon
-    cc #18424
-    closes #18045
 </pre></body></html>
