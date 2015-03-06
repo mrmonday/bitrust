@@ -1,6 +1,57 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 1fe8f221450bad3ffb1351c6549f67c18ce0b94e
+Merge: b0746ff b5c6ab2
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Mar 6 05:20:11 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Mar 6 05:20:11 2015 +0000
+
+    Auto merge of #22899 - huonw:macro-stability, r=alexcrichton
+    
+    Unstable items used in a macro expansion will now always trigger
+    stability warnings, *unless* the unstable items are directly inside a
+    macro marked with `#[allow_internal_unstable]`. IOW, the compiler warns
+    unless the span of the unstable item is a subspan of the definition of a
+    macro marked with that attribute.
+    
+    E.g.
+    
+        #[allow_internal_unstable]
+        macro_rules! foo {
+            ($e: expr) =&gt; {{
+                $e;
+                unstable(); // no warning
+                only_called_by_foo!();
+            }}
+        }
+    
+        macro_rules! only_called_by_foo {
+            () =&gt; { unstable() } // warning
+        }
+    
+        foo!(unstable()) // warning
+    
+    The unstable inside `foo` is fine, due to the attribute. But the
+    `unstable` inside `only_called_by_foo` is not, since that macro doesn't
+    have the attribute, and the `unstable` passed into `foo` is also not
+    fine since it isn't contained in the macro itself (that is, even though
+    it is only used directly in the macro).
+    
+    In the process this makes the stability tracking much more precise,
+    e.g. previously `println!("{}", unstable())` got no warning, but now it
+    does. As such, this is a bug fix that may cause [breaking-change]s.
+    
+    The attribute is definitely feature gated, since it explicitly allows
+    side-stepping the feature gating system.
+    
+    ---
+    
+    This updates `thread_local!` macro to use the attribute, since it uses
+    unstable features internally (initialising a struct with unstable
+    fields).
+
 commit f0c74f85f363a8081b31f9ab696463717ce312d5
 Merge: 68740b4 9b332ff
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -19,6 +70,50 @@ CommitDate: Thu Mar 5 17:52:21 2015 +0000
     This is technically a [breaking-change] because it affects the definition of a super-trait. Anything in a where clause that looks like `where Self : Foo` is now considered a supertrait. Because cycles are disallowed in supertraits, that could lead to some errors. This has not been observed in any existing code.
     
     r? @nrc
+
+commit 84b060ce29bf7dd65fc23e855ad7c5a8748d806c
+Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+AuthorDate: Sun Mar 1 14:09:28 2015 +1100
+Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+CommitDate: Fri Mar 6 00:18:28 2015 +1100
+
+    Add #[allow_internal_unstable] to track stability for macros better.
+    
+    Unstable items used in a macro expansion will now always trigger
+    stability warnings, *unless* the unstable items are directly inside a
+    macro marked with `#[allow_internal_unstable]`. IOW, the compiler warns
+    unless the span of the unstable item is a subspan of the definition of a
+    macro marked with that attribute.
+    
+    E.g.
+    
+        #[allow_internal_unstable]
+        macro_rules! foo {
+            ($e: expr) =&gt; {{
+                $e;
+                unstable(); // no warning
+                only_called_by_foo!();
+            }}
+        }
+    
+        macro_rules! only_called_by_foo {
+            () =&gt; { unstable() } // warning
+        }
+    
+        foo!(unstable()) // warning
+    
+    The unstable inside `foo` is fine, due to the attribute. But the
+    `unstable` inside `only_called_by_foo` is not, since that macro doesn't
+    have the attribute, and the `unstable` passed into `foo` is also not
+    fine since it isn't contained in the macro itself (that is, even though
+    it is only used directly in the macro).
+    
+    In the process this makes the stability tracking much more precise,
+    e.g. previously `println!("{}", unstable())` got no warning, but now it
+    does. As such, this is a bug fix that may cause [breaking-change]s.
+    
+    The attribute is definitely feature gated, since it explicitly allows
+    side-stepping the feature gating system.
 
 commit cc722a4dd3e8110a8bf7e62eea977e99e3a3d128
 Merge: 3b3bb0e 95d9046
@@ -2196,83 +2291,5 @@ CommitDate: Mon Feb 2 11:01:16 2015 -0800
     affected.
     
     Closes #21839
-    [breaking-change]
-
-commit 0e4448409ef61c703b98e4c5b2fd99447308942d
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Sun Feb 1 12:15:36 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Sun Feb 1 13:05:23 2015 -0800
-
-    std: Remove extra type params on iter adaptors
-    
-    Now that associated types are fully implemented the iterator adaptors only need
-    type parameters which are associated with actual storage. All other type
-    parameters can either be derived from these (e.g. they are an associated type)
-    or can be bare on the `impl` block itself.
-    
-    This is a breaking change due to the removal of type parameters on these
-    iterator adaptors, but code can fairly easily migrate by just deleting the
-    relevant type parameters for each adaptor. Other behavior should not be
-    affected.
-    
-    Closes #21839
-    [breaking-change]
-
-commit 70ed3a48dfa301c5bb56de3e0a7c25214539b83c
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Jan 27 12:20:58 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Sun Feb 1 11:08:15 2015 -0800
-
-    std: Add a new `env` module
-    
-    This is an implementation of [RFC 578][rfc] which adds a new `std::env` module
-    to replace most of the functionality in the current `std::os` module. More
-    details can be found in the RFC itself, but as a summary the following methods
-    have all been deprecated:
-    
-    [rfc]: https://github.com/rust-lang/rfcs/pull/578
-    
-    * `os::args_as_bytes`   =&gt; `env::args`
-    * `os::args`            =&gt; `env::args`
-    * `os::consts`          =&gt; `env::consts`
-    * `os::dll_filename`    =&gt; no replacement, use `env::consts` directly
-    * `os::page_size`       =&gt; `env::page_size`
-    * `os::make_absolute`   =&gt; use `env::current_dir` + `join` instead
-    * `os::getcwd`          =&gt; `env::current_dir`
-    * `os::change_dir`      =&gt; `env::set_current_dir`
-    * `os::homedir`         =&gt; `env::home_dir`
-    * `os::tmpdir`          =&gt; `env::temp_dir`
-    * `os::join_paths`      =&gt; `env::join_paths`
-    * `os::split_paths`     =&gt; `env::split_paths`
-    * `os::self_exe_name`   =&gt; `env::current_exe`
-    * `os::self_exe_path`   =&gt; use `env::current_exe` + `pop`
-    * `os::set_exit_status` =&gt; `env::set_exit_status`
-    * `os::get_exit_status` =&gt; `env::get_exit_status`
-    * `os::env`             =&gt; `env::vars`
-    * `os::env_as_bytes`    =&gt; `env::vars`
-    * `os::getenv`          =&gt; `env::var` or `env::var_string`
-    * `os::getenv_as_bytes` =&gt; `env::var`
-    * `os::setenv`          =&gt; `env::set_var`
-    * `os::unsetenv`        =&gt; `env::remove_var`
-    
-    Many function signatures have also been tweaked for various purposes, but the
-    main changes were:
-    
-    * `Vec`-returning APIs now all return iterators instead
-    * All APIs are now centered around `OsString` instead of `Vec&lt;u8&gt;` or `String`.
-      There is currently on convenience API, `env::var_string`, which can be used to
-      get the value of an environment variable as a unicode `String`.
-    
-    All old APIs are `#[deprecated]` in-place and will remain for some time to allow
-    for migrations. The semantics of the APIs have been tweaked slightly with regard
-    to dealing with invalid unicode (panic instead of replacement).
-    
-    The new `std::env` module is all contained within the `env` feature, so crates
-    must add the following to access the new APIs:
-    
-        #![feature(env)]
-    
     [breaking-change]
 </pre></body></html>
