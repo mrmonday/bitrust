@@ -1,6 +1,47 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 668c6474081a10768ef143b9984efcab5376bf68
+Merge: b8c6eb1 491054f
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Mar 7 18:39:17 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Mar 7 18:39:17 2015 +0000
+
+    Auto merge of #23137 - kmcallister:derive-sugar, r=sfackler
+    
+    This is a hack, but I don't think we can do much better as long as `derive` is running at the syntax expansion phase.
+    
+    If the `custom_derive` feature gate is enabled, this works with user-defined traits and syntax extensions. Without the gate, you can't use e.g. `#[derive_Clone]` directly, so this does not change the stable language.
+    
+    To make this effective, we now check gated attributes both before and after macro expansion. This uncovered a number of tests that were missing feature gates.
+    
+    This PR also cleans up the deriving code somewhat, and forbids some previously-meaningless attribute syntax. For this reason it's technically a
+    
+        [breaking-change]
+    
+    r? @sfackler
+
+commit 491054f08e2aaaa8438f1a9943f115dad9da1c6b
+Author:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
+AuthorDate: Fri Mar 6 13:15:54 2015 -0800
+Commit:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
+CommitDate: Fri Mar 6 18:20:16 2015 -0800
+
+    Make #[derive(Anything)] into sugar for #[derive_Anything]
+    
+    This is a hack, but I don't think we can do much better as long as `derive` is
+    running at the syntax expansion phase.
+    
+    If the custom_derive feature gate is enabled, this works with user-defined
+    traits and syntax extensions. Without the gate, you can't use e.g. #[derive_Clone]
+    directly, so this does not change the stable language.
+    
+    This commit also cleans up the deriving code somewhat, and forbids some
+    previously-meaningless attribute syntax. For this reason it's technically a
+    
+        [breaking-change]
+
 commit fd86a01bb9f23921c82017485d88fe14448e78fe
 Merge: 1a30412 9aea749
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2469,61 +2510,6 @@ CommitDate: Sat Feb 7 10:49:58 2015 -0800
     Feature-gate #![no_std]
     
     Fixes #21833.
-    
-    [breaking-change]
-
-commit 61626b306314768b273892e3a547b896ef7a4dfd
-Merge: ce5aad2 b445bf2
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sat Feb 7 18:20:55 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sat Feb 7 18:20:55 2015 +0000
-
-    Auto merge of #21984 - pnkfelix:make-for-loops-a-terminating-scope, r=nikomatsakis
-    
-    make `for PAT in ITER_EXPR { ... }` a terminating-scope for ITER_EXPR.
-    
-    In effect, temporary anonymous values created during the evaluation of ITER_EXPR no longer not live for the entirety of the block surrounding the for-loop; instead they only live for the extent of the for-loop itself, and no longer.
-    
-    ----
-    
-    There is one case I know of that this breaks, demonstrated to me by @nikomatsakis  (but it is also a corner-case that is useless in practice).  Here is that case:
-    
-    ```
-    fn main() {
-        let mut foo: Vec&lt;&amp;i8&gt; = Vec::new();
-        for i in &amp;[1, 2, 3] { foo.push(i) }
-    }
-    ```
-    
-    Note that if you add any code following the for-loop above, or even a semicolon to the end of it, then the code will stop compiling (i.e., it gathers a vector of references but the gathered vector cannot actually be used.)
-    
-    (The above code, despite being useless, did occur in one run-pass test by accident; that test is updated here to accommodate the new striction.)
-    
-    ----
-    
-    So, technically this is a:
-    
-    [breaking-change]
-
-commit 8661b3dc0fbb9e21b94266ba62e23cebb8f0603f
-Merge: 80627cd 4583272
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sat Feb 7 14:08:38 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sat Feb 7 14:08:38 2015 +0000
-
-    Auto merge of #21971 - pnkfelix:fsk-restrict-fixdsz-array-moves, r=nikomatsakis
-    
-    Revised version of PR #21930.
-    
-    Restrictions on moves into and out-from fixed-length arrays.
-    
-    (There was only one use of this "feature" in the compiler source.)
-    
-    Note 1: the change to the error message in tests/compile-fail/borrowck-use-in-index-lvalue.rs, where we now report that *w is uninitialized (rather than w), was unintended fallout from the implementation strategy used here. The change appears harmless to me, but I welcome advice on how to bring back the old message, which was slightly cleaner (i.e. less unintelligible) since that the syntactic form *w does not actually appear in the source text.
-    
-    Note 2: the move out-from restriction to only apply to expr[i], and not destructuring bind (e.g. f([a, b, c]: Array) { ... }) since the latter is compatible with nonzeroing drop, AFAICT.
     
     [breaking-change]
 </pre></body></html>
