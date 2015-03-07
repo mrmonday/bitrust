@@ -1,6 +1,47 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit fd86a01bb9f23921c82017485d88fe14448e78fe
+Merge: 1a30412 9aea749
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Mar 6 15:36:08 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Fri Mar 6 15:36:08 2015 -0800
+
+    rollup merge of #22813: alexcrichton/deprecate-net
+    
+    The `std::net` primitives should be ready for use now and as a result the old
+    ones are now deprecated and slated for removal. Most TCP/UDP functionality is
+    now available through `std::net` but the `std::old_io::net::pipe` module is
+    removed entirely from the standard library.
+    
+    Unix socket funtionality can be found in sfackler's [`unix_socket`][unix] crate
+    and there is currently no replacement for named pipes on Windows.
+    
+    [unix]: https://crates.io/crates/unix_socket
+    
+    [breaking-change]
+
+commit 9aea749b835a6fdcad6f2840a00adac996cc0339
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Wed Feb 25 13:08:51 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Fri Mar 6 10:27:28 2015 -0800
+
+    std: Deprecate the std::old_io::net primitives
+    
+    The `std::net` primitives should be ready for use now and as a result the old
+    ones are now deprecated and slated for removal. Most TCP/UDP functionality is
+    now available through `std::net` but the `std::old_io::net::pipe` module is
+    removed entirely from the standard library.
+    
+    Unix socket funtionality can be found in sfackler's [`unix_socket`][unix] crate
+    and there is currently no replacement for named pipes on Windows.
+    
+    [unix]: https://crates.io/crates/unix_socket
+    
+    [breaking-change]
+
 commit 1fe8f221450bad3ffb1351c6549f67c18ce0b94e
 Merge: b0746ff b5c6ab2
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -51,6 +92,382 @@ CommitDate: Fri Mar 6 05:20:11 2015 +0000
     This updates `thread_local!` macro to use the attribute, since it uses
     unstable features internally (initialising a struct with unstable
     fields).
+
+commit fe41c935603be8192c7481fcd846e629d76337b1
+Merge: c9063e0 73b0b25
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Fri Mar 6 09:01:50 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Mar 6 09:01:50 2015 +0530
+
+    Rollup merge of #23081 - alexcrichton:stabilize-fs, r=aturon
+    
+     This commit performs a stabilization pass over the `std::fs` module now that
+    it's had some time to bake. The change was largely just adding `#[stable]` tags,
+    but there are a few APIs that remain `#[unstable]`.
+    
+    The following apis are now marked `#[stable]`:
+    
+    * `std::fs` (the name)
+    * `File`
+    * `Metadata`
+    * `ReadDir`
+    * `DirEntry`
+    * `OpenOptions`
+    * `Permissions`
+    * `File::{open, create}`
+    * `File::{sync_all, sync_data}`
+    * `File::set_len`
+    * `File::metadata`
+    * Trait implementations for `File` and `&amp;File`
+    * `OpenOptions::new`
+    * `OpenOptions::{read, write, append, truncate, create}`
+    * `OpenOptions::open` - this function was modified, however, to not attempt to
+      reject cross-platform openings of directories. This means that some platforms
+      will succeed in opening a directory and others will fail.
+    * `Metadata::{is_dir, is_file, len, permissions}`
+    * `Permissions::{readonly, set_readonly}`
+    * `Iterator for ReadDir`
+    * `DirEntry::path`
+    * `remove_file` - like with `OpenOptions::open`, the extra windows code to
+      remove a readonly file has been removed. This means that removing a readonly
+      file will succeed on some platforms but fail on others.
+    * `metadata`
+    * `rename`
+    * `copy`
+    * `hard_link`
+    * `soft_link`
+    * `read_link`
+    * `create_dir`
+    * `create_dir_all`
+    * `remove_dir`
+    * `remove_dir_all`
+    * `read_dir`
+    
+    The following apis remain `#[unstable]`.
+    
+    * `WalkDir` and `walk` - there are many methods by which a directory walk can be
+      constructed, and it's unclear whether the current semantics are the right
+      ones. For example symlinks are not handled super well currently. This is now
+      behind a new `fs_walk` feature.
+    * `File::path` - this is an extra abstraction which the standard library
+      provides on top of what the system offers and it's unclear whether we should
+      be doing so. This is now behind a new `file_path` feature.
+    * `Metadata::{accessed, modified}` - we do not currently have a good
+      abstraction for a moment in time which is what these APIs should likely be
+      returning, so these remain `#[unstable]` for now. These are now behind a new
+      `fs_time` feature
+    * `set_file_times` - like with `Metadata::accessed`, we do not currently have
+      the appropriate abstraction for the arguments here so this API remains
+      unstable behind the `fs_time` feature gate.
+    * `PathExt` - the precise set of methods on this trait may change over time and
+      some methods may be removed. This API remains unstable behind the `path_ext`
+      feature gate.
+    * `set_permissions` - we may wish to expose a more granular ability to set the
+      permissions on a file instead of just a blanket \"set all permissions\" method.
+      This function remains behind the `fs` feature.
+    
+    The following apis are now `#[deprecated]`
+    
+    * The `TempDir` type is now entirely deprecated and is [located on
+      crates.io][tempdir] as the `tempdir` crate with [its source][github] at
+      rust-lang/tempdir.
+    
+    [tempdir]: https://crates.io/crates/tempdir
+    [github]: https://github.com/rust-lang/tempdir
+    
+    The stability of some of these APIs has been questioned over the past few weeks
+    in using these APIs, and it is intentional that the majority of APIs here are
+    marked `#[stable]`. The `std::fs` module has a lot of room to grow and the
+    material is [being tracked in a RFC issue][rfc-issue].
+    
+    [rfc-issue]: rust-lang/rfcs#939
+    
+    Closes #22879
+    
+    [breaking-change]
+
+commit c9063e0f98da9eb0cb30427010614ea634b409ed
+Merge: d77fc9f 7ed418c
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Fri Mar 6 09:01:37 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Mar 6 09:01:37 2015 +0530
+
+    Rollup merge of #23079 - alexcrichton:deprecate-process, r=aturon
+    
+     This module is now superseded by the `std::process` module. This module still
+    has some room to expand to get quite back up to parity with the `old_io`
+    version, and there is a [tracking issue][issue] for feature requests as well as
+    known room for expansion.
+    
+    [issue]: https://github.com/rust-lang/rfcs/issues/941
+    [breaking-change]
+
+commit 32631b4138fbaeca0f6496dd83aa327c76d5a900
+Merge: efb487b 0dfa997
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Fri Mar 6 08:58:44 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Mar 6 08:58:44 2015 +0530
+
+    Rollup merge of #23010 - alexcrichton:deprecate-some-old-io, r=aturon
+    
+     The new `io` module has had some time to bake and this commit stabilizes some of
+    the utilities associated with it. This commit also deprecates a number of
+    `std::old_io::util` functions and structures.
+    
+    These items are now `#[stable]`
+    
+    * `Cursor`
+    * `Cursor::{new, into_inner, get_ref, get_mut, position, set_position}`
+    * Implementations of I/O traits for `Cursor&lt;T&gt;`
+    * Delegating implementations of I/O traits for references and `Box` pointers
+    * Implementations of I/O traits for primitives like slices and `Vec&lt;T&gt;`
+    * `ReadExt::bytes`
+    * `Bytes` (and impls)
+    * `ReadExt::chain`
+    * `Chain` (and impls)
+    * `ReadExt::take` (and impls)
+    * `BufReadExt::lines`
+    * `Lines` (and impls)
+    * `io::copy`
+    * `io::{empty, Empty}` (and impls)
+    * `io::{sink, Sink}` (and impls)
+    * `io::{repeat, Repeat}` (and impls)
+    
+    These items remain `#[unstable]`
+    
+    * Core I/O traits. These may want a little bit more time to bake along with the
+      commonly used methods like `read_to_end`.
+    * `BufReadExt::split` - this function may be renamed to not conflict with
+      `SliceExt::split`.
+    * `Error` - there are a number of questions about its representation,
+      `ErrorKind`, and usability.
+    
+    These items are now `#[deprecated]` in `old_io`
+    
+    * `LimitReader` - use `take` instead
+    * `NullWriter` - use `io::sink` instead
+    * `ZeroReader` - use `io::repeat` instead
+    * `NullReader` - use `io::empty` instead
+    * `MultiWriter` - use `broadcast` instead
+    * `ChainedReader` - use `chain` instead
+    * `TeeReader` - use `tee` instead
+    * `copy` - use `io::copy` instead
+    
+    [breaking-change]
+
+commit efb487b503d87f04448fc5e6f75038ca98b8670e
+Merge: 9eb596c d5d8345
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Fri Mar 6 08:58:30 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Mar 6 08:58:30 2015 +0530
+
+    Rollup merge of #22980 - alexcrichton:debug-assertions, r=pnkfelix
+    
+     This commit is an implementation of [RFC 563][rfc] which adds a new
+    `cfg(debug_assertions)` directive which is specially recognized and calculated
+    by the compiler. The flag is turned off at any optimization level greater than 1
+    and may also be explicitly controlled through the `-C debug-assertions`
+    flag.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/pull/563
+    
+    The `debug_assert!` and `debug_assert_eq!` macros now respect this instead of
+    the `ndebug` variable and `ndebug` no longer holds any meaning to the standard
+    library.
+    
+    Code which was previously relying on `not(ndebug)` to gate expensive code should
+    be updated to rely on `debug_assertions` instead.
+    
+    Closes #22492
+    [breaking-change]
+
+commit 9eb596ce8f4b70ba73e8671f9b42147c91319842
+Merge: e80fc10 b5c6ab2
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Fri Mar 6 08:58:16 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Mar 6 08:58:16 2015 +0530
+
+    Rollup merge of #22899 - huonw:macro-stability, r=alexcrichton
+    
+     Unstable items used in a macro expansion will now always trigger
+    stability warnings, *unless* the unstable items are directly inside a
+    macro marked with `#[allow_internal_unstable]`. IOW, the compiler warns
+    unless the span of the unstable item is a subspan of the definition of a
+    macro marked with that attribute.
+    
+    E.g.
+    
+        #[allow_internal_unstable]
+        macro_rules! foo {
+            ($e: expr) =&gt; {{
+                $e;
+                unstable(); // no warning
+                only_called_by_foo!();
+            }}
+        }
+    
+        macro_rules! only_called_by_foo {
+            () =&gt; { unstable() } // warning
+        }
+    
+        foo!(unstable()) // warning
+    
+    The unstable inside `foo` is fine, due to the attribute. But the
+    `unstable` inside `only_called_by_foo` is not, since that macro doesn't
+    have the attribute, and the `unstable` passed into `foo` is also not
+    fine since it isn't contained in the macro itself (that is, even though
+    it is only used directly in the macro).
+    
+    In the process this makes the stability tracking much more precise,
+    e.g. previously `println!(\"{}\", unstable())` got no warning, but now it
+    does. As such, this is a bug fix that may cause [breaking-change]s.
+    
+    The attribute is definitely feature gated, since it explicitly allows
+    side-stepping the feature gating system.
+    
+    ---
+    
+    This updates `thread_local!` macro to use the attribute, since it uses
+    unstable features internally (initialising a struct with unstable
+    fields).
+
+commit 73b0b25e326687aba319df99aee4b0c4124d4498
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Mar 3 19:18:29 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Thu Mar 5 16:49:41 2015 -0800
+
+    std: Stabilize the `fs` module
+    
+    This commit performs a stabilization pass over the `std::fs` module now that
+    it's had some time to bake. The change was largely just adding `#[stable]` tags,
+    but there are a few APIs that remain `#[unstable]`.
+    
+    The following apis are now marked `#[stable]`:
+    
+    * `std::fs` (the name)
+    * `File`
+    * `Metadata`
+    * `ReadDir`
+    * `DirEntry`
+    * `OpenOptions`
+    * `Permissions`
+    * `File::{open, create}`
+    * `File::{sync_all, sync_data}`
+    * `File::set_len`
+    * `File::metadata`
+    * Trait implementations for `File` and `&amp;File`
+    * `OpenOptions::new`
+    * `OpenOptions::{read, write, append, truncate, create}`
+    * `OpenOptions::open` - this function was modified, however, to not attempt to
+      reject cross-platform openings of directories. This means that some platforms
+      will succeed in opening a directory and others will fail.
+    * `Metadata::{is_dir, is_file, len, permissions}`
+    * `Permissions::{readonly, set_readonly}`
+    * `Iterator for ReadDir`
+    * `DirEntry::path`
+    * `remove_file` - like with `OpenOptions::open`, the extra windows code to
+      remove a readonly file has been removed. This means that removing a readonly
+      file will succeed on some platforms but fail on others.
+    * `metadata`
+    * `rename`
+    * `copy`
+    * `hard_link`
+    * `soft_link`
+    * `read_link`
+    * `create_dir`
+    * `create_dir_all`
+    * `remove_dir`
+    * `remove_dir_all`
+    * `read_dir`
+    
+    The following apis remain `#[unstable]`.
+    
+    * `WalkDir` and `walk` - there are many methods by which a directory walk can be
+      constructed, and it's unclear whether the current semantics are the right
+      ones. For example symlinks are not handled super well currently. This is now
+      behind a new `fs_walk` feature.
+    * `File::path` - this is an extra abstraction which the standard library
+      provides on top of what the system offers and it's unclear whether we should
+      be doing so. This is now behind a new `file_path` feature.
+    * `Metadata::{accessed, modified}` - we do not currently have a good
+      abstraction for a moment in time which is what these APIs should likely be
+      returning, so these remain `#[unstable]` for now. These are now behind a new
+      `fs_time` feature
+    * `set_file_times` - like with `Metadata::accessed`, we do not currently have
+      the appropriate abstraction for the arguments here so this API remains
+      unstable behind the `fs_time` feature gate.
+    * `PathExt` - the precise set of methods on this trait may change over time and
+      some methods may be removed. This API remains unstable behind the `path_ext`
+      feature gate.
+    * `set_permissions` - we may wish to expose a more granular ability to set the
+      permissions on a file instead of just a blanket "set all permissions" method.
+      This function remains behind the `fs` feature.
+    
+    The following apis are now `#[deprecated]`
+    
+    * The `TempDir` type is now entirely deprecated and is [located on
+      crates.io][tempdir] as the `tempdir` crate with [its source][github] at
+      rust-lang/tempdir.
+    
+    [tempdir]: https://crates.io/crates/tempdir
+    [github]: https://github.com/rust-lang/tempdir
+    
+    The stability of some of these APIs has been questioned over the past few weeks
+    in using these APIs, and it is intentional that the majority of APIs here are
+    marked `#[stable]`. The `std::fs` module has a lot of room to grow and the
+    material is [being tracked in a RFC issue][rfc-issue].
+    
+    [rfc-issue]: https://github.com/rust-lang/rfcs/issues/939
+    
+    [breaking-change]
+
+commit d5d834551cd5a7e7d89ac9f2ae642a93409ed989
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Mon Mar 2 14:51:24 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Thu Mar 5 14:51:38 2015 -0800
+
+    rustc: Add a debug_assertions #[cfg] directive
+    
+    This commit is an implementation of [RFC 563][rfc] which adds a new
+    `cfg(debug_assertions)` directive which is specially recognized and calculated
+    by the compiler. The flag is turned off at any optimization level greater than 1
+    and may also be explicitly controlled through the `-C debug-assertions`
+    flag.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/pull/563
+    
+    The `debug_assert!` and `debug_assert_eq!` macros now respect this instead of
+    the `ndebug` variable and `ndebug` no longer holds any meaning to the standard
+    library.
+    
+    Code which was previously relying on `not(ndebug)` to gate expensive code should
+    be updated to rely on `debug_assertions` instead.
+    
+    Closes #22492
+    [breaking-change]
+
+commit 7ed418c3b4ede0364bf419b2c12b27f89b706dcf
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Thu Mar 5 10:41:42 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Thu Mar 5 10:41:42 2015 -0800
+
+    std: Deprecate the old_io::process module
+    
+    This module is now superseded by the `std::process` module. This module still
+    has some room to expand to get quite back up to parity with the `old_io`
+    version, and there is a [tracking issue][issue] for feature requests as well as
+    known room for expansion.
+    
+    [issue]: https://github.com/rust-lang/rfcs/issues/941
+    [breaking-change]
 
 commit f0c74f85f363a8081b31f9ab696463717ce312d5
 Merge: 68740b4 9b332ff
@@ -131,6 +548,59 @@ CommitDate: Thu Mar 5 01:19:15 2015 +0000
     
     The compiler has been migrated to new `std::fs` and `std::path` APIs where
     appropriate as part of this change.
+    
+    [breaking-change]
+
+commit 0dfa9978cc57efc8eb51485fc3a333eafd1aa392
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Mar 3 14:49:03 2015 -0800
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Mar 4 17:04:22 2015 -0800
+
+    std: Stabilize portions of the `io` module
+    
+    The new `io` module has had some time to bake and this commit stabilizes some of
+    the utilities associated with it. This commit also deprecates a number of
+    `std::old_io::util` functions and structures.
+    
+    These items are now `#[stable]`
+    
+    * `Cursor`
+    * `Cursor::{new, into_inner, get_ref, get_mut, position, set_position}`
+    * Implementations of I/O traits for `Cursor&lt;T&gt;`
+    * Delegating implementations of I/O traits for references and `Box` pointers
+    * Implementations of I/O traits for primitives like slices and `Vec&lt;T&gt;`
+    * `ReadExt::bytes`
+    * `Bytes` (and impls)
+    * `ReadExt::chain`
+    * `Chain` (and impls)
+    * `ReadExt::take` (and impls)
+    * `BufReadExt::lines`
+    * `Lines` (and impls)
+    * `io::copy`
+    * `io::{empty, Empty}` (and impls)
+    * `io::{sink, Sink}` (and impls)
+    * `io::{repeat, Repeat}` (and impls)
+    
+    These items remain `#[unstable]`
+    
+    * Core I/O traits. These may want a little bit more time to bake along with the
+      commonly used methods like `read_to_end`.
+    * `BufReadExt::split` - this function may be renamed to not conflict with
+      `SliceExt::split`.
+    * `Error` - there are a number of questions about its representation,
+      `ErrorKind`, and usability.
+    
+    These items are now `#[deprecated]` in `old_io`
+    
+    * `LimitReader` - use `take` instead
+    * `NullWriter` - use `io::sink` instead
+    * `ZeroReader` - use `io::repeat` instead
+    * `NullReader` - use `io::empty` instead
+    * `MultiWriter` - use `broadcast` instead
+    * `ChainedReader` - use `chain` instead
+    * `TeeReader` - use `tee` instead
+    * `copy` - use `io::copy` instead
     
     [breaking-change]
 
@@ -2055,241 +2525,5 @@ CommitDate: Sat Feb 7 14:08:38 2015 +0000
     
     Note 2: the move out-from restriction to only apply to expr[i], and not destructuring bind (e.g. f([a, b, c]: Array) { ... }) since the latter is compatible with nonzeroing drop, AFAICT.
     
-    [breaking-change]
-
-commit cc8f35f874c81be1a5950d2527902b7dd5a94513
-Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-AuthorDate: Tue Feb 3 01:25:45 2015 +0100
-Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-CommitDate: Sat Feb 7 13:44:00 2015 +0100
-
-    Restrictions on moves out-from and into fixed-length arrays.
-    
-    No longer legal: `fn foo(a: [D; 5]) { drop(a); a[2] = D::new(); }`;
-    one must first initialize the entirety of `a` before assigning to its
-    individual elements.
-    
-    No longer legal: `fn foo(arr: [D; 5]) -&gt; D { arr[2] }`, unless `D`
-    implements `Copy`. This "move out-from" restriction only affects
-    `expr[i]`, and not destructuring (e.g. `f([a, b, c]: Array) { ... }`).
-    
-    uses mem_categorization to distinguish destructuring-bind from array
-    indexing.
-    
-    See discussion on RFC PR 533.
-    
-    [breaking-change]
-
-commit 0b6dbbc9cfb747df1db646bba16561c022704056
-Merge: 7ebf9bc 724bf7b
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sat Feb 7 04:14:22 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sat Feb 7 04:14:22 2015 +0000
-
-    Auto merge of #21949 - japaric:index, r=nikomatsakis
-    
-    closes #21630
-    
-    Overloaded indexing (`&amp;[mut] foo[bar]`) only works when `&lt;Self as Index&gt;::Output` is the same as `&lt;Self as IndexMut&gt;::Output` (see issue above). To restrict implementations of `IndexMut` that doesn't work, this PR makes `IndexMut` a supertrait over `Index`, i.e. `trait IndexMut&lt;I&gt;: Index&lt;I&gt;`, just like in the `trait DerefMut: Deref` case.
-    
-    This breaks all downstream implementations of `IndexMut`, in most cases this simply means removing the `type Output = ..` bit, which is now redundant, from `IndexMut` implementations:
-    
-    ``` diff
-     impl Index&lt;Foo&gt; for Bar {
-         type Output = Baz;
-         ..
-     }
-    
-     impl IndexMut&lt;Foo&gt; for Bar {
-    -    type Output = Baz;
-         ..
-     }
-    ```
-    
-    [breaking-change]
-    
-    ---
-    
-    r? @nikomatsakis
-
-commit df7db970dcdb7b7fb1080b9d66baf2e45b689914
-Merge: fc1e045 67ee26d
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Sat Feb 7 00:44:31 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Sat Feb 7 00:44:31 2015 +0530
-
-    Rollup merge of #22009 - japaric:no-mov, r=alexcrichton
-    
-     If you were still using `MaybeOwnedVector`, update your code to use `CowVec`.
-    
-    [breaking-change]
-    
-    ---
-    
-    We already removed `MaybeOwned` (the string equivalent) long time ago and with a much shorter deprecation period. It's time to let go.
-
-commit d1a1d339ef3fb89599f74c0cbae2183c7cf2ee25
-Merge: 08a2bef 5cbbc12
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Fri Feb 6 05:37:32 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Feb 6 16:21:07 2015 +0530
-
-    Rollup merge of #21951 - Gankro:entry, r=aturon
-    
-     This also removes two erroneous re-exports of the Entry variants, and so is incidentally a [breaking-change], though presumably no one should have been using those.
-    
-    r? @aturon
-
-commit b445bf2bd1139236fd815bf93610ddaf17726111
-Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-AuthorDate: Wed Feb 4 13:24:44 2015 +0100
-Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-CommitDate: Fri Feb 6 00:07:37 2015 +0100
-
-    make `for PAT in ITER_EXPR { ... }` a terminating-scope for ITER_EXPR.
-    
-    In effect, temporary anonymous values created during the evaluation of
-    ITER_EXPR no longer not live for the entirety of the block surrounding
-    the for-loop; instead they only live for the extent of the for-loop
-    itself, and no longer.
-    
-    ----
-    
-    There is one case I know of that this breaks, demonstrated to me by
-    niko (but it is also a corner-case that is useless in practice).  Here
-    is that case:
-    
-    ```
-    fn main() {
-        let mut foo: Vec&lt;&amp;i8&gt; = Vec::new();
-        for i in &amp;[1, 2, 3] { foo.push(i) }
-    }
-    ```
-    
-    Note that if you add any code following the for-loop above, or even a
-    semicolon to the end of it, then the code will stop compiling (i.e.,
-    it gathers a vector of references but the gathered vector cannot
-    actually be used.)
-    
-    (The above code, despite being useless, did occur in one run-pass test
-    by accident; that test is updated here to accommodate the new
-    striction.)
-    
-    ----
-    
-    So, technically this is a:
-    
-    [breaking-change]
-
-commit c3e1f77291803d26b2897c0953dce5cf7e70ab65
-Merge: d6c15d9 df1ac7a
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Wed Feb 4 08:47:27 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Wed Feb 4 08:47:27 2015 +0000
-
-    Auto merge of #21892 - huonw:deprecate-rand, r=alexcrichton
-    
-    Use [`rand`](https://crates.io/crates/rand) and [`derive_rand`](https://crates.io/crates/derive_rand) from crates.io.
-    
-    [breaking-change]
-
-commit 8550bf74c1149eb54fc568bb53b78fd2b6caec98
-Merge: 3b2ed14 45ddf50
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Feb 3 15:35:53 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Feb 3 15:35:53 2015 -0800
-
-    rollup merge of #21759: aturon/new-path
-    
-    This PR implements [path reform](https://github.com/rust-lang/rfcs/pull/474), and motivation and details for the change can be found there.
-    
-    For convenience, the old path API is being kept as `old_path` for the time being. Updating after this PR is just a matter of changing imports to `old_path` (which is likely not needed, since the prelude entries still export the old path API).
-    
-    This initial PR does not include additional normalization or platform-specific path extensions. These will be done in follow up commits or PRs.
-    
-    [breaking-change]
-    
-    Closes #20034
-    Closes #12056
-    Closes #11594
-    Closes #14028
-    Closes #14049
-    Closes #10035
-
-commit df1ac7aa63ea89a067c57663eab035f7b83f6933
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Tue Feb 3 20:11:38 2015 +1100
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Wed Feb 4 09:39:40 2015 +1100
-
-    Deprecate in-tree `rand`, `std::rand` and `#[derive(Rand)]`.
-    
-    Use the crates.io crate `rand` (version 0.1 should be a drop in
-    replacement for `std::rand`) and `rand_macros` (`#[derive_Rand]` should
-    be a drop-in replacement).
-    
-    [breaking-change]
-
-commit 3e39f0bc0e96f76610104918edaa5912f4f352df
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Thu Jan 29 14:03:36 2015 -0800
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Tue Feb 3 14:34:42 2015 -0800
-
-    Rename std::path to std::old_path
-    
-    As part of [RFC 474](https://github.com/rust-lang/rfcs/pull/474), this
-    commit renames `std::path` to `std::old_path`, leaving the existing path
-    API in place to ease migration to the new one. Updating should be as
-    simple as adjusting imports, and the prelude still maps to the old path
-    APIs for now.
-    
-    [breaking-change]
-
-commit d30f225b492163b14005d5069b7924f3fecf868c
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Feb 3 12:32:56 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Feb 3 12:41:23 2015 -0800
-
-    std: Remove `iter::ByRef` and generalize impls
-    
-    This removes the `ByRef` iterator adaptor to stay in line with the changes to
-    `std::io`. The `by_ref` method instead just returns `&amp;mut Self`.
-    
-    This also removes the implementation of `Iterator for &amp;mut Iterator` and instead
-    generalizes it to `Iterator for &amp;mut I` where `I: Iterator + ?Sized`. The
-    `Box&lt;I&gt;` implementations were also updated.
-    
-    This is a breaking change due to the removal of the `std::iter::ByRef` type. All
-    mentions of `ByRef&lt;'a, T&gt;` should be replaced with `&amp;mut T` to migrate forward.
-    
-    [breaking-change]
-
-commit 99b2bd4bfa332c5a723114d09e8bb74d5a0c7376
-Merge: 747e6b5 0e44484
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Feb 2 11:01:16 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Feb 2 11:01:16 2015 -0800
-
-    rollup merge of #21842: alexcrichton/issue-21839
-    
-    Now that associated types are fully implemented the iterator adaptors only need
-    type parameters which are associated with actual storage. All other type
-    parameters can either be derived from these (e.g. they are an associated type)
-    or can be bare on the `impl` block itself.
-    
-    This is a breaking change due to the removal of type parameters on these
-    iterator adaptors, but code can fairly easily migrate by just deleting the
-    relevant type parameters for each adaptor. Other behavior should not be
-    affected.
-    
-    Closes #21839
     [breaking-change]
 </pre></body></html>
