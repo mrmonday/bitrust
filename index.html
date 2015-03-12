@@ -1,6 +1,25 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit c9b03c24ec346e6405883032094f47805ef9c43e
+Merge: 538840b 9da9185
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Mar 12 20:13:23 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Mar 12 20:13:23 2015 +0000
+
+    Auto merge of #23265 - eddyb:meth-ast-refactor, r=nikomatsakis
+    
+    The end result is that common fields (id, name, attributes, etc.) are stored in now-structures `ImplItem` and `TraitItem`.
+    The signature of a method is no longer duplicated between methods with a body (default/impl) and those without, they now share `MethodSig`.
+    
+    This is also a [breaking-change] because of minor bugfixes and changes to syntax extensions:
+    * `pub fn` methods in a trait no longer parse - remove the `pub`, it has no meaning anymore
+    * `MacResult::make_methods` is now `make_impl_items` and the return type has changed accordingly
+    * `quote_method` is gone, because `P&lt;ast::Method&gt;` doesn't exist and it couldn't represent a full method anyways - could be replaced by `quote_impl_item`/`quote_trait_item` in the future, but I do hope we realize how silly that combinatorial macro expansion is and settle on a single `quote` macro + some type hints - or just no types at all (only token-trees)
+    
+    r? @nikomatsakis This is necessary (hopefully also sufficient) for associated constants.
+
 commit cfea8ec41699e25c8fb524d625190f0cb860dc71
 Merge: 6048ba8 0f6a0b5
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2522,32 +2541,6 @@ CommitDate: Mon Feb 9 15:58:13 2015 -0800
     
     With associated types an where clauses none of the type parameters are
     necessary.
-    
-    [breaking-change]
-
-commit 93b642d9743edea728ef08b2d6fd17229caaad43
-Author:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
-AuthorDate: Fri Feb 6 13:56:38 2015 -0800
-Commit:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
-CommitDate: Mon Feb 9 13:27:27 2015 -0800
-
-    Use a crate attribute to load plugins
-    
-        #[plugin] #[no_link] extern crate bleh;
-    
-    becomes a crate attribute
-    
-        #![plugin(bleh)]
-    
-    The feature gate is still required.
-    
-    It's almost never correct to link a plugin into the resulting library /
-    executable, because it will bring all of libsyntax and librustc with it.
-    However if you really want this behavior, you can get it with a separate
-    `extern crate` item in addition to the `plugin` attribute.
-    
-    Fixes #21043.
-    Fixes #20769.
     
     [breaking-change]
 </pre></body></html>
