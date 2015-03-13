@@ -1,6 +1,208 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 3e4be02b80a3dd27bce20870958fe0aef7e7336d
+Merge: 9eb69ab 981bf5f
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Mar 13 20:22:16 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Mar 13 20:22:16 2015 +0000
+
+    Auto merge of #23292 - alexcrichton:stabilize-io, r=aturon
+    
+    The new `std::io` module has had some time to bake now, and this commit
+    stabilizes its functionality. There are still portions of the module which
+    remain unstable, and below contains a summart of the actions taken.
+    
+    This commit also deprecates the entire contents of the `old_io` module in a
+    blanket fashion. All APIs should now have a reasonable replacement in the
+    new I/O modules.
+    
+    Stable APIs:
+    
+    * `std::io` (the name)
+    * `std::io::prelude` (the name)
+    * `Read`
+    * `Read::read`
+    * `Read::{read_to_end, read_to_string}` after being modified to return a `usize`
+      for the number of bytes read.
+    * `ReadExt`
+    * `Write`
+    * `Write::write`
+    * `Write::{write_all, write_fmt}`
+    * `WriteExt`
+    * `BufRead`
+    * `BufRead::{fill_buf, consume}`
+    * `BufRead::{read_line, read_until}` after being modified to return a `usize`
+      for the number of bytes read.
+    * `BufReadExt`
+    * `BufReader`
+    * `BufReader::{new, with_capacity}`
+    * `BufReader::{get_ref, get_mut, into_inner}`
+    * `{Read,BufRead} for BufReader`
+    * `BufWriter`
+    * `BufWriter::{new, with_capacity}`
+    * `BufWriter::{get_ref, get_mut, into_inner}`
+    * `Write for BufWriter`
+    * `IntoInnerError`
+    * `IntoInnerError::{error, into_inner}`
+    * `{Error,Display} for IntoInnerError`
+    * `LineWriter`
+    * `LineWriter::{new, with_capacity}` - `with_capacity` was added
+    * `LineWriter::{get_ref, get_mut, into_inner}` - `get_mut` was added)
+    * `Write for LineWriter`
+    * `BufStream`
+    * `BufStream::{new, with_capacities}`
+    * `BufStream::{get_ref, get_mut, into_inner}`
+    * `{BufRead,Read,Write} for BufStream`
+    * `stdin`
+    * `Stdin`
+    * `Stdin::lock`
+    * `Stdin::read_line` - added method
+    * `StdinLock`
+    * `Read for Stdin`
+    * `{Read,BufRead} for StdinLock`
+    * `stdout`
+    * `Stdout`
+    * `Stdout::lock`
+    * `StdoutLock`
+    * `Write for Stdout`
+    * `Write for StdoutLock`
+    * `stderr`
+    * `Stderr`
+    * `Stderr::lock`
+    * `StderrLock`
+    * `Write for Stderr`
+    * `Write for StderrLock`
+    * `io::Result`
+    * `io::Error`
+    * `io::Error::last_os_error`
+    * `{Display, Error} for Error`
+    
+    Unstable APIs:
+    
+    (reasons can be found in the commit itself)
+    
+    * `Write::flush`
+    * `Seek`
+    * `ErrorKind`
+    * `Error::new`
+    * `Error::from_os_error`
+    * `Error::kind`
+    
+    Deprecated APIs
+    
+    * `Error::description` - available via the `Error` trait
+    * `Error::detail` - available via the `Display` implementation
+    * `thread::Builder::{stdout, stderr}`
+    
+    Changes in functionality:
+    
+    * `old_io::stdio::set_stderr` is now a noop as the infrastructure for printing
+      backtraces has migrated to `std::io`.
+    
+    [breaking-change]
+
+commit d54bd9f29af67748b7ddf80a5cf285145949ddc2
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Wed Mar 11 14:16:46 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Thu Mar 12 20:39:03 2015 -0700
+
+    std: Stabilize the `io` module
+    
+    The new `std::io` module has had some time to bake now, and this commit
+    stabilizes its functionality. There are still portions of the module which
+    remain unstable, and below contains a summart of the actions taken.
+    
+    This commit also deprecates the entire contents of the `old_io` module in a
+    blanket fashion. All APIs should now have a reasonable replacement in the
+    new I/O modules.
+    
+    Stable APIs:
+    
+    * `std::io` (the name)
+    * `std::io::prelude` (the name)
+    * `Read`
+    * `Read::read`
+    * `Read::{read_to_end, read_to_string}` after being modified to return a `usize`
+      for the number of bytes read.
+    * `Write`
+    * `Write::write`
+    * `Write::{write_all, write_fmt}`
+    * `BufRead`
+    * `BufRead::{fill_buf, consume}`
+    * `BufRead::{read_line, read_until}` after being modified to return a `usize`
+      for the number of bytes read.
+    * `BufReader`
+    * `BufReader::{new, with_capacity}`
+    * `BufReader::{get_ref, get_mut, into_inner}`
+    * `{Read,BufRead} for BufReader`
+    * `BufWriter`
+    * `BufWriter::{new, with_capacity}`
+    * `BufWriter::{get_ref, get_mut, into_inner}`
+    * `Write for BufWriter`
+    * `IntoInnerError`
+    * `IntoInnerError::{error, into_inner}`
+    * `{Error,Display} for IntoInnerError`
+    * `LineWriter`
+    * `LineWriter::{new, with_capacity}` - `with_capacity` was added
+    * `LineWriter::{get_ref, get_mut, into_inner}` - `get_mut` was added)
+    * `Write for LineWriter`
+    * `BufStream`
+    * `BufStream::{new, with_capacities}`
+    * `BufStream::{get_ref, get_mut, into_inner}`
+    * `{BufRead,Read,Write} for BufStream`
+    * `stdin`
+    * `Stdin`
+    * `Stdin::lock`
+    * `Stdin::read_line` - added method
+    * `StdinLock`
+    * `Read for Stdin`
+    * `{Read,BufRead} for StdinLock`
+    * `stdout`
+    * `Stdout`
+    * `Stdout::lock`
+    * `StdoutLock`
+    * `Write for Stdout`
+    * `Write for StdoutLock`
+    * `stderr`
+    * `Stderr`
+    * `Stderr::lock`
+    * `StderrLock`
+    * `Write for Stderr`
+    * `Write for StderrLock`
+    * `io::Result`
+    * `io::Error`
+    * `io::Error::last_os_error`
+    * `{Display, Error} for Error`
+    
+    Unstable APIs:
+    
+    (reasons can be found in the commit itself)
+    
+    * `Write::flush`
+    * `Seek`
+    * `ErrorKind`
+    * `Error::new`
+    * `Error::from_os_error`
+    * `Error::kind`
+    
+    Deprecated APIs
+    
+    * `Error::description` - available via the `Error` trait
+    * `Error::detail` - available via the `Display` implementation
+    * `thread::Builder::{stdout, stderr}`
+    
+    Changes in functionality:
+    
+    * `old_io::stdio::set_stderr` is now a noop as the infrastructure for printing
+      backtraces has migrated to `std::io`.
+    * The `ReadExt`, `WriteExt`, and `BufReadExt` extension traits were all removed
+      by folding functionality into the corresponding trait.
+    
+    [breaking-change]
+
 commit 79dd393a4f144fa5e6f81c720c782de3175810d7
 Merge: c9b03c2 42c4e48
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2517,64 +2719,6 @@ CommitDate: Wed Feb 11 11:47:05 2015 +0100
     
     (Having to opt into both `box_syntax` and `box_patterns` seemed
     unnecessary.)
-    
-    [breaking-change]
-
-commit e02b6d17486ecef8541d03bb6a38c52d1a35b339
-Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-AuthorDate: Mon Oct 27 12:55:16 2014 +0100
-Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-CommitDate: Wed Feb 11 08:50:27 2015 +0100
-
-    destructor checker (dropck).
-    
-    Largely adapted from pcwalton's original branch, with following
-    notable modifications:
-    
-    Use `regionck::type_must_outlive` to generate `SafeDestructor`
-    constraints.  (this plugged some soundness holes in the analysis).
-    
-    Avoid exponential time blowup on compile-fail/huge-struct.rs by
-    keeping the breadcrumbs until end of traversal.
-    
-    Avoid premature return from regionck::visit_expr.
-    
-    Factored drop-checking code out into dropck module.
-    
-    Added `SafeDestructor` to enum `SubregionOrigin` (for error reporting).
-    
-    ----
-    
-    Since this imposes restrictions on the lifetimes used in types with
-    destructors, this is a (wait for it)
-    
-    [breaking-change]
-
-commit 94c06a1be0ccfcf1a8e105fc98d126de372dbd40
-Merge: de8bc44 1aedc45
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Feb 10 11:15:52 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Feb 10 11:15:52 2015 +0000
-
-    Auto merge of #22026 - kmcallister:plugin, r=sfackler
-    
-    ```rust
-    #[plugin] #[no_link] extern crate bleh;
-    ```
-    
-    becomes a crate attribute
-    
-    ```rust
-    #![plugin(bleh)]
-    ```
-    
-    The feature gate is still required.
-    
-    It's almost never correct to link a plugin into the resulting library / executable, because it will bring all of libsyntax and librustc with it. However if you really want this behavior, you can get it with a separate `extern crate` item in addition to the `plugin` attribute.
-    
-    Fixes #21043.
-    Fixes #20769.
     
     [breaking-change]
 </pre></body></html>
