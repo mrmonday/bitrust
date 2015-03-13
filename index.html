@@ -1,6 +1,66 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 79dd393a4f144fa5e6f81c720c782de3175810d7
+Merge: c9b03c2 42c4e48
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Mar 13 01:00:02 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Mar 13 01:00:02 2015 +0000
+
+    Auto merge of #23229 - aturon:stab-path, r=alexcrichton
+    
+    This commit stabilizes essentially all of the new `std::path` API. The
+    API itself is changed in a couple of ways (which brings it in closer
+    alignment with the RFC):
+    
+    * `.` components are now normalized away, unless they appear at the
+      start of a path. This in turn effects the semantics of e.g. asking for
+      the file name of `foo/` or `foo/.`, both of which yield `Some("foo")`
+      now. This semantics is what the original RFC specified, and is also
+      desirable given early experience rolling out the new API.
+    
+    * The `parent` method is now `without_file` and succeeds if, and only
+      if, `file_name` is `Some(_)`. That means, in particular, that it fails
+      for a path like `foo/../`. This change affects `pop` as well.
+    
+    In addition, the `old_path` module is now deprecated.
+    
+    [breaking-change]
+    
+    r? @alexcrichton
+
+commit 42c4e481cd98bd392839144c9ac83e55e445a12a
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Mon Mar 9 08:49:10 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Thu Mar 12 16:38:58 2015 -0700
+
+    Stabilize std::path
+    
+    This commit stabilizes essentially all of the new `std::path` API. The
+    API itself is changed in a couple of ways (which brings it in closer
+    alignment with the RFC):
+    
+    * `.` components are now normalized away, unless they appear at the
+      start of a path. This in turn effects the semantics of e.g. asking for
+      the file name of `foo/` or `foo/.`, both of which yield `Some("foo")`
+      now. This semantics is what the original RFC specified, and is also
+      desirable given early experience rolling out the new API.
+    
+    * The `parent` function now succeeds if, and only if, the path has at
+      least one non-root/prefix component. This change affects `pop` as
+      well.
+    
+    * The `Prefix` component now involves a separate `PrefixComponent`
+      struct, to better allow for keeping both parsed and unparsed prefix data.
+    
+    In addition, the `old_path` module is now deprecated.
+    
+    Closes #23264
+    
+    [breaking-change]
+
 commit c9b03c24ec346e6405883032094f47805ef9c43e
 Merge: 538840b 9da9185
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2515,32 +2575,6 @@ CommitDate: Tue Feb 10 11:15:52 2015 +0000
     
     Fixes #21043.
     Fixes #20769.
-    
-    [breaking-change]
-
-commit 605225a366b62f29f5fd4b03cc298fff03bc3bdf
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Feb 6 14:47:55 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Feb 9 15:58:13 2015 -0800
-
-    std: Rename IntoIterator::Iter to IntoIter
-    
-    This is in preparation for stabilization of the `IntoIterator` trait. All
-    implementations and references to `Iter` need to be renamed to `IntoIter`.
-    
-    [breaking-change]
-
-commit 64a4decec779ee0a30585a12352d20a54b722506
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Feb 6 14:47:09 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Feb 9 15:58:13 2015 -0800
-
-    std: Remove typarms from IteratorExt::cloned
-    
-    With associated types an where clauses none of the type parameters are
-    necessary.
     
     [breaking-change]
 </pre></body></html>
