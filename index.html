@@ -1,6 +1,119 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 542e2bb3910f8860d49b4b40bcd78d9c74e733ff
+Merge: b4f5e78 1f5f76a
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Mar 15 18:42:54 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Mar 15 18:42:54 2015 +0000
+
+    Auto merge of #23353 - alexcrichton:stabilize-os, r=aturon
+    
+    This commit starts to organize the `std::os::$platform` modules and in the
+    process stabilizes some of the functionality contained within. The organization
+    of these modules will reflect the organization of the standard library itself
+    with extension traits for primitives in the same corresponding module.
+    
+    The OS-specific modules will grow more functionality over time including
+    concrete types that are not extending functionality of other structures, and
+    these will either go into the closest module in `std::os::$platform` or they
+    will grow a new module in the hierarchy.
+    
+    The following items are now stable:
+    
+    * `os::{unix, windows}`
+    * `unix::ffi`
+    * `unix::ffi::OsStrExt`
+    * `unix::ffi::OsStrExt::{from_bytes, as_bytes, to_cstring}`
+    * `unix::ffi::OsString`
+    * `unix::ffi::OsStringExt::{from_vec, into_vec}`
+    * `unix::process`
+    * `unix::process::CommandExt`
+    * `unix::process::CommandExt::{uid, gid}`
+    * `unix::process::ExitStatusExt`
+    * `unix::process::ExitStatusExt::signal`
+    * `unix::prelude`
+    * `windows::ffi`
+    * `windows::ffi::OsStringExt`
+    * `windows::ffi::OsStringExt::from_wide`
+    * `windows::ffi::OsStrExt`
+    * `windows::ffi::OsStrExt::encode_wide`
+    * `windows::prelude`
+    
+    The following items remain unstable:
+    
+    * `unix::io`
+    * `unix::io::{Fd, AsRawFd}`
+    * `unix::fs::{PermissionsExt, OpenOptionsExt}`
+    * `windows::io`
+    * `windows::io::{Handle, AsRawHandle}`
+    * `windows::io::{Socket, AsRawSocket}`
+    * `windows::fs`
+    * `windows::fs::OpenOptionsExt`
+    
+    Due to the reorgnization of the platform extension modules, this commit is a
+    breaking change. Most imports can be fixed by adding the relevant libstd module
+    in the `use` path (such as `ffi` or `fs`).
+    
+    [breaking-change]
+
+commit 1f5f76adc36082ec514a6cfa4ad2d7e6655a5253
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Mar 13 17:12:38 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Sun Mar 15 10:28:34 2015 -0700
+
+    std: Stabilize portions of `std::os::$platform`
+    
+    This commit starts to organize the `std::os::$platform` modules and in the
+    process stabilizes some of the functionality contained within. The organization
+    of these modules will reflect the organization of the standard library itself
+    with extension traits for primitives in the same corresponding module.
+    
+    The OS-specific modules will grow more functionality over time including
+    concrete types that are not extending functionality of other structures, and
+    these will either go into the closest module in `std::os::$platform` or they
+    will grow a new module in the hierarchy.
+    
+    The following items are now stable:
+    
+    * `os::{unix, windows}`
+    * `unix::ffi`
+    * `unix::ffi::OsStrExt`
+    * `unix::ffi::OsStrExt::{from_bytes, as_bytes, to_cstring}`
+    * `unix::ffi::OsString`
+    * `unix::ffi::OsStringExt::{from_vec, into_vec}`
+    * `unix::process`
+    * `unix::process::CommandExt`
+    * `unix::process::CommandExt::{uid, gid}`
+    * `unix::process::ExitStatusExt`
+    * `unix::process::ExitStatusExt::signal`
+    * `unix::prelude`
+    * `windows::ffi`
+    * `windows::ffi::OsStringExt`
+    * `windows::ffi::OsStringExt::from_wide`
+    * `windows::ffi::OsStrExt`
+    * `windows::ffi::OsStrExt::encode_wide`
+    * `windows::prelude`
+    
+    The following items remain unstable:
+    
+    * `unix::io`
+    * `unix::io::{Fd, AsRawFd}`
+    * `unix::fs::{PermissionsExt, OpenOptionsExt}`
+    * `windows::io`
+    * `windows::io::{Handle, AsRawHandle}`
+    * `windows::io::{Socket, AsRawSocket}`
+    * `windows::fs`
+    * `windows::fs::OpenOptionsExt`
+    
+    Due to the reorgnization of the platform extension modules, this commit is a
+    breaking change. Most imports can be fixed by adding the relevant libstd module
+    in the `use` path (such as `ffi` or `fs`).
+    
+    [breaking-change]
+
 commit 54660fc392343e4ddee8a0ea1ca196ffc533585b
 Merge: f59af75 60a4a2d
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2687,61 +2800,6 @@ CommitDate: Wed Feb 11 13:46:35 2015 -0800
     as well as "the default". This is also a breaking change due to the differences
     of what's yielded from each of these functions, but migration should be fairly
     easy as the defaults operate over `String` which is a common type to use.
-    
-    [breaking-change]
-
-commit 6f5944bfcff96509e3f3de227570382056153392
-Author:     Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
-AuthorDate: Wed Feb 11 21:53:31 2015 +0200
-Commit:     Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
-CommitDate: Wed Feb 11 22:29:16 2015 +0200
-
-    Change target-word-size to target-pointer-width
-    
-    This aligns json target specification to match terminology used elsewhere in the code base.
-    
-    [breaking-change] for custom target json users. Change all appearances of target-word-size
-    to target-pointer-width.
-
-commit bbbb571fee01532f63b105150654db8db0b01bf7
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Feb 9 16:33:19 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Feb 11 12:14:59 2015 -0800
-
-    rustc: Fix a number of stability lint holes
-    
-    There are a number of holes that the stability lint did not previously cover,
-    including:
-    
-    * Types
-    * Bounds on type parameters on functions and impls
-    * Where clauses
-    * Imports
-    * Patterns (structs and enums)
-    
-    These holes have all been fixed by overriding the `visit_path` function on the
-    AST visitor instead of a few specialized cases. This change also necessitated a
-    few stability changes:
-    
-    * The `collections::fmt` module is now stable (it was already supposed to be).
-    * The `thread_local::imp::Key` type is now stable (it was already supposed to
-      be).
-    * The `std::rt::{begin_unwind, begin_unwind_fmt}` functions are now stable.
-      These are required via the `panic!` macro.
-    * The `std::old_io::stdio::{println, println_args}` functions are now stable.
-      These are required by the `print!` and `println!` macros.
-    * The `ops::{FnOnce, FnMut, Fn}` traits are now `#[stable]`. This is required to
-      make bounds with these traits stable. Note that manual implementations of
-      these traits are still gated by default, this stability only allows bounds
-      such as `F: FnOnce()`.
-    
-    Additionally, the compiler now has special logic to ignore its own generated
-    `__test` module for the `--test` harness in terms of stability.
-    
-    Closes #8962
-    Closes #16360
-    Closes #20327
     
     [breaking-change]
 </pre></body></html>
