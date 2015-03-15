@@ -1,6 +1,59 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 54660fc392343e4ddee8a0ea1ca196ffc533585b
+Merge: f59af75 60a4a2d
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Mar 15 09:18:42 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Mar 15 09:18:42 2015 +0000
+
+    Auto merge of #23316 - alexcrichton:less-question-sized, r=aturon
+    
+    It is a frequent pattern among I/O functions to take `P: AsPath + ?Sized` or
+    `AsOsStr` instead of `AsPath`. Most of these functions do not need to take
+    ownership of their argument, but for libraries in general it's much more
+    ergonomic to not deal with `?Sized` at all and simply require an argument `P`
+    instead of `&amp;P`.
+    
+    This change is aimed at removing unsightly `?Sized` bounds while retaining the
+    same level of usability as before. All affected functions now take ownership of
+    their arguments instead of taking them by reference, but due to the forwarding
+    implementations of `AsOsStr` and `AsPath` all code should continue to work as it
+    did before.
+    
+    This is strictly speaking a breaking change due to the signatures of these
+    functions changing, but normal idiomatic usage of these APIs should not break in
+    practice.
+    
+    [breaking-change]
+
+commit 60a4a2db8837be91bdae051bd51ab181077e5dc6
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Thu Mar 12 12:59:53 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Sat Mar 14 23:23:54 2015 -0700
+
+    std: Remove ?Sized bounds from many I/O functions
+    
+    It is a frequent pattern among I/O functions to take `P: AsPath + ?Sized` or
+    `AsOsStr` instead of `AsPath`. Most of these functions do not need to take
+    ownership of their argument, but for libraries in general it's much more
+    ergonomic to not deal with `?Sized` at all and simply require an argument `P`
+    instead of `&amp;P`.
+    
+    This change is aimed at removing unsightly `?Sized` bounds while retaining the
+    same level of usability as before. All affected functions now take ownership of
+    their arguments instead of taking them by reference, but due to the forwarding
+    implementations of `AsOsStr` and `AsPath` all code should continue to work as it
+    did before.
+    
+    This is strictly speaking a breaking change due to the signatures of these
+    functions changing, but normal idiomatic usage of these APIs should not break in
+    practice.
+    
+    [breaking-change]
+
 commit 3e4be02b80a3dd27bce20870958fe0aef7e7336d
 Merge: 9eb69ab 981bf5f
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2689,36 +2742,6 @@ CommitDate: Wed Feb 11 12:14:59 2015 -0800
     Closes #8962
     Closes #16360
     Closes #20327
-    
-    [breaking-change]
-
-commit f9a1087f2730ab021d5356a5df703baeccffc020
-Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-AuthorDate: Wed Feb 11 13:57:40 2015 +0100
-Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-CommitDate: Wed Feb 11 13:57:40 2015 +0100
-
-    Feature-gate the `#[unsafe_no_drop_flag]` attribute.
-    
-    See RFC 320, "Non-zeroing dynamic drops."
-    
-    Fix #22173
-    
-    [breaking-change]
-
-commit 105f70b50097a5776ef0d1a6da6753c25d191aa6
-Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-AuthorDate: Tue Feb 10 22:49:56 2015 +0100
-Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-CommitDate: Wed Feb 11 11:47:05 2015 +0100
-
-    Add `box_patterns` feature gate.
-    
-    Switch feature-gate checker from `box_syntax` to `box_patterns` when
-    visiting a pattern.
-    
-    (Having to opt into both `box_syntax` and `box_patterns` seemed
-    unnecessary.)
     
     [breaking-change]
 </pre></body></html>
