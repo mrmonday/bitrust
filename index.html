@@ -1,6 +1,24 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit bde09eea35113f25d4e0bcc4a8344de971f3069a
+Merge: cc78919 1d5983a
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Mar 16 17:02:11 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Mar 16 17:02:11 2015 +0000
+
+    Auto merge of #23347 - aturon:stab-misc, r=alexcrichton
+    
+    This commit deprecates the `count`, `range` and `range_step` functions
+    in `iter`, in favor of range notation. To recover all existing
+    functionality, a new `step_by` adapter is provided directly on `ops::Range`
+    and `ops::RangeFrom`.
+    
+    [breaking-change]
+    
+    r? @alexcrichton
+
 commit 542e2bb3910f8860d49b4b40bcd78d9c74e733ff
 Merge: b4f5e78 1f5f76a
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -164,6 +182,21 @@ CommitDate: Sat Mar 14 23:23:54 2015 -0700
     This is strictly speaking a breaking change due to the signatures of these
     functions changing, but normal idiomatic usage of these APIs should not break in
     practice.
+    
+    [breaking-change]
+
+commit 1d5983aded687149239e8943debd51abdce5d27b
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Fri Mar 13 11:35:53 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Fri Mar 13 14:45:13 2015 -0700
+
+    Deprecate range, range_step, count, distributions
+    
+    This commit deprecates the `count`, `range` and `range_step` functions
+    in `iter`, in favor of range notation. To recover all existing
+    functionality, a new `step_by` adapter is provided directly on `ops::Range`
+    and `ops::RangeFrom`.
     
     [breaking-change]
 
@@ -2751,55 +2784,4 @@ CommitDate: Thu Feb 12 13:55:08 2015 +0100
     ----
     
     (Joint authorship by pcwalton and Ryman; thanks all!)
-
-commit 9492275106dd4d564a036517ff4726feacaf0720
-Merge: 43a2004 a828e79
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Feb 11 14:02:24 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Feb 11 14:02:24 2015 -0800
-
-    rollup merge of #22188: alexcrichton/envv2
-    
-    This commit tweaks the interface of the `std::env` module to make it more
-    ergonomic for common usage:
-    
-    * `env::var` was renamed to `env::var_os`
-    * `env::var_string` was renamed to `env::var`
-    * `env::args` was renamed to `env::args_os`
-    * `env::args` was re-added as a panicking iterator over string values
-    * `env::vars` was renamed to `env::vars_os`
-    * `env::vars` was re-added as a panicking iterator over string values.
-    
-    This should make common usage (e.g. unicode values everywhere) more ergonomic
-    as well as "the default". This is also a breaking change due to the differences
-    of what's yielded from each of these functions, but migration should be fairly
-    easy as the defaults operate over `String` which is a common type to use.
-    
-    [breaking-change]
-
-commit a828e7948069f310dc5b33be8edb65e5e8e0cf9a
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Feb 11 11:47:53 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Feb 11 13:46:35 2015 -0800
-
-    std: Tweak the std::env OsString/String interface
-    
-    This commit tweaks the interface of the `std::env` module to make it more
-    ergonomic for common usage:
-    
-    * `env::var` was renamed to `env::var_os`
-    * `env::var_string` was renamed to `env::var`
-    * `env::args` was renamed to `env::args_os`
-    * `env::args` was re-added as a panicking iterator over string values
-    * `env::vars` was renamed to `env::vars_os`
-    * `env::vars` was re-added as a panicking iterator over string values.
-    
-    This should make common usage (e.g. unicode values everywhere) more ergonomic
-    as well as "the default". This is also a breaking change due to the differences
-    of what's yielded from each of these functions, but migration should be fairly
-    easy as the defaults operate over `String` which is a common type to use.
-    
-    [breaking-change]
 </pre></body></html>
