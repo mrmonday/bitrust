@@ -1,6 +1,50 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit e46610966f798a083350724461648c6ffdd151f4
+Merge: a257288 b65ebc4
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Mar 17 03:23:50 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Mar 17 03:23:50 2015 +0000
+
+    Auto merge of #23104 - japaric:inherent, r=nikomatsakis
+    
+    - Allow inherent implementations on `char`, `str`, `[T]`, `*const T`, `*mut T` and all the numeric primitives.
+    - copy `unicode::char::CharExt` methods into `impl char`
+    - remove `unicode::char::CharExt`, its re-export `std::char::CharExt` and `CharExt` from the prelude
+    - copy `collections::str::StrExt` methods into `impl str`
+    - remove `collections::str::StrExt` its re-export `std::str::StrExt`, and `StrExt` from the prelude
+    - copy `collections::slice::SliceExt` methods into `impl&lt;T&gt; [T]`
+    - remove `collections::slice::SliceExt` its re-export `std::slice::SliceExt`, and `SliceExt` from the prelude
+    - copy `core::ptr::PtrExt` methods into `impl&lt;T&gt; *const T`
+    - remove `core::ptr::PtrExt` its re-export `std::ptr::PtrExt`, and `PtrExt` from the prelude
+    - copy `core::ptr::PtrExt` and `core::ptr::MutPtrExt` methods into `impl&lt;T&gt; *mut T`
+    - remove `core::ptr::MutPtrExt` its re-export `std::ptr::MutPtrExt`, and `MutPtrExt` from the prelude
+    - copy `core::num::Int` and `core::num::SignedInt` methods into `impl i{8,16,32,64,size}`
+    - copy `core::num::Int` and `core::num::UnsignedInt` methods into `impl u{8,16,32,64,size}`
+    - remove `core::num::UnsignedInt` and its re-export `std::num::UnsignedInt`
+    - move `collections` tests into its own crate: `collectionstest`
+    - copy `core::num::Float` methods into `impl f{32,64}`
+    
+    Because this PR removes several traits, this is a [breaking-change], however functionality remains unchanged and breakage due to unresolved imports should be minimal. If you encounter an error due to an unresolved import, simply remove the import:
+    
+    ``` diff
+      fn main() {
+    -     use std::num::UnsignedInt;  //~ error: unresolved import `std::num::UnsignedInt`.
+    -
+          println!("{}", 8_usize.is_power_of_two());
+      }
+    ```
+    
+    ---
+    
+    cc  #16862
+    [preview docs](http://japaric.github.io/inherent/std/index.html)
+    [unicode::char](http://japaric.github.io/inherent/unicode/primitive.char.html)
+    [collections::str](http://japaric.github.io/inherent/collections/primitive.str.html)
+    [std::f32](http://japaric.github.io/inherent/std/primitive.f32.html)
+
 commit a2572885ab62512a2508868a27c22d615382174a
 Merge: 92dd995 f798674
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2833,18 +2877,4 @@ CommitDate: Fri Feb 13 21:26:50 2015 +0100
     Range&lt;isize&gt; are always ExactSizeIterators.
     
     [breaking-change]
-
-commit cf636c233dfeef5abf0de8fb35e23c0a161810d2
-Merge: ba2efe9 8ed58d8
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri Feb 13 07:44:41 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri Feb 13 07:44:41 2015 +0000
-
-    Auto merge of #22093 - petrochenkov:builtin, r=pnkfelix
-    
-    Names of structs, enums, traits, type aliases and type parameters (i.e. all identifiers that can be used as full paths in type position) are not allowed to match the names of primitive types.
-    See #20427 for more information.
-    
-    This is a minor [breaking-change]
 </pre></body></html>
