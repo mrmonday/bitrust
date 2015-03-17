@@ -1,6 +1,21 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit c2671b59ccbc899b8defbabf453e88f89900c3a0
+Merge: a4b57be cbd37d8
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Tue Mar 17 15:19:57 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Tue Mar 17 15:19:57 2015 +0530
+
+    Rollup merge of #23409 - GBGamer:patch-2, r=alexcrichton
+    
+     To the correct MAP_NORESERVE. Every other instance is known as MAP_NORESERVE, so this is just a basic typo.
+    
+    I really doubt this will break anybody's but my own code.
+    
+    [breaking-change]
+
 commit e46610966f798a083350724461648c6ffdd151f4
 Merge: a257288 b65ebc4
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -143,6 +158,18 @@ CommitDate: Mon Mar 16 17:02:11 2015 +0000
     [breaking-change]
     
     r? @alexcrichton
+
+commit 170ccd615f976fc9e90a8f14ce6c373bfdf01533
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Sun Mar 15 18:47:00 2015 +1300
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Mon Mar 16 11:03:54 2015 +1300
+
+    Error if `pub use` references a private item.
+    
+    [breaking-change]
+    
+    Closes #23266
 
 commit 542e2bb3910f8860d49b4b40bcd78d9c74e733ff
 Merge: b4f5e78 1f5f76a
@@ -2834,47 +2861,6 @@ CommitDate: Sat Feb 14 12:56:32 2015 +1300
     Rename `fmt::Writer` to `fmt::Write`
     
     This brings it in line with its namesake in `std::io`.
-    
-    [breaking-change]
-
-commit dcd4cef119dc2fdac43b86cfb3694756d8c23f9f
-Author:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
-AuthorDate: Thu Feb 12 20:43:57 2015 -0800
-Commit:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
-CommitDate: Fri Feb 13 13:48:09 2015 -0800
-
-    Forbid `pub mymacro!();`
-    
-    It's not clear what this means, because a macro in item position can expand to
-    zero or more items.  For now we disallow it, which is technically a
-    
-        [breaking-change]
-    
-    but is landing without an RFC.  The `pub` keyword previously had no effect,
-    which seems quite unintended.
-    
-    Fixes #18317.
-    Fixes #14660.
-
-commit b19fda0ceb820af57f00976951dba95a3c0419aa
-Author:     Ulrik Sverdrup &lt;root@localhost&gt;
-AuthorDate: Fri Feb 13 21:20:16 2015 +0100
-Commit:     Ulrik Sverdrup &lt;root@localhost&gt;
-CommitDate: Fri Feb 13 21:26:50 2015 +0100
-
-    Remove ExactSizeIterator from 64-bit ranges.
-    
-    Fixes #22047
-    
-    Range&lt;u64&gt; and Range&lt;i64&gt; may be longer than usize::MAX on 32-bit
-    platforms, and thus they cannot fulfill the protocol for
-    ExactSizeIterator. We don't want a nonobvious platform dependency in
-    basic iterator traits, so the trait impl is removed.
-    
-    The logic of this change assumes that usize is at least 32-bit.
-    
-    This is technically a breaking change; note that Range&lt;usize&gt; and
-    Range&lt;isize&gt; are always ExactSizeIterators.
     
     [breaking-change]
 </pre></body></html>
