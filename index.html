@@ -1,6 +1,21 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit c64d671671aea2e44ee7fc6eb00ee75fc30ed7b9
+Merge: 31ba212 277b4f0
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Mar 17 13:29:48 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Mar 17 13:29:48 2015 +0000
+
+    Auto merge of #23423 - nikomatsakis:issue-18737-trait-subtyping, r=nrc
+    
+    This upcast coercion currently never requires vtable changes. It should be generalized.
+    
+    This is a [breaking-change] -- if you have an impl on an object type like `impl SomeTrait`, then this will no longer be applicable to object types like `SomeTrait+Send`. In the standard library, this primarily affected `Any`, and this PR adds impls for `Any+Send` as to keep the API the same in practice. An alternate workaround is to use UFCS form or standalone fns. For more details, see &lt;https://github.com/rust-lang/rust/issues/18737#issuecomment-78450798&gt;.
+    
+    r? @nrc
+
 commit c2671b59ccbc899b8defbabf453e88f89900c3a0
 Merge: a4b57be cbd37d8
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2849,18 +2864,6 @@ CommitDate: Sat Feb 14 11:32:08 2015 +1100
     It also deprecates the `std::raw::Closure` type which is now useless for
     non-type-erased closures, and replaced by `TraitObject` for `&amp;Fn`, `&amp;mut
     FnMut` etc, so I guess it should be called a:
-    
-    [breaking-change]
-
-commit bc9084b9b7f21140ffbc051ecb2a0cd08e88f3bb
-Author:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
-AuthorDate: Sat Feb 14 12:56:32 2015 +1300
-Commit:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
-CommitDate: Sat Feb 14 12:56:32 2015 +1300
-
-    Rename `fmt::Writer` to `fmt::Write`
-    
-    This brings it in line with its namesake in `std::io`.
     
     [breaking-change]
 </pre></body></html>
