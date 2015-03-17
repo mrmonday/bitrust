@@ -1,6 +1,73 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit a2572885ab62512a2508868a27c22d615382174a
+Merge: 92dd995 f798674
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Mar 17 00:50:26 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Mar 17 00:50:26 2015 +0000
+
+    Auto merge of #23352 - alexcrichton:stabilize-net, r=aturon
+    
+    This commit performs a stabilization pass over the std::net module,
+    incorporating the changes from RFC 923. Specifically, the following actions were
+    taken:
+    
+    Stable functionality:
+    
+    * `net` (the name)
+    * `Shutdown`
+    * `Shutdown::{Read, Write, Both}`
+    * `lookup_host`
+    * `LookupHost`
+    * `SocketAddr`
+    * `SocketAddr::{V4, V6}`
+    * `SocketAddr::port`
+    * `SocketAddrV4`
+    * `SocketAddrV4::{new, ip, port}`
+    * `SocketAddrV6`
+    * `SocketAddrV4::{new, ip, port, flowinfo, scope_id}`
+    * Common trait impls for socket addr structures
+    * `ToSocketAddrs`
+    * `ToSocketAddrs::Iter`
+    * `ToSocketAddrs::to_socket_addrs`
+    * `ToSocketAddrs for {SocketAddr*, (Ipv*Addr, u16), str, (str, u16)}`
+    * `Ipv4Addr`
+    * `Ipv4Addr::{new, octets, to_ipv6_compatible, to_ipv6_mapped}`
+    * `Ipv6Addr`
+    * `Ipv6Addr::{new, segments, to_ipv4}`
+    * `TcpStream`
+    * `TcpStream::connect`
+    * `TcpStream::{peer_addr, local_addr, shutdown, try_clone}`
+    * `{Read,Write} for {TcpStream, &amp;TcpStream}`
+    * `TcpListener`
+    * `TcpListener::bind`
+    * `TcpListener::{local_addr, try_clone, accept, incoming}`
+    * `Incoming`
+    * `UdpSocket`
+    * `UdpSocket::bind`
+    * `UdpSocket::{recv_from, send_to, local_addr, try_clone}`
+    
+    Unstable functionality:
+    
+    * Extra methods on `Ipv{4,6}Addr` for various methods of inspecting the address
+      and determining qualities of it.
+    * Extra methods on `TcpStream` to configure various protocol options.
+    * Extra methods on `UdpSocket` to configure various protocol options.
+    
+    Deprecated functionality:
+    
+    * The `socket_addr` method has been renamed to `local_addr`
+    
+    This commit is a breaking change due to the restructuring of the `SocketAddr`
+    type as well as the renaming of the `socket_addr` method. Migration should be
+    fairly straightforward, however, after accounting for the new level of
+    abstraction in `SocketAddr` (protocol distinction at the socket address level,
+    not the IP address).
+    
+    [breaking-change]
+
 commit 92dd995e1705a8c398a5266c8483e2519e494f47
 Merge: 1760e87 9889aae
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -196,6 +263,72 @@ CommitDate: Sat Mar 14 23:23:54 2015 -0700
     This is strictly speaking a breaking change due to the signatures of these
     functions changing, but normal idiomatic usage of these APIs should not break in
     practice.
+    
+    [breaking-change]
+
+commit f798674b86382929ca17c88de422a6e2fdb27f2a
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Mar 13 14:22:33 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Fri Mar 13 16:47:42 2015 -0700
+
+    std: Stabilize the `net` module
+    
+    This commit performs a stabilization pass over the std::net module,
+    incorporating the changes from RFC 923. Specifically, the following actions were
+    taken:
+    
+    Stable functionality:
+    
+    * `net` (the name)
+    * `Shutdown`
+    * `Shutdown::{Read, Write, Both}`
+    * `lookup_host`
+    * `LookupHost`
+    * `SocketAddr`
+    * `SocketAddr::{V4, V6}`
+    * `SocketAddr::port`
+    * `SocketAddrV4`
+    * `SocketAddrV4::{new, ip, port}`
+    * `SocketAddrV6`
+    * `SocketAddrV4::{new, ip, port, flowinfo, scope_id}`
+    * Common trait impls for socket addr structures
+    * `ToSocketAddrs`
+    * `ToSocketAddrs::Iter`
+    * `ToSocketAddrs::to_socket_addrs`
+    * `ToSocketAddrs for {SocketAddr*, (Ipv*Addr, u16), str, (str, u16)}`
+    * `Ipv4Addr`
+    * `Ipv4Addr::{new, octets, to_ipv6_compatible, to_ipv6_mapped}`
+    * `Ipv6Addr`
+    * `Ipv6Addr::{new, segments, to_ipv4}`
+    * `TcpStream`
+    * `TcpStream::connect`
+    * `TcpStream::{peer_addr, local_addr, shutdown, try_clone}`
+    * `{Read,Write} for {TcpStream, &amp;TcpStream}`
+    * `TcpListener`
+    * `TcpListener::bind`
+    * `TcpListener::{local_addr, try_clone, accept, incoming}`
+    * `Incoming`
+    * `UdpSocket`
+    * `UdpSocket::bind`
+    * `UdpSocket::{recv_from, send_to, local_addr, try_clone}`
+    
+    Unstable functionality:
+    
+    * Extra methods on `Ipv{4,6}Addr` for various methods of inspecting the address
+      and determining qualities of it.
+    * Extra methods on `TcpStream` to configure various protocol options.
+    * Extra methods on `UdpSocket` to configure various protocol options.
+    
+    Deprecated functionality:
+    
+    * The `socket_addr` method has been renamed to `local_addr`
+    
+    This commit is a breaking change due to the restructuring of the `SocketAddr`
+    type as well as the renaming of the `socket_addr` method. Migration should be
+    fairly straightforward, however, after accounting for the new level of
+    abstraction in `SocketAddr` (protocol distinction at the socket address level,
+    not the IP address).
     
     [breaking-change]
 
@@ -2714,37 +2847,4 @@ CommitDate: Fri Feb 13 07:44:41 2015 +0000
     See #20427 for more information.
     
     This is a minor [breaking-change]
-
-commit e4a9eb95ce4a457e800571d86942561ada28304a
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Fri Feb 13 14:40:57 2015 +1100
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Fri Feb 13 14:40:57 2015 +1100
-
-    Remove `_VALUE` from the float extremes constants.
-    
-    In `std::f32` and `std::f64`:
-    
-    - `MIN_VALUE` → `MIN`
-    - `MAX_VALUE` → `MAX`
-    - `MIN_POS_VALUE` → `MIN_POSITIVE`
-    
-    This matches the corresponding integer constants.
-    
-    [breaking-change]
-
-commit 07d00deab22dc07ffc58b8e74d45596242ca8b15
-Author:     Marvin Löbel &lt;loebel.marvin@gmail.com&gt;
-AuthorDate: Tue Feb 10 14:55:45 2015 +0100
-Commit:     Marvin Löbel &lt;loebel.marvin@gmail.com&gt;
-CommitDate: Thu Feb 12 22:04:31 2015 +0100
-
-    Made `Self` a keyword.
-    
-    It is only allowed in paths now, where it will either work inside a `trait`
-    or `impl` item, or not resolve outside of it.
-    
-    [breaking-change]
-    
-    Closes #22137
 </pre></body></html>
