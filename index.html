@@ -1,6 +1,24 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit ea8b82e90c450febb1f26a07862a1ec89c22addd
+Merge: bfac337 e256b7f
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Mar 17 21:23:02 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Mar 17 21:23:02 2015 +0000
+
+    Auto merge of #23376 - eddyb:die-tydesc-die, r=nikomatsakis
+    
+    Final remnant of reflection is gone. Also, virtual `Trait` destructors are no longer tied to `Box`.
+    That means they can be used to drop any instance of the type (used in libarena to replace TyDesc).
+    
+    This is [breaking-change] for direct users of intrinsics:
+    * use `intrinsics::type_name::&lt;T&gt;()` instead of `(*intrinsics::get_tydesc::&lt;T&gt;()).name`
+    * the only way to get the destructor is from a trait object's vtable (see libarena changes)
+    
+    r? @pcwalton f? @dotdash
+
 commit c64d671671aea2e44ee7fc6eb00ee75fc30ed7b9
 Merge: 31ba212 277b4f0
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2840,30 +2858,6 @@ CommitDate: Sat Feb 14 11:32:42 2015 +1100
     Fixes #22260
     
     You need to use `unsafe impl` to implement the Repr trait now.
-    
-    [breaking-change]
-
-commit 5e3ae102dbeeb646e8c7d2d423cea263337a76af
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Thu Feb 12 22:50:44 2015 +1100
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Sat Feb 14 11:32:08 2015 +1100
-
-    Dramatically expand the docs of std::raw.
-    
-    This overhauls the very meager docs that currently exist to clarify
-    various understandable confusions that I've noticed, e.g. people look in
-    `std::raw` for the "real" types of slices like `&amp;[T]`, or think that
-    `Slice&lt;T&gt;` refers to `[T]` (fixes #22214).
-    
-    This patch takes the liberty of offering some "style" guidance around
-    `raw::Slice`, since there's more restricted ways to duplicate all
-    functionality connected to it: `std::slice::from_raw_parts{,_mut}` for
-    construction and `.as_{,mut_}ptr` &amp; `.len` for deconstruction.
-    
-    It also deprecates the `std::raw::Closure` type which is now useless for
-    non-type-erased closures, and replaced by `TraitObject` for `&amp;Fn`, `&amp;mut
-    FnMut` etc, so I guess it should be called a:
     
     [breaking-change]
 </pre></body></html>
