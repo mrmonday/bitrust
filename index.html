@@ -1,6 +1,21 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 46f649c479ce40f3b4590590dda6c2895e8d60f6
+Merge: f9a7bc5 dccd17d
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Mar 18 08:27:22 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Mar 18 08:27:22 2015 +0000
+
+    Auto merge of #22838 - petrochenkov:bytelit, r=alexcrichton
+    
+    This patch changes the type of byte string literals from `&amp;[u8]` to `&amp;[u8; N]`.
+    It also implements some necessary traits (`IntoBytes`, `Seek`, `Read`, `BufRead`) for fixed-size arrays (also related to #21725) and adds test for #17233, which seems to be resolved.
+    
+    Fixes #18465
+    [breaking-change]
+
 commit c10918905fda1344e78bc16e6e73294d096ee97d
 Merge: 1ae32de 0947f40
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2843,20 +2858,4 @@ CommitDate: Sun Feb 15 18:22:31 2015 +0530
     FnMut` etc, so I guess it should be called a:
     
     [breaking-change]
-
-commit b63cee4a11fcfecf20ed8419bc3bd6859e6496bc
-Merge: 3d1c1ad 07d00de
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sat Feb 14 17:01:11 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sat Feb 14 17:01:11 2015 +0000
-
-    Auto merge of #22158 - Kimundi:the_lonely_uppercase_keyword, r=pnkfelix
-    
-    It is only allowed in paths now, where it will either work inside a `trait`
-    or `impl` item, or not resolve outside of it.
-    
-    [breaking-change]
-    
-    Closes #22137
 </pre></body></html>
