@@ -1,6 +1,23 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit c10918905fda1344e78bc16e6e73294d096ee97d
+Merge: 1ae32de 0947f40
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Mar 18 03:22:12 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Mar 18 03:22:12 2015 +0000
+
+    Auto merge of #23452 - nikomatsakis:unsafety-subtyping, r=nrc
+    
+    Safe fns are no longer subtypes of unsafe fns, but you can coerce from one to the other.
+    
+    This is a [breaking-change] in that impl fns must now be declared `unsafe` if the trait is declared `unsafe`. In some rare cases, the subtyping change may also direct affect you, but no such cases were encountered in practice.
+    
+    Fixes #23449.
+    
+    r? @nrc
+
 commit ea8b82e90c450febb1f26a07862a1ec89c22addd
 Merge: bfac337 e256b7f
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2842,22 +2859,4 @@ CommitDate: Sat Feb 14 17:01:11 2015 +0000
     [breaking-change]
     
     Closes #22137
-
-commit 7a52932f4cd65f57bcc8d77f12e32066b2a9c432
-Author:     Ulrik Sverdrup &lt;root@localhost&gt;
-AuthorDate: Fri Feb 13 20:31:09 2015 +0100
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Sat Feb 14 11:32:42 2015 +1100
-
-    Make std::raw::Repr an unsafe trait
-    
-    The default implementation of .repr() will call conveniently call
-    transmute_copy which should be appropriate for all implementors, but is
-    memory unsafe if used wrong.
-    
-    Fixes #22260
-    
-    You need to use `unsafe impl` to implement the Repr trait now.
-    
-    [breaking-change]
 </pre></body></html>
