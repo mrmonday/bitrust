@@ -1,6 +1,31 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit a32bb1bcc4c6b8806b1058c2f654415341240233
+Merge: c7392be c225824
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Thu Mar 19 06:08:56 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Thu Mar 19 08:49:34 2015 +0530
+
+    Rollup merge of #23475 - nikomatsakis:closure-ret-syntax, r=acrichto
+    
+     Require braces when a closure has an explicit return type. This is a [breaking-change]: instead of a closure like `|| -&gt; i32 22`, prefer `|| -&gt; i32 { 22 }`.
+    
+    Fixes #23420.
+
+commit c225824bded695c8bced713f5a4c62fe327277bc
+Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+AuthorDate: Wed Mar 18 09:22:38 2015 -0400
+Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+CommitDate: Wed Mar 18 20:07:27 2015 -0400
+
+    Require braces when a closure has an explicit return type. This is a
+    [breaking-change]: instead of a closure like `|| -&gt; i32 22`, prefer `||
+    -&gt; i32 { 22 }`.
+    
+    Fixes #23420.
+
 commit 46f649c479ce40f3b4590590dda6c2895e8d60f6
 Merge: f9a7bc5 dccd17d
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2812,50 +2837,6 @@ CommitDate: Sun Feb 15 18:42:44 2015 +0530
     
     This is technically a breaking change; note that `Range&lt;usize&gt;` and
     `Range&lt;isize&gt;` are always ExactSizeIterators.
-    
-    [breaking-change]
-
-commit da1a1f515fbedb32cfd954e2dc9cbf93a02453c8
-Merge: d014548 e4a9eb9
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Sun Feb 15 18:25:40 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Sun Feb 15 18:25:40 2015 +0530
-
-    Rollup merge of #22254 - huonw:float-value--, r=aturon
-    
-     In `std::f32` and `std::f64`:
-    
-    - `MIN_VALUE` → `MIN`
-    - `MAX_VALUE` → `MAX`
-    - `MIN_POS_VALUE` → `MIN_POSITIVE`
-    
-    This matches the corresponding integer constants.
-    
-    [breaking-change]
-
-commit 8cc3fbd41dddbb11f442a17902cd0d276aa22566
-Merge: 63091ef 7a52932
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Sun Feb 15 18:22:31 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Sun Feb 15 18:22:31 2015 +0530
-
-    Rollup merge of #22218 - huonw:raw-docs, r=steveklabnik,huonw
-    
-    This overhauls the very meager docs that currently exist to clarify
-    various understandable confusions that I've noticed, e.g. people look in
-    `std::raw` for the "real" types of slices like `&amp;[T]`, or think that
-    `Slice&lt;T&gt;` refers to `[T]` (fixes #22214).
-    
-    This patch takes the liberty of offering some "style" guidance around
-    `raw::Slice`, since there's more restricted ways to duplicate all
-    functionality connected to it: `std::slice::from_raw_parts{,_mut}` for
-    construction and `.as_{,mut_}ptr` &amp; `.len` for deconstruction.
-    
-    It also deprecates the `std::raw::Closure` type which is now useless for
-    non-type-erased closures, and replaced by `TraitObject` for `&amp;Fn`, `&amp;mut
-    FnMut` etc, so I guess it should be called a:
     
     [breaking-change]
 </pre></body></html>
