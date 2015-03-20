@@ -1,6 +1,26 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit fda8673531c2ecea13c86216f964feb6091b4ade
+Merge: e98e391 f2e3c74
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Mar 20 04:30:04 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Mar 20 04:30:04 2015 +0000
+
+    Auto merge of #23504 - alexcrichton:parse-error-not-unit, r=aturon
+    
+    The IP and socket address types all had `FromStr` implemented but the
+    implementations were not marked stable, nor was the error type returned ready to
+    be properly stabilized.
+    
+    This commit marks the implementations of `FromStr` as stable and also renamed
+    the `ParseError` structure to `AddrParseError`. The error is now also an opaque
+    structure that cannot be constructed outside the standard library.
+    
+    cc #22949
+    [breaking-change]
+
 commit 7f53b943f94b338e4c5401f1ce9efbe7da92b0c5
 Merge: 81e2396 dedac5e
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -45,6 +65,25 @@ CommitDate: Thu Mar 19 08:49:34 2015 +0530
      Require braces when a closure has an explicit return type. This is a [breaking-change]: instead of a closure like `|| -&gt; i32 22`, prefer `|| -&gt; i32 { 22 }`.
     
     Fixes #23420.
+
+commit f2e3c7469b56cd744e613a05a1ea73f441f66401
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Wed Mar 18 20:08:15 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Mar 18 20:10:15 2015 -0700
+
+    std: Stabilize FromStr implementations in std::net
+    
+    The IP and socket address types all had `FromStr` implemented but the
+    implementations were not marked stable, nor was the error type returned ready to
+    be properly stabilized.
+    
+    This commit marks the implementations of `FromStr` as stable and also renamed
+    the `ParseError` structure to `AddrParseError`. The error is now also an opaque
+    structure that cannot be constructed outside the standard library.
+    
+    cc #22949
+    [breaking-change]
 
 commit c225824bded695c8bced713f5a4c62fe327277bc
 Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
@@ -2816,36 +2855,4 @@ CommitDate: Mon Feb 16 10:55:37 2015 -0500
     but another option is to write an explicit annotation for the `'a`
     lifetime that used to be implicit.  Both fixes are demonstrated in
     this commit.
-
-commit 16b24f15bd042c4f97e1d4826d82c992c0228684
-Merge: ed728ec dcd4cef
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Sun Feb 15 18:36:20 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Sun Feb 15 18:42:48 2015 +0530
-
-    Rollup merge of #22285 - kmcallister:pub-macro, r=nick29581
-    
-     It's not clear what this means, because a macro in item position can expand to zero or more items.  For now we disallow it, which is technically a
-    
-        [breaking-change]
-    
-    but is landing without an RFC.  The `pub` keyword previously had no effect, which seems quite unintended.
-    
-    Fixes #18317.
-    Fixes #14660.
-
-commit f7870b6faa43a9e63b5575d5d9663457003a8ac5
-Merge: 8acaaa9 b1cd769
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Sun Feb 15 18:34:18 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Sun Feb 15 18:42:47 2015 +0530
-
-    Rollup merge of #22339 - petrochenkov:int, r=huonw
-    
-     Some function signatures have changed, so this is a [breaking-change].
-    In particular, radixes and numerical values of digits are represented by `u32` now.
-    
-    Part of #22240
 </pre></body></html>
