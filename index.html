@@ -1,6 +1,59 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 6107e4c0b88d9e22482ed88c52b98c2ec2034bb1
+Merge: 0711006 71321ff
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Fri Mar 20 05:36:15 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Mar 20 12:43:15 2015 +0530
+
+    Rollup merge of  #23534 - steveklabnik:remove_sched_threads, r=alexcrichton
+    
+    As @alexcrichton says, this was really a libgreen thing, and isn't
+    relevant now.
+    
+    As this removes a technically-public function, this is a
+    
+    [breaking-change]
+
+commit e2d32b74ecedc3f603def4d5130c0c300edce7d1
+Merge: 3e43373 7cbc428
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Fri Mar 20 05:30:28 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Mar 20 12:43:11 2015 +0530
+
+    Rollup merge of #23525 - steveklabnik:test_tasks, r=alexcrichton
+    
+     We don't use 'task' anymore, these are now threads.
+    
+    Because this changes the name of a compiler option, this is
+    
+    [breaking-change]
+    
+    I think this is small enough to not need an RFC, nor a period of accepting both. If we want to take both for a while, I can change the patch.
+
+commit 3e433738fb1ab9f353c943d60061d72024c6af07
+Merge: 4294327 f2e3c74
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Fri Mar 20 05:30:23 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Mar 20 12:43:11 2015 +0530
+
+    Rollup merge of #23504 - alexcrichton:parse-error-not-unit, r=aturon
+    
+     The IP and socket address types all had `FromStr` implemented but the
+    implementations were not marked stable, nor was the error type returned ready to
+    be properly stabilized.
+    
+    This commit marks the implementations of `FromStr` as stable and also renamed
+    the `ParseError` structure to `AddrParseError`. The error is now also an opaque
+    structure that cannot be constructed outside the standard library.
+    
+    cc #22949
+    [breaking-change]
+
 commit fda8673531c2ecea13c86216f964feb6091b4ade
 Merge: e98e391 f2e3c74
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -19,6 +72,38 @@ CommitDate: Fri Mar 20 04:30:04 2015 +0000
     structure that cannot be constructed outside the standard library.
     
     cc #22949
+    [breaking-change]
+
+commit 71321ff33fa3fe71cc1df541b3d0547b4e208923
+Author:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
+AuthorDate: Thu Mar 19 18:38:16 2015 -0400
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Mar 20 05:36:07 2015 +0530
+
+    Remove rt::default_sched_threads and RUST_THREADS.
+    
+    As @alexcrichton says, this was really a libgreen thing, and isn't
+    relevant now.
+    
+    As this removes a technically-public function, this is a
+    
+    [breaking-change]
+    
+    Conflicts:
+    	src/libtest/lib.rs
+
+commit 7cbc42849f7586d3c567d7ac8f202839f9b968e8
+Author:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
+AuthorDate: Thu Mar 19 15:42:53 2015 -0400
+Commit:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
+CommitDate: Thu Mar 19 15:42:56 2015 -0400
+
+    RUST_TEST_TASKS -&gt; RUST_TEST_THREADS
+    
+    We don't use 'task' anymore, these are now threads.
+    
+    Because this changes the name of a compiler option, this is
+    
     [breaking-change]
 
 commit 7f53b943f94b338e4c5401f1ce9efbe7da92b0c5
@@ -2719,140 +2804,4 @@ CommitDate: Tue Feb 17 17:33:20 2015 +0530
     [breaking-change]
     
     r? @aturon
-
-commit 4647d89205992383f8122e8fde0e2615497572bc
-Merge: 1a1ac6c f64d71b
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Tue Feb 17 15:51:53 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Tue Feb 17 17:33:19 2015 +0530
-
-    Rollup merge of #22364 - Manishearth:rfc-572-forbid-attr, r=nikomatsakis
-    
-     fixes #22203
-    
-    r? @nikomatsakis
-    
-    This breaks code that might be using attributes randomly, so it's technically a
-    
-    [breaking-change]
-
-commit d264ef2b11683337c24cfb16e0335ab386df02ab
-Merge: e337a57 e727378
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Mon Feb 16 11:30:21 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Tue Feb 17 06:23:40 2015 +0530
-
-    Rollup merge of #22313 - japaric:iter, r=aturon
-    
-     `IntoIterator` now has an extra associated item:
-    
-    ``` rust
-    trait IntoIterator {
-        type Item;
-        type IntoIter: Iterator&lt;Self=Self::Item&gt;;
-    }
-    ```
-    
-    This lets you bind the iterator \"`Item`\" directly when writing generic functions:
-    
-    ``` rust
-    // hypothetical change, not included in this PR
-    impl Extend&lt;T&gt; for Vec&lt;T&gt; {
-        // you can now write
-        fn extend&lt;I&gt;(&amp;mut self, it: I) where I: IntoIterator&lt;Item=T&gt; { .. }
-        // instead of
-        fn extend&lt;I: IntoIterator&gt;(&amp;mut self, it: I) where I::IntoIter: Iterator&lt;Item=T&gt; { .. }
-    }
-    ```
-    
-    The downside is that now you have to write an extra associated type in your `IntoIterator` implementations:
-    
-    ``` diff
-     impl&lt;T&gt; IntoIterator for Vec&lt;T&gt; {
-    +    type Item = T;
-         type IntoIter = IntoIter&lt;T&gt;;
-    
-         fn into_iter(self) -&gt; IntoIter&lt;T&gt; { .. }
-     }
-    ```
-    
-    Because this breaks all downstream implementations of `IntoIterator`, this is a [breaking-change]
-    
-    ---
-    
-    r? @aturon
-
-commit efd2a1780b2ee1909e84df0c3b398adb024ee375
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Mon Feb 16 16:33:55 2015 -0800
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Mon Feb 16 16:42:06 2015 -0800
-
-    Deprecate std::sync::TaskPool
-    
-    Rather than stabilize on the current API, we're going to punt this
-    concern to crates.io, to allow for faster iteration.
-    
-    If you need this functionality, you might look at https://github.com/carllerche/syncbox
-    
-    [breaking-change]
-
-commit 4a9dd3f8403f84ad518b0119fa2312c379df5dd7
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Wed Feb 11 16:57:23 2015 -0800
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Mon Feb 16 13:53:09 2015 -0800
-
-    Expose more of std::path
-    
-    This commit exposes the `is_sep` function and `MAIN_SEP` constant, as
-    well as Windows path prefixes. The path prefix enum is safely exposed on
-    all platforms, but it only yielded as a component for Windows.
-    
-    Exposing the prefix enum as part of prefix components involved changing
-    the type from `OsStr` to the `Prefix` enum, which is a:
-    
-    [breaking-change]
-
-commit f58a1bfa981eee4ba4d4c3c801f94772e4ab0019
-Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-AuthorDate: Thu Feb 12 10:41:47 2015 -0500
-Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-CommitDate: Mon Feb 16 10:55:37 2015 -0500
-
-    Fix fallout in libsyntax from RFC 599. Clarity and efficiency seems to be mostly improved, to my eye.
-    Nonetheless, as this commit demonstrates, the previous commits was a [breaking-change].
-    
-    In practice, breakage is focused on functions of this form:
-    
-    ```rust
-    fn foo(..., object: Box&lt;FnMut()&gt;)
-    ````
-    
-    where `FnMut()` could be any trait object type. The older scheme defaulted objects in argument
-    position so that they were bounded by a fresh lifetime:
-    
-    ```rust
-    fn foo&lt;'a&gt;(..., object: Box&lt;FnMut()+'a&gt;)
-    ```
-    
-    This meant that the object could contain borrowed data. The newer
-    scheme defaults to a lifetime bound of `'static`:
-    
-    ```rust
-    fn foo(..., object: Box&lt;FnMut()+'static&gt;)
-    ```
-    
-    This means that the object cannot contain borrowed data. In some cases, the best fix
-    is to stop using `Box`:
-    
-    ```rust
-    fn foo(..., object: &amp;mut FnMut())
-    ```
-    
-    but another option is to write an explicit annotation for the `'a`
-    lifetime that used to be implicit.  Both fixes are demonstrated in
-    this commit.
 </pre></body></html>
