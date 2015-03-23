@@ -1,6 +1,69 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit a91eece96b1c945bebb01a7e906dabc2d736a131
+Merge: b0aad7d 5fe0bb7
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sun Mar 22 01:35:39 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Mon Mar 23 04:54:26 2015 +0530
+
+    Rollup merge of #23559 - aturon:future-proof-map-index, r=Gankro
+    
+     This commit removes the `IndexMut` impls on `HashMap` and `BTreeMap`, in
+    order to future-proof the API against the eventual inclusion of an
+    `IndexSet` trait.
+    
+    Ideally, we would eventually be able to support:
+    
+    ```rust
+    map[owned_key] = val;
+    map[borrowed_key].mutating_method(arguments);
+    &amp;mut map[borrowed_key];
+    ```
+    
+    but to keep the design space as unconstrained as possible, we do not
+    currently want to support `IndexMut`, in case some other strategy will
+    eventually be needed.
+    
+    Code currently using mutating index notation can use `get_mut` instead.
+    
+    [breaking-change]
+    
+    Closes #23448
+    
+    r? @Gankro
+
+commit 5fe0bb743a0af0413f8989a70a4f926fa5c63074
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Fri Mar 20 10:22:57 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Fri Mar 20 10:46:31 2015 -0700
+
+    Future-proof indexing on maps: remove IndexMut
+    
+    This commit removes the `IndexMut` impls on `HashMap` and `BTreeMap`, in
+    order to future-proof the API against the eventual inclusion of an
+    `IndexSet` trait.
+    
+    Ideally, we would eventually be able to support:
+    
+    ```rust
+    map[owned_key] = val;
+    map[borrowed_key].mutating_method(arguments);
+    &amp;mut map[borrowed_key];
+    ```
+    
+    but to keep the design space as unconstrained as possible, we do not
+    currently want to support `IndexMut`, in case some other strategy will
+    eventually be needed.
+    
+    Code currently using mutating index notation can use `get_mut` instead.
+    
+    [breaking-change]
+    
+    Closes #23448
+
 commit 6107e4c0b88d9e22482ed88c52b98c2ec2034bb1
 Merge: 0711006 71321ff
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2760,46 +2823,6 @@ CommitDate: Tue Feb 17 15:55:55 2015 +0000
     Auto merge of #22311 - lfairy:consistent-fmt, r=alexcrichton
     
     This brings it in line with its namesake in `std::io`.
-    
-    [breaking-change]
-    
-    r? @aturon
-
-commit 020e4e4ad981ce0518bd8e3464ac592717c41143
-Merge: 0e89228 dc0797c
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Tue Feb 17 15:54:25 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Tue Feb 17 17:33:20 2015 +0530
-
-    Rollup merge of #22383 - pnkfelix:pass-features-along-during-expansion, r=huonw
-    
-     Pass features along during expansion
-    
-    Use the set of passed features to detect uses of feature-gated macros without the corresponding feature enabled.
-    
-    Fix #22234.
-    
-    ----
-    
-    Also, the framework this add (passing along a reference to the features in the expansion context) is a necessary precursor for landing a properly feature-gated desugaring-based overloaded-`box` and placement-`in` (#22181).
-    
-    ----
-    
-    This is fixing a bug, but since there might be code out there that is unknowingly taking advantage of that bug, I feel obligated to mark this as a:
-    
-    [breaking-change]
-
-commit bf52f2eef578e6fff83611a6276a3aa9f284e1c5
-Merge: 4647d89 bc9084b
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Tue Feb 17 15:52:01 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Tue Feb 17 17:33:20 2015 +0530
-
-    Rollup merge of #22311 - lfairy:consistent-fmt, r=alexcrichton
-    
-     This brings it in line with its namesake in `std::io`.
     
     [breaking-change]
     
