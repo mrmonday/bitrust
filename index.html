@@ -1,6 +1,224 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 753efb5042563dd34a4a524197fa14a129ddf449
+Merge: 388e5ae 57cf2de
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Mon Mar 23 15:10:50 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Mon Mar 23 15:10:50 2015 -0700
+
+    rollup merge of #23601: nikomatsakis/by-value-index
+    
+    This is a [breaking-change]. When indexing a generic map (hashmap, etc) using the `[]` operator, it is now necessary to borrow explicitly, so change `map[key]` to `map[&amp;key]` (consistent with the `get` routine). However, indexing of string-valued maps with constant strings can now be written `map["abc"]`.
+    
+    r? @japaric
+    cc @aturon @Gankro
+
+commit 2153c581ef66de1537286b58b1b323d24c25d07f
+Merge: b97e1cc 6bd3ab0
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Mon Mar 23 15:09:09 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Mon Mar 23 15:09:09 2015 -0700
+
+    rollup merge of #23557: aturon/rfc-909
+    
+    This commit implements [RFC 909](https://github.com/rust-lang/rfcs/pull/909):
+    
+    The `std::thread_local` module is now deprecated, and its contents are
+    available directly in `std::thread` as `LocalKey`, `LocalKeyState`, and
+    `ScopedKey`.
+    
+    The macros remain exactly as they were, which means little if any code
+    should break. Nevertheless, this is technically a:
+    
+    [breaking-change]
+    
+    Closes #23547
+
+commit b97e1cc28e0d3fe6a745a02a7c1750564a090f34
+Merge: fd13400 9231ceb
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Mon Mar 23 15:09:08 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Mon Mar 23 15:09:08 2015 -0700
+
+    rollup merge of #23541: aturon/stab-error
+    
+    This small commit stabilizes the `Error` trait as-is, except that `Send`
+    and `Debug` are added as constraints. The `Send` constraint is because
+    most uses of `Error` will be for trait objects, and by default we would
+    like these objects to be transferrable between threads. The `Debug`
+    constraint is to ensure that e.g. `Box&lt;Error&gt;` is `Debug`, and because
+    types that implement `Display` should certainly implement `Debug` in any case.
+    
+    In the near future we expect to add `Any`-like downcasting features to
+    `Error`, but this is waiting on some additional
+    mechanisms (`Reflect`). It will be added before 1.0 via default methods.
+    
+    [breaking-change]
+    
+    r? @alexcrichton
+    
+    Closes #21790
+
+commit ad41e7cd7a3d1969e666508d7e4a3ba305cee2ec
+Merge: d6054e4 45fae88
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Mon Mar 23 15:07:19 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Mon Mar 23 15:07:19 2015 -0700
+
+    rollup merge of #23119: nikomatsakis/issue-23116-ref-mut
+    
+    Don't allow upcasting to a supertype in the type of the match discriminant. Fixes #23116.
+    
+    This is a [breaking-change] in that it closes a type hole that previously existed.
+    
+    r? @pnkfelix
+
+commit 8389253df0431e58bfe0a8e0e3949d58ebe7400f
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Wed Mar 18 09:14:54 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Mon Mar 23 15:01:45 2015 -0700
+
+    Add generic conversion traits
+    
+    This commit:
+    
+    * Introduces `std::convert`, providing an implementation of
+    RFC 529.
+    
+    * Deprecates the `AsPath`, `AsOsStr`, and `IntoBytes` traits, all
+    in favor of the corresponding generic conversion traits.
+    
+      Consequently, various IO APIs now take `AsRef&lt;Path&gt;` rather than
+    `AsPath`, and so on. Since the types provided by `std` implement both
+    traits, this should cause relatively little breakage.
+    
+    * Deprecates many `from_foo` constructors in favor of `from`.
+    
+    * Changes `PathBuf::new` to take no argument (creating an empty buffer,
+      as per convention). The previous behavior is now available as
+      `PathBuf::from`.
+    
+    * De-stabilizes `IntoCow`. It's not clear whether we need this separate trait.
+    
+    Closes #22751
+    Closes #14433
+    
+    [breaking-change]
+
+commit f78815979706bca435bff80155b28acc80a19781
+Merge: 4a81e66 45fae88
+Author:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
+AuthorDate: Mon Mar 23 17:05:43 2015 -0400
+Commit:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
+CommitDate: Mon Mar 23 17:05:43 2015 -0400
+
+    Rollup merge of #23119 - nikomatsakis:issue-23116-ref-mut, r=pnkfelix
+    
+    Don't allow upcasting to a supertype in the type of the match discriminant. Fixes #23116.
+    
+    This is a [breaking-change] in that it closes a type hole that previously existed.
+    
+    r? @pnkfelix
+
+commit 6bd3ab0d8140053475a901ad4e2e80e98955bcb0
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Fri Mar 20 00:46:13 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Mon Mar 23 11:28:54 2015 -0700
+
+    Implement RFC 909: move thread_local into thread
+    
+    This commit implements [RFC
+    909](https://github.com/rust-lang/rfcs/pull/909):
+    
+    The `std::thread_local` module is now deprecated, and its contents are
+    available directly in `std::thread` as `LocalKey`, `LocalKeyState`, and
+    `ScopedKey`.
+    
+    The macros remain exactly as they were, which means little if any code
+    should break. Nevertheless, this is technically a:
+    
+    [breaking-change]
+    
+    Closes #23547
+
+commit 9231ceb6dd273d8101e1b3906e6060f802e6423d
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Thu Mar 19 16:37:34 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Mon Mar 23 11:27:19 2015 -0700
+
+    Stabilize the Error trait
+    
+    This small commit stabilizes the `Error` trait as-is, except that `Send`
+    and `Debug` are added as constraints. The `Send` constraint is because
+    most uses of `Error` will be for trait objects, and by default we would
+    like these objects to be transferrable between threads. The `Debug`
+    constraint is to ensure that e.g. `Box&lt;Error&gt;` is `Debug`, and because
+    types that implement `Display` should certainly implement `Debug` in any case.
+    
+    In the near future we expect to add `Any`-like downcasting features to
+    `Error`, but this is waiting on some additional
+    mechanisms (`Reflect`). It will be added before 1.0 via default methods.
+    
+    [breaking-change]
+
+commit 45fae882568d9bf36ade39f210a2721d05e556dd
+Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+AuthorDate: Fri Mar 6 10:14:12 2015 -0500
+Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+CommitDate: Mon Mar 23 05:30:43 2015 -0400
+
+    When matching against a pattern (either via `match` or `let`) that
+    contains ref-bindings, do not permit any upcasting from the type of
+    the value being matched. Similarly, do not permit coercion in a `let`.
+    
+    This is a [breaking-change] in that it closes a type hole that
+    previously existed, and in that coercion is not performed. You should
+    be able to work around the latter by converting:
+    
+    ```rust
+    let ref mut x: T = expr;
+    ```
+    
+    into
+    
+    ```rust
+    let x: T = expr;
+    let ref mut x = x;
+    ```
+    
+    Restricting coercion not to apply in the case of `let ref` or `let ref mut` is sort
+    of unexciting to me, but seems the best solution:
+    
+    1. Mixing coercion and `let ref` or `let ref mut` is a bit odd, because you are taking
+       the address of a (coerced) temporary, but only sometimes. It's not syntactically evident,
+       in other words, what's going on. When you're doing a coercion, you're kind of
+    
+    2. Put another way, I would like to preserve the relationship that
+       `equality &lt;= subtyping &lt;= coercion &lt;= as-coercion`, where this is
+       an indication of the number of `(T1,T2)` pairs that are accepted by
+       the various relations. Trying to mix `let ref mut` and coercion
+       would create another kind of relation that is like coercion, but
+       acts differently in the case where a precise match is needed.
+    
+    3. In any case, this is strictly more conservative than what we had
+       before and we can undo it in the future if we find a way to make
+       coercion mix with type equality.
+    
+    The change to match I feel ok about but similarly unthrilled. There is
+    some subtle text already concerning whether to use eqtype or subtype
+    for identifier bindings. The best fix I think would be to always have
+    match use strict equality but use subtyping on identifier bindings,
+    but the comment `(*)` explains why that's not working at the moment.
+    As above, I think we can change this as we clean up the code there.
+
 commit a91eece96b1c945bebb01a7e906dabc2d736a131
 Merge: b0aad7d 5fe0bb7
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2629,210 +2847,6 @@ CommitDate: Wed Feb 18 14:01:47 2015 -0500
     This breaks all implementors of FromIterator, as they must now accept IntoIterator instead of Iterator. The fix for this is generally trivial (change the bound, and maybe call into_iter() on the argument to get the old argument).
     
     Users of FromIterator should be unaffected because Iterators are IntoIterator.
-    
-    [breaking-change]
-
-commit 4a9d190423f67a00053f4b5c9869f0ccbdfcc689
-Author:     Alexis &lt;a.beingessner@gmail.com&gt;
-AuthorDate: Wed Feb 18 10:04:30 2015 -0500
-Commit:     Alexis &lt;a.beingessner@gmail.com&gt;
-CommitDate: Wed Feb 18 14:01:47 2015 -0500
-
-    make Extend use IntoIterator
-    
-    This breaks all implementors of Extend, as they must now accept IntoIterator instead of Iterator. The fix for this is generally trivial (change the bound, and maybe call into_iter() on the argument to get the old argument).
-    
-    Users of Extend should be unaffected because Iterators are IntoIterator.
-    
-    [breaking-change]
-
-commit 5fa9de16df87ab844452821acff1b6c74e948327
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Tue Feb 17 23:44:55 2015 -0800
-Commit:     Alexis &lt;a.beingessner@gmail.com&gt;
-CommitDate: Wed Feb 18 14:01:46 2015 -0500
-
-    Implement RFC 580
-    
-    This commit implements RFC 580 by renaming:
-    
-    * DList -&gt; LinkedList
-    * Bitv -&gt; BitVec
-    * BitvSet -&gt; BitSet
-    * RingBuf -&gt; VecDeque
-    
-    More details are in [the
-    RFC](https://github.com/rust-lang/rfcs/pull/580)
-    
-    [breaking-change]
-
-commit f83e23ad7c464c242c2d7ace7212d323980b2bca
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Feb 17 20:48:07 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Feb 18 08:26:20 2015 -0800
-
-    std: Stabilize the `hash` module
-    
-    This commit is an implementation of [RFC 823][rfc] which is another pass over
-    the `std::hash` module for stabilization. The contents of the module were not
-    entirely marked stable, but some portions which remained quite similar to the
-    previous incarnation are now marked `#[stable]`. Specifically:
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0823-hash-simplification.md
-    
-    * `std::hash` is now stable (the name)
-    * `Hash` is now stable
-    * `Hash::hash` is now stable
-    * `Hasher` is now stable
-    * `SipHasher` is now stable
-    * `SipHasher::new` and `new_with_keys` are now stable
-    * `Hasher for SipHasher` is now stable
-    * Many `Hash` implementations are now stable
-    
-    All other portions of the `hash` module remain `#[unstable]` as they are less
-    commonly used and were recently redesigned.
-    
-    This commit is a breaking change due to the modifications to the `std::hash` API
-    and more details can be found on the [RFC][rfc].
-    
-    Closes #22467
-    [breaking-change]
-
-commit eca2453a02548042fcb7082063149367a3343dd7
-Merge: 5be2b89 4a9dd3f
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Feb 17 15:13:53 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Feb 17 15:13:53 2015 -0800
-
-    rollup merge of #22208: aturon/expose-more-path
-    
-    This commit exposes the `is_sep` function and `MAIN_SEP` constant, as
-    well as Windows path prefixes. The path prefix enum is safely exposed on
-    all platforms, but it only yielded as a component for Windows.
-    
-    Exposing the prefix enum as part of prefix components involved changing
-    the type from `OsStr` to the `Prefix` enum, which is a:
-    
-    [breaking-change]
-
-commit 5be2b8964c624ee619d2f8518215d3a3b13514e1
-Merge: 311fc36 6f5944b
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Feb 17 15:13:46 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Feb 17 15:13:46 2015 -0800
-
-    rollup merge of #22191: nagisa/target-ptr-width-json
-    
-    This aligns json target specification to match terminology used elsewhere in the code base.
-    
-    [breaking-change] for custom target json users. Change all appearances of target-word-size
-    to target-pointer-width.
-
-commit f492095eb4ac061f1b4898b92880095d23dc9c86
-Merge: 096b105 235f35b
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Feb 17 15:13:20 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Feb 17 15:13:20 2015 -0800
-
-    rollup merge of #22024: alexcrichton/ascii
-    
-    * Move the type parameter on the `AsciiExt` trait to an associated type named
-      `Owned`.
-    * Move `ascii::escape_default` to using an iterator.
-    
-    This is a breaking change due to the removal of the type parameter on the
-    `AsciiExt` trait as well as the modifications to the `escape_default` function
-    to returning an iterator. Manual implementations of `AsciiExt` (or `AsciiExt`
-    bounds) should be adjusted to remove the type parameter and using the new
-    `escape_default` should be relatively straightforward.
-    
-    [breaking-change]
-
-commit d8f8f7a58c7c8b3352c1c577347865f5a823fee3
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Tue Feb 17 01:08:53 2015 -0800
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Tue Feb 17 14:33:29 2015 -0800
-
-    Revise std::thread semantics
-    
-    This commit makes several changes to `std::thread` in preparation for
-    final stabilization:
-    
-    * It removes the ability to handle panics from `scoped` children; see
-      #20807 for discussion
-    
-    * It adds a `JoinHandle` structure, now returned from `spawn`, which
-      makes it possible to join on children that do not share data from
-      their parent's stack. The child is automatically detached when the
-      handle is dropped, and the handle cannot be copied due to Posix
-      semantics.
-    
-    * It moves all static methods from `std::thread::Thread` to free
-      functions in `std::thread`. This was done in part because, due to the
-      above changes, there are effectively no direct `Thread` constructors,
-      and the static methods have tended to feel a bit awkward.
-    
-    * Adds an `io::Result` around the `Builder` methods `scoped` and
-      `spawn`, making it possible to handle OS errors when creating
-      threads. The convenience free functions entail an unwrap.
-    
-    * Stabilizes the entire module. Despite the fact that the API is
-      changing somewhat here, this is part of a long period of baking and
-      the changes are addressing all known issues prior to alpha2. If
-      absolutely necessary, further breaking changes can be made prior to beta.
-    
-    Closes #20807
-    
-    [breaking-change]
-
-commit a2ebb24ee6cc76791ef834cb2d17ecac95756499
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Feb 17 11:05:44 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Feb 17 14:02:45 2015 -0800
-
-    std: Rename io/path features with old_ prefix
-    
-    This commit renames the features for the `std::old_io` and `std::old_path`
-    modules to `old_io` and `old_path` to help facilitate migration to the new APIs.
-    
-    This is a breaking change as crates which mention the old feature names now need
-    to be renamed to use the new feature names.
-    
-    [breaking-change]
-
-commit 235f35b0b724a38a5583112825d46f50c5dde980
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Feb 17 13:58:34 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Feb 17 13:58:34 2015 -0800
-
-    std: Stabilize the `ascii` module
-    
-    This commit performs a stabilization pass over the `std::ascii` module taking
-    the following actions:
-    
-    * the module name is now stable
-    * `AsciiExt` is now stable after moving its type parameter to an `Owned`
-      associated type
-    * `AsciiExt::is_ascii` is now stable
-    * `AsciiExt::to_ascii_uppercase` is now stable
-    * `AsciiExt::to_ascii_lowercase` is now stable
-    * `AsciiExt::eq_ignore_ascii_case` is now stable
-    * `AsciiExt::make_ascii_uppercase` is added to possibly replace
-      `OwnedAsciiExt::into_ascii_uppercase` (similarly for lowercase variants).
-    * `escape_default` now returns an iterator and is stable
-    * `EscapeDefault` is now stable
-    
-    Trait implementations are now also marked stable.
-    
-    Primarily it is still unstable to *implement* the `AsciiExt` trait due to it
-    containing some unstable methods.
     
     [breaking-change]
 </pre></body></html>
