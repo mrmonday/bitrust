@@ -64,6 +64,29 @@ CommitDate: Fri Mar 20 10:46:31 2015 -0700
     
     Closes #23448
 
+commit 19fef72a8c14100029e5ce39cbc5472ab091dad8
+Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+AuthorDate: Thu Mar 19 19:52:08 2015 +0100
+Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+CommitDate: Fri Mar 20 11:25:20 2015 +0100
+
+    Added panic-on-overflow for rhs of left and right shift expressions.
+    
+    This includes a slight refactoring of the `cast_shift_rhs` and related
+    functions in `trans::base`, so that I can call them from much later in
+    the compiler's control flow (so that we can clearly dilineate where
+    automatic conversions of the RHS occur, versus where we check it).
+    
+    The rhs-checking and fallback-masking is generalized to 8- and 16-bit
+    values, and the fallback-masking is turned on unconditionally.
+    
+    Fix #10183.
+    
+    Is this a [breaking-change]?  I would argue it is not; it only adds a
+    strict definition to what was previously undefined behavior; however,
+    there might be code that was e.g. assuming that `1_i8 &lt;&lt; 17` yields 0.
+    (This happens in certain contexts and at certain optimization levels.)
+
 commit 6107e4c0b88d9e22482ed88c52b98c2ec2034bb1
 Merge: 0711006 71321ff
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2812,19 +2835,4 @@ CommitDate: Tue Feb 17 13:58:34 2015 -0800
     containing some unstable methods.
     
     [breaking-change]
-
-commit f9aeea7cb7865a2b82e7102837daabbe549177ea
-Merge: f1bb6c2 bc9084b
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Feb 17 15:55:55 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Feb 17 15:55:55 2015 +0000
-
-    Auto merge of #22311 - lfairy:consistent-fmt, r=alexcrichton
-    
-    This brings it in line with its namesake in `std::io`.
-    
-    [breaking-change]
-    
-    r? @aturon
 </pre></body></html>
