@@ -1,6 +1,133 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 3b13b9c2b4e72d08cb1c68024ccc4f50001f4878
+Merge: 91b633a 1955e05
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Mar 24 15:27:14 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Mar 24 15:27:14 2015 -0700
+
+    rollup merge of #23638: pnkfelix/fsk-reject-specialized-drops
+    
+    Reject specialized Drop impls.
+    
+    See Issue #8142 for discussion.
+    
+    This makes it illegal for a Drop impl to be more specialized than the original item.
+    
+    So for example, all of the following are now rejected (when they would have been blindly accepted before):
+    
+    ```rust
+    struct S&lt;A&gt; { ... };
+    impl Drop for S&lt;i8&gt; { ... } // error: specialized to concrete type
+    
+    struct T&lt;'a&gt; { ... };
+    impl Drop for T&lt;'static&gt; { ... } // error: specialized to concrete region
+    
+    struct U&lt;A&gt; { ... };
+    impl&lt;A:Clone&gt; Drop for U&lt;A&gt; { ... } // error: added extra type requirement
+    
+    struct V&lt;'a,'b&gt;;
+    impl&lt;'a,'b:a&gt; Drop for V&lt;'a,'b&gt; { ... } // error: added extra region requirement
+    ```
+    
+    Due to examples like the above, this is a [breaking-change].
+    
+    (The fix is to either remove the specialization from the `Drop` impl, or to transcribe the requirements into the struct/enum definition; examples of both are shown in the PR's fixed to `libstd`.)
+    
+    ----
+    
+    This is likely to be the last thing blocking the removal of the `#[unsafe_destructor]` attribute.
+    
+    Fix #8142
+    Fix #23584
+
+commit 5b2e8693e42dee545d336c0364773b3fbded93a5
+Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+AuthorDate: Sat Mar 21 13:12:08 2015 +0100
+Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+CommitDate: Tue Mar 24 22:27:23 2015 +0100
+
+    Reject specialized Drop impls.
+    
+    See Issue 8142 for discussion.
+    
+    This makes it illegal for a Drop impl to be more specialized than the
+    original item.
+    
+    So for example, all of the following are now rejected (when they would
+    have been blindly accepted before):
+    
+    ```rust
+    struct S&lt;A&gt; { ... };
+    impl Drop for S&lt;i8&gt; { ... } // error: specialized to concrete type
+    
+    struct T&lt;'a&gt; { ... };
+    impl Drop for T&lt;'static&gt; { ... } // error: specialized to concrete region
+    
+    struct U&lt;A&gt; { ... };
+    impl&lt;A:Clone&gt; Drop for U&lt;A&gt; { ... } // error: added extra type requirement
+    
+    struct V&lt;'a,'b&gt;;
+    impl&lt;'a,'b:a&gt; Drop for V&lt;'a,'b&gt; { ... } // error: added extra region requirement
+    ```
+    
+    Due to examples like the above, this is a [breaking-change].
+    
+    (The fix is to either remove the specialization from the `Drop` impl,
+    or to transcribe the requirements into the struct/enum definition;
+    examples of both are shown in the PR's fixed to `libstd`.)
+    
+    ----
+    
+    This is likely to be the last thing blocking the removal of the
+    `#[unsafe_destructor]` attribute.
+    
+    Includes two new error codes for the new dropck check.
+    
+    Update run-pass tests to accommodate new dropck pass.
+    
+    Update tests and docs to reflect new destructor restriction.
+    
+    ----
+    
+    Implementation notes:
+    
+    We identify Drop impl specialization by not being as parametric as the
+    struct/enum definition via unification.
+    
+    More specifically:
+    
+     1. Attempt unification of a skolemized instance of the struct/enum
+        with an instance of the Drop impl's type expression where all of
+        the impl's generics (i.e. the free variables of the type
+        expression) have been replaced with unification variables.
+    
+     2. If unification fails, then reject Drop impl as specialized.
+    
+     3. If unification succeeds, check if any of the skolemized
+        variables "leaked" into the constraint set for the inference
+        context; if so, then reject Drop impl as specialized.
+    
+     4. Otherwise, unification succeeded without leaking skolemized
+        variables: accept the Drop impl.
+    
+    We identify whether a Drop impl is injecting new predicates by simply
+    looking whether the predicate, after an appropriate substitution,
+    appears on the struct/enum definition.
+
+commit 9330bae4bde720dbdf8d379bd5529a1bb7a6f1e9
+Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+AuthorDate: Wed Mar 11 10:08:33 2015 -0400
+Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+CommitDate: Mon Mar 23 19:57:30 2015 -0400
+
+    Fallout from changing fn traits to use inheritance rather than bridge
+    impls. This is a [breaking-change] (for gated code) in that when you
+    implement `Fn` (`FnMut`) you must also implement `FnOnce`. This commit
+    demonstrates how to fix it.
+
 commit 753efb5042563dd34a4a524197fa14a129ddf449
 Merge: 388e5ae 57cf2de
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2751,102 +2878,5 @@ CommitDate: Wed Feb 18 14:32:10 2015 -0800
     
     Closes #22469
     Closes #22470
-    [breaking-change]
-
-commit 9774b7e64b7ff8323b4f8160cc38eb793f447217
-Merge: 261364d f83e23a
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Feb 18 14:32:03 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Feb 18 14:32:03 2015 -0800
-
-    rollup merge of #22480: alexcrichton/hashv3
-    
-    This commit is an implementation of [RFC 823][rfc] which is another pass over
-    the `std::hash` module for stabilization. The contents of the module were not
-    entirely marked stable, but some portions which remained quite similar to the
-    previous incarnation are now marked `#[stable]`. Specifically:
-    
-    [rfc]: https://github.com/rust-lang/rfcs/blob/master/text/0823-hash-simplification.md
-    
-    * `std::hash` is now stable (the name)
-    * `Hash` is now stable
-    * `Hash::hash` is now stable
-    * `Hasher` is now stable
-    * `SipHasher` is now stable
-    * `SipHasher::new` and `new_with_keys` are now stable
-    * `Hasher for SipHasher` is now stable
-    * Many `Hash` implementations are now stable
-    
-    All other portions of the `hash` module remain `#[unstable]` as they are less
-    commonly used and were recently redesigned.
-    
-    This commit is a breaking change due to the modifications to the `std::hash` API
-    and more details can be found on the [RFC][rfc].
-    
-    Closes #22467
-    [breaking-change]
-
-commit 1860ee521aa6096eb7f5410a64b53311fb0d2d0e
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Feb 17 22:47:40 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Feb 18 14:15:43 2015 -0800
-
-    std: Implement CString-related RFCs
-    
-    This commit is an implementation of [RFC 592][r592] and [RFC 840][r840]. These
-    two RFCs tweak the behavior of `CString` and add a new `CStr` unsized slice type
-    to the module.
-    
-    [r592]: https://github.com/rust-lang/rfcs/blob/master/text/0592-c-str-deref.md
-    [r840]: https://github.com/rust-lang/rfcs/blob/master/text/0840-no-panic-in-c-string.md
-    
-    The new `CStr` type is only constructable via two methods:
-    
-    1. By `deref`'ing from a `CString`
-    2. Unsafely via `CStr::from_ptr`
-    
-    The purpose of `CStr` is to be an unsized type which is a thin pointer to a
-    `libc::c_char` (currently it is a fat pointer slice due to implementation
-    limitations). Strings from C can be safely represented with a `CStr` and an
-    appropriate lifetime as well. Consumers of `&amp;CString` should now consume `&amp;CStr`
-    instead to allow producers to pass in C-originating strings instead of just
-    Rust-allocated strings.
-    
-    A new constructor was added to `CString`, `new`, which takes `T: IntoBytes`
-    instead of separate `from_slice` and `from_vec` methods (both have been
-    deprecated in favor of `new`). The `new` method returns a `Result` instead of
-    panicking.  The error variant contains the relevant information about where the
-    error happened and bytes (if present). Conversions are provided to the
-    `io::Error` and `old_io::IoError` types via the `FromError` trait which
-    translate to `InvalidInput`.
-    
-    This is a breaking change due to the modification of existing `#[unstable]` APIs
-    and new deprecation, and more detailed information can be found in the two RFCs.
-    Notable breakage includes:
-    
-    * All construction of `CString` now needs to use `new` and handle the outgoing
-      `Result`.
-    * Usage of `CString` as a byte slice now explicitly needs a `.as_bytes()` call.
-    * The `as_slice*` methods have been removed in favor of just having the
-      `as_bytes*` methods.
-    
-    Closes #22469
-    Closes #22470
-    [breaking-change]
-
-commit 66613e26b95438c02e2f5c273c557515454121f7
-Author:     Alexis &lt;a.beingessner@gmail.com&gt;
-AuthorDate: Wed Feb 18 13:06:21 2015 -0500
-Commit:     Alexis &lt;a.beingessner@gmail.com&gt;
-CommitDate: Wed Feb 18 14:01:47 2015 -0500
-
-    make FromIterator use IntoIterator
-    
-    This breaks all implementors of FromIterator, as they must now accept IntoIterator instead of Iterator. The fix for this is generally trivial (change the bound, and maybe call into_iter() on the argument to get the old argument).
-    
-    Users of FromIterator should be unaffected because Iterators are IntoIterator.
-    
     [breaking-change]
 </pre></body></html>
