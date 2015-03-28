@@ -1,6 +1,45 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit f8b6e28e758231f611e8e7923aa607cebd150717
+Merge: 9f9e251 3feeea5
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Mar 28 09:09:50 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Mar 28 09:09:50 2015 +0000
+
+    Auto merge of #23799 - reem:error-no-send, r=aturon
+    
+    The Send bound is an unnecessary restriction, and though provided as a convenience, can't be removed by downstream code.
+    
+    The removal of this bound is a [breaking-change] since it removes an implicit Send bound on all `E: Error` and all `Error` trait objects.
+    
+    To migrate, consider if your code actually requires the Send bound and, if so, add it explicitly.
+    
+    Fixes #23774
+    
+    r? @aturon
+
+commit 3feeea59dbfe397cccc6760b68f7bfb8291540b7
+Author:     Jonathan Reem &lt;jonathan.reem@gmail.com&gt;
+AuthorDate: Fri Mar 27 16:35:16 2015 -0700
+Commit:     Jonathan Reem &lt;jonathan.reem@gmail.com&gt;
+CommitDate: Fri Mar 27 16:35:16 2015 -0700
+
+    Make `std::error::Error` not inherit from Send
+    
+    The Send bound is an unnecessary restriction, and though provided as a
+    convenience, can't be removed by downstream code.
+    
+    The removal of this bound is a [breaking-change] since it
+    removes an implicit Send bound on all `E: Error` and all
+    `Error` trait objects.
+    
+    To migrate, consider if your code actually requires the Send
+    bound and, if so, add it explicitly.
+    
+    Fixes #23774
+
 commit 1639e51f6e4d036478705f4581de3a7417ccec0f
 Author:     Brian Anderson &lt;banderson@mozilla.com&gt;
 AuthorDate: Thu Mar 26 18:34:27 2015 -0700
@@ -2786,62 +2825,4 @@ CommitDate: Tue Feb 24 15:27:42 2015 -0800
     module is deprecated.
     
     [breaking-change]
-
-commit ab45694198356ae78972025e0d3beece297431d1
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Feb 23 11:39:16 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Feb 24 14:22:33 2015 -0800
-
-    std: Stabilize some `ptr` functions
-    
-    Specifically, the following actions were taken:
-    
-    * The `copy_memory` and `copy_nonoverlapping_memory` functions
-      to drop the `_memory` suffix (as it's implied by the functionality). Both
-      functions are now marked as `#[stable]`.
-    * The `set_memory` function was renamed to `write_bytes` and is now stable.
-    * The `zero_memory` function is now deprecated in favor of `write_bytes`
-      directly.
-    * The `Unique` pointer type is now behind its own feature gate called `unique`
-      to facilitate future stabilization.
-    * All type parameters now are `T: ?Sized` wherever possible and new clauses were
-      added to the `offset` functions to require that the type is sized.
-    
-    [breaking-change]
-
-commit 0bd15657d93c932611f3aee351b6521cdfa77731
-Merge: c9ace05 0c6d1f3
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Feb 24 17:56:09 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Feb 24 17:56:09 2015 +0000
-
-    Auto merge of #22172 - eddyb:almost-there, r=nikomatsakis
-    
-    Adds `&lt;module::Type&gt;::method` support and makes `module::Type::method` a shorthand for it.
-    This is most of #16293, except that chaining multiple associated types is not yet supported.
-    It also fixes #22563 as `impl`s are no longer treated as modules in resolve.
-    
-    Unfortunately, this is still a *[breaking-change]*:
-    * If you used a global path to a primitive type, i.e. `::bool`, `::i32` etc. - that was a bug I had to fix.
-    Solution: remove the leading `::`.
-    * If you passed explicit `impl`-side type parameters to an inherent method, e.g.:
-    ```rust
-    struct Foo&lt;T&gt;(T);
-    impl&lt;A, B&gt; Foo&lt;(A, B)&gt; {
-        fn pair(a: A, b: B) -&gt; Foo&lt;(A, B)&gt; { Foo((a, b)) }
-    }
-    Foo::&lt;A, B&gt;::pair(a, b)
-    // Now that is sugar for:
-    &lt;Foo&lt;A, B&gt;&gt;::pair(a, b)
-    // Which isn't valid because `Foo` has only one type parameter.
-    // Solution: replace with:
-    Foo::&lt;(A, B)&gt;::pair(a, b)
-    // And, if possible, remove the explicit type param entirely:
-    Foo::pair(a, b)
-    ```
-    * If you used the `QPath`-related `AstBuilder` methods @hugwijst added in #21943.
-    The methods still exist, but `QPath` was replaced by `QSelf`, with the actual path stored separately.
-    Solution: unpack the pair returned by `cx.qpath` to get the two arguments for `cx.expr_qpath`.
 </pre></body></html>
