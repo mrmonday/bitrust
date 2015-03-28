@@ -1,6 +1,127 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 1639e51f6e4d036478705f4581de3a7417ccec0f
+Author:     Brian Anderson &lt;banderson@mozilla.com&gt;
+AuthorDate: Thu Mar 26 18:34:27 2015 -0700
+Commit:     Brian Anderson &lt;banderson@mozilla.com&gt;
+CommitDate: Fri Mar 27 12:50:49 2015 -0700
+
+    Feature gate *all* slice patterns. #23121
+    
+    Until some backwards-compatibility hazards are fixed in #23121,
+    these need to be unstable.
+    
+    [breaking-change]
+
+commit b24a3b82011c3b78573ace4ade3f99d7c4701a11
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Thu Mar 26 17:35:13 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Fri Mar 27 10:19:59 2015 -0700
+
+    rustc: Remove support for hyphens in crate names
+    
+    This commit removes parser support for `extern crate "foo" as bar` as the
+    renamed crate is now required to be an identifier. Additionally this commit
+    enables hard errors on crate names that contain hyphens in them, they must now
+    solely contain alphanumeric characters or underscores.
+    
+    If the crate name is inferred from the file name, however, the file name
+    `foo-bar.rs` will have the crate name inferred as `foo_bar`. If a binary is
+    being emitted it will have the name `foo-bar` and a library will have the name
+    `libfoo_bar.rlib`.
+    
+    This commit is a breaking change for a number of reasons:
+    
+    * Old syntax is being removed. This was previously only issuing warnings.
+    * The output for the compiler when input is received on stdin is now `rust_out`
+      instead of `rust-out`.
+    * The crate name for a crate in the file `foo-bar.rs` is now `foo_bar` which can
+      affect infrastructure such as logging.
+    
+    [breaking-change]
+
+commit 45f1324037b098d6e92da7b34cc0aba274fdae97
+Merge: a491d21 c9f600b
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Mar 27 10:07:52 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Fri Mar 27 10:07:52 2015 -0700
+
+    rollup merge of #23771: aturon/stab-straggle-1
+    
+    Marks as `#[stable}`:
+    
+    * `ok_or`
+    * `ok_or_else`
+    * `iter_mut`
+    * `cloned`
+    
+    Similarly to `IteratorExt::cloned`, the `cloned` method is pared down to
+    work only on `Option&lt;&amp;T&gt;`. Thus, this is a:
+    
+    [breaking-change]
+    
+    r? @alexcrichton
+
+commit e42521aa58be928dd62b5450c443368d29ab6a65
+Merge: 0e5052c b68ca84
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Mar 27 10:07:41 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Fri Mar 27 10:07:41 2015 -0700
+
+    rollup merge of #23535: pnkfelix/fsk-filling-drop
+    
+    Replace zeroing-on-drop with filling-on-drop.
+    
+    This is meant to set the stage for removing *all* zeroing and filling (on drop) in the future.
+    
+    Note that the code is meant to be entirely abstract with respect to the particular values used for the drop flags: the final commit demonstrates how to go from zeroing-on-drop to filling-on-drop by changing the value of three constants (in two files).
+    
+    See further discussion on the internals thread:
+      http://internals.rust-lang.org/t/attention-hackers-filling-drop/1715/11
+    
+    [breaking-change] especially for structs / enums using `#[unsafe_no_drop_flag]`.
+
+commit c9f600bceeb5086ea292c3872ee3094ce770f9b0
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Thu Mar 26 17:47:13 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Thu Mar 26 17:47:13 2015 -0700
+
+    Stabilize some stragglers in `std::option`
+    
+    Marks as `#[stable}`:
+    
+    * `ok_or`
+    * `ok_or_else`
+    * `iter_mut`
+    * `cloned`
+    
+    Similarly to `IteratorExt::cloned`, the `cloned` method is pared down to
+    work only on `Option&lt;&amp;T&gt;`. Thus, this is a:
+    
+    [breaking-change]
+
+commit 9754b06cd80cfcc523573535090519bec935fec3
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Thu Mar 26 13:25:06 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Thu Mar 26 13:25:33 2015 -0700
+
+    rustc: Remove support for old_impl_check
+    
+    This commit removes compiler support for the `old_impl_check` attribute which
+    should in theory be entirely removed now. The last remaining use of it in the
+    standard library has been updated by moving the type parameter on the
+    `old_io::Acceptor` trait into an associated type. As a result, this is a
+    breaking change for all current users of the deprecated `old_io::Acceptor`
+    trait. Code can be migrated by using the `Connection` associated type instead.
+    
+    [breaking-change]
+
 commit 3b13b9c2b4e72d08cb1c68024ccc4f50001f4878
 Merge: 91b633a 1955e05
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2723,160 +2844,4 @@ CommitDate: Tue Feb 24 17:56:09 2015 +0000
     * If you used the `QPath`-related `AstBuilder` methods @hugwijst added in #21943.
     The methods still exist, but `QPath` was replaced by `QSelf`, with the actual path stored separately.
     Solution: unpack the pair returned by `cx.qpath` to get the two arguments for `cx.expr_qpath`.
-
-commit 717a91d6651598994834d056c69e6c4bf2b74b9f
-Author:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
-AuthorDate: Mon Feb 23 11:07:37 2015 -0800
-Commit:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
-CommitDate: Mon Feb 23 11:07:37 2015 -0800
-
-    Update missing-docs lint to check associated type declarations
-    
-    [breaking-change]
-    
-    Fixes #20648
-
-commit 67eb38ee4cfd7b28f8498b5b6492da172768dcb9
-Merge: dcc6ce2 c8dd2d0
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sun Feb 22 22:45:46 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sun Feb 22 22:45:46 2015 +0000
-
-    Auto merge of #22466 - Kimundi:str_pattern_ai_safe, r=aturon
-    
-    This is not a complete implementation of the RFC:
-    
-    - only existing methods got updated, no new ones added
-    - doc comments are not extensive enough yet
-    - optimizations got lost and need to be reimplemented
-    
-    See https://github.com/rust-lang/rfcs/pull/528
-    
-    Technically a
-    
-    [breaking-change]
-
-commit 98ec45ee0b5f38f06b4ac5adfb9aff198f157bdd
-Merge: 9fe2d21 be0dc49
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Sun Feb 22 01:50:53 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Sun Feb 22 01:50:53 2015 +0530
-
-    Rollup merge of #22542 - ipetkov:unsafe-lint, r=huonw
-    
-     This allows warning or forbidding all uses of unsafe code, whereas
-    previously only unsafe blocks were caught by the lint.
-    
-    The lint has been renamed from `unsafe-blocks` to `unsafe-code` to
-    reflect its new purpose.
-    
-    This is a minor [breaking-change]
-    
-    Closes #22430
-
-commit be0dc49675ff38b4bc2e73f68bff298168bc6875
-Author:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
-AuthorDate: Thu Feb 19 10:04:56 2015 -0800
-Commit:     Ivan Petkov &lt;ivanppetkov@gmail.com&gt;
-CommitDate: Thu Feb 19 20:43:09 2015 -0800
-
-    Unsafe lint will also check for other unsafe code
-    
-    Checks include declaration/implementation of unsafe functions, traits,
-    and methods.
-    
-    This allows warning or forbidding all uses of unsafe code, whereas
-    previously only unsafe blocks were caught by the lint.
-    
-    The lint has been renamed from `unsafe-blocks` to `unsafe-code` to
-    reflect its new purpose.
-    
-    This is a minor [breaking-change]
-    
-    Closes #22430
-
-commit a99e698628cbd396c8100ef776d10ac61d911847
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Wed Feb 11 23:16:32 2015 -0800
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Wed Feb 18 15:23:58 2015 -0800
-
-    Stabilize std::borrow
-    
-    This commit stabilizes `std::borrow`, making the following modifications
-    to catch up the API with language changes:
-    
-    * It renames `BorrowFrom` to `Borrow`, as was originally intended (but
-      blocked for technical reasons), and reorders the parameters
-      accordingly.
-    
-    * It moves the type parameter of `ToOwned` to an associated type. This
-      is somewhat less flexible, in that each borrowed type must have a
-      unique owned type, but leads to a significant simplification for
-      `Cow`. Flexibility can be regained by using newtyped slices, which is
-      advisable for other reasons anyway.
-    
-    * It removes the owned type parameter from `Cow`, making the type much
-      less verbose.
-    
-    * Deprecates the `is_owned` and `is_borrowed` predicates in favor of
-      direct matching.
-    
-    The above API changes are relatively minor; the basic functionality
-    remains the same, and essentially the whole module is now marked
-    `#[stable]`.
-    
-    [breaking-change]
-
-commit f3657170b1cbe80393d9ccde8608872f7bdc68f2
-Merge: 9774b7e 1860ee5
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Feb 18 14:32:10 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Feb 18 14:32:10 2015 -0800
-
-    rollup merge of #22482: alexcrichton/cstr-changes
-    
-    This commit is an implementation of [RFC 592][r592] and [RFC 840][r840]. These
-    two RFCs tweak the behavior of `CString` and add a new `CStr` unsized slice type
-    to the module.
-    
-    [r592]: https://github.com/rust-lang/rfcs/blob/master/text/0592-c-str-deref.md
-    [r840]: https://github.com/rust-lang/rfcs/blob/master/text/0840-no-panic-in-c-string.md
-    
-    The new `CStr` type is only constructable via two methods:
-    
-    1. By `deref`'ing from a `CString`
-    2. Unsafely via `CStr::from_ptr`
-    
-    The purpose of `CStr` is to be an unsized type which is a thin pointer to a
-    `libc::c_char` (currently it is a fat pointer slice due to implementation
-    limitations). Strings from C can be safely represented with a `CStr` and an
-    appropriate lifetime as well. Consumers of `&amp;CString` should now consume `&amp;CStr`
-    instead to allow producers to pass in C-originating strings instead of just
-    Rust-allocated strings.
-    
-    A new constructor was added to `CString`, `new`, which takes `T: IntoBytes`
-    instead of separate `from_slice` and `from_vec` methods (both have been
-    deprecated in favor of `new`). The `new` method returns a `Result` instead of
-    panicking.  The error variant contains the relevant information about where the
-    error happened and bytes (if present). Conversions are provided to the
-    `io::Error` and `old_io::IoError` types via the `FromError` trait which
-    translate to `InvalidInput`.
-    
-    This is a breaking change due to the modification of existing `#[unstable]` APIs
-    and new deprecation, and more detailed information can be found in the two RFCs.
-    Notable breakage includes:
-    
-    * All construction of `CString` now needs to use `new` and handle the outgoing
-      `Result`.
-    * Usage of `CString` as a byte slice now explicitly needs a `.as_bytes()` call.
-    * The `as_slice*` methods have been removed in favor of just having the
-      `as_bytes*` methods.
-    
-    Closes #22469
-    Closes #22470
-    [breaking-change]
 </pre></body></html>
