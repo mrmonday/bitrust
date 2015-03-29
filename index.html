@@ -1,6 +1,23 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 227b46bdede794d5c8476b810bb1c30926bd9c04
+Merge: 27af78c 3c0c8fc
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Mar 29 05:21:29 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Mar 29 05:21:29 2015 +0000
+
+    Auto merge of #23810 - sfackler:debug-collections, r=alexcrichton
+    
+    The collections debug helpers no longer prefix output with the
+    collection name, in line with the current conventions for Debug
+    implementations. Implementations that want to preserve the current
+    behavior can simply add a `try!(write!(fmt, "TypeName "));` at the
+    beginning of the `fmt` method.
+    
+    [breaking-change]
+
 commit c89de2c56baeb61e7cc434924dcc8bedd32b26b8
 Merge: 01f2c67 d502f42
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -28,6 +45,22 @@ CommitDate: Sat Mar 28 13:53:45 2015 -0700
     
     All methods are inlined into Iterator with `Self: Sized` bounds to make
     sure Iterator is still object safe.
+    
+    [breaking-change]
+
+commit 4037f2a368edd75c561bc6f3d8c6f0d644bc4180
+Author:     Steven Fackler &lt;sfackler@gmail.com&gt;
+AuthorDate: Thu Mar 26 22:42:29 2015 -0700
+Commit:     Steven Fackler &lt;sfackler@gmail.com&gt;
+CommitDate: Sat Mar 28 10:33:51 2015 -0700
+
+    Update debug helpers and add list builder
+    
+    The collections debug helpers no longer prefix output with the
+    collection name, in line with the current conventions for Debug
+    implementations. Implementations that want to preserve the current
+    behavior can simply add a `try!(write!(fmt, "TypeName "));` at the
+    beginning of the `fmt` method.
     
     [breaking-change]
 
@@ -2771,51 +2804,5 @@ CommitDate: Tue Feb 24 22:04:21 2015 -0800
     Keeps the method consistent with `Iterator::any`.
     
     Closes #22617
-    [breaking-change]
-
-commit 6c6f2317bae63261123cd94ebe214e80fb6ad78e
-Merge: b18584c ab45694
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Wed Feb 25 10:29:46 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Wed Feb 25 10:29:46 2015 +0530
-
-    Rollup merge of #22729 - alexcrichton:ptr-stabilization, r=aturon
-    
-     Specifically, the following actions were takend:
-    
-    * The `copy_memory` and `copy_nonoverlapping_memory` functions
-      to drop the `_memory` suffix (as it's implied by the functionality). Both
-      functions are now marked as `#[stable]`.
-    * The `set_memory` function was renamed to `write_bytes` and is now stable.
-    * The `zero_memory` function is now deprecated in favor of `write_bytes`
-      directly.
-    * The `Unique` pointer type is now behind its own feature gate called `unique`
-      to facilitate future stabilization.
-    
-    [breaking-change]
-
-commit b18584cbd942e2559e718d6318fdbc494e9047bd
-Merge: 7b7cf84 2d200c9
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Wed Feb 25 10:29:39 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Wed Feb 25 10:29:39 2015 +0530
-
-    Rollup merge of #22727 - alexcrichton:prep-env, r=aturon
-    
-     This commit moves `std::env` away from the `std::old_io` error type as well as
-    the `std::old_path` module. Methods returning an error now return `io::Error`
-    and methods consuming or returning paths use `std::path` instead of
-    `std::old_path`. This commit does not yet mark these APIs as `#[stable]`.
-    
-    This commit also migrates `std::old_io::TempDir` to `std::fs::TempDir` with
-    essentially the exact same API. This type was added to interoperate with the new
-    path API and has its own `tempdir` feature.
-    
-    Finally, this commit reverts the deprecation of `std::os` APIs returning the old
-    path API types. This deprecation can come back once the entire `std::old_path`
-    module is deprecated.
-    
     [breaking-change]
 </pre></body></html>
