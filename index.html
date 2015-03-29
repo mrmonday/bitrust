@@ -1,6 +1,36 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit c89de2c56baeb61e7cc434924dcc8bedd32b26b8
+Merge: 01f2c67 d502f42
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Mar 28 22:11:49 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Mar 28 22:11:49 2015 +0000
+
+    Auto merge of #23300 - sfackler:rm-iterator-ext, r=alexcrichton
+    
+    All methods are inlined into Iterator with `Self: Sized` bounds to make
+    sure Iterator is still object safe.
+    
+    [breaking-change]
+    
+    This is blocked on ICEs: https://gist.github.com/sfackler/5aff7c57cf8d896e2c6f
+    Seem to be similar to #23281.
+
+commit d502f4221fd5472c4a7905cdc3c59533e9612822
+Author:     Steven Fackler &lt;sfackler@gmail.com&gt;
+AuthorDate: Wed Mar 11 22:41:24 2015 -0700
+Commit:     Steven Fackler &lt;sfackler@gmail.com&gt;
+CommitDate: Sat Mar 28 13:53:45 2015 -0700
+
+    Remove IteratorExt
+    
+    All methods are inlined into Iterator with `Self: Sized` bounds to make
+    sure Iterator is still object safe.
+    
+    [breaking-change]
+
 commit f8b6e28e758231f611e8e7923aa607cebd150717
 Merge: 9f9e251 3feeea5
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2775,43 +2805,6 @@ CommitDate: Wed Feb 25 10:29:39 2015 +0530
     Rollup merge of #22727 - alexcrichton:prep-env, r=aturon
     
      This commit moves `std::env` away from the `std::old_io` error type as well as
-    the `std::old_path` module. Methods returning an error now return `io::Error`
-    and methods consuming or returning paths use `std::path` instead of
-    `std::old_path`. This commit does not yet mark these APIs as `#[stable]`.
-    
-    This commit also migrates `std::old_io::TempDir` to `std::fs::TempDir` with
-    essentially the exact same API. This type was added to interoperate with the new
-    path API and has its own `tempdir` feature.
-    
-    Finally, this commit reverts the deprecation of `std::os` APIs returning the old
-    path API types. This deprecation can come back once the entire `std::old_path`
-    module is deprecated.
-    
-    [breaking-change]
-
-commit 24fc50d29545e7ea89320d3c9544cd9043894d7d
-Merge: 9692f3b 27f8708
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Wed Feb 25 10:27:11 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Wed Feb 25 10:27:11 2015 +0530
-
-    Rollup merge of #22783 - alexcrichton:deprecate-taskpool, r=alexcrichton
-    
-     Rather than stabilize on the current API, we're going to punt this
-    concern to crates.io, to allow for faster iteration.
-    
-    [breaking-change]
-
-commit 2d200c9c8bd6659720a68ab8dd74218b1e58c1e9
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Feb 23 10:59:17 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Feb 24 15:27:42 2015 -0800
-
-    std: Move std::env to the new I/O APIs
-    
-    This commit moves `std::env` away from the `std::old_io` error type as well as
     the `std::old_path` module. Methods returning an error now return `io::Error`
     and methods consuming or returning paths use `std::path` instead of
     `std::old_path`. This commit does not yet mark these APIs as `#[stable]`.
