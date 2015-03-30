@@ -18,6 +18,20 @@ CommitDate: Mon Mar 30 11:35:52 2015 +0000
     
     [breaking-change]
 
+commit c92bdcb232da3973a8a548e6b2044b610e286210
+Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+AuthorDate: Tue Mar 24 15:45:11 2015 -0400
+Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+CommitDate: Mon Mar 30 05:02:20 2015 -0400
+
+    Fallout where types must be specified.
+    
+    This is due to a [breaking-change] to operators. The primary affected
+    code is uses of the `Rng` trait where we used to (incorrectly) infer the
+    right-hand-side type from the left-hand-side, in the case that the LHS
+    type was a scalar like `i32`. The fix is to add a type annotation like
+    `x + rng.gen::&lt;i32&gt;()`.
+
 commit e64b677ca66d742e7c06738bacf3a160cba827a7
 Author:     Corey Richardson &lt;corey@octayn.net&gt;
 AuthorDate: Fri Mar 27 23:01:19 2015 -0400
@@ -2789,18 +2803,4 @@ CommitDate: Fri Feb 27 22:07:03 2015 +0530
     This is a
     [breaking-change]
     Due to some code needing additional type annotations.
-
-commit 91569a95f16580f05f9dcb4b6d6eff50203cdde8
-Merge: fb92e31 18878b1
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Fri Feb 27 11:43:57 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Feb 27 22:07:02 2015 +0530
-
-    Rollup merge of #22795 - alexcrichton:issue-22617, r=huonw
-    
-     Keeps the method consistent with `Iterator::any`.
-    
-    Closes #22617
-    [breaking-change]
 </pre></body></html>
