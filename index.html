@@ -1,6 +1,43 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 14192d6df5cc714e5c9a3ca70b08f2514d977be2
+Merge: f002640 e64b677
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Mar 30 11:35:52 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Mar 30 11:35:52 2015 +0000
+
+    Auto merge of #23848 - cmr:no-compiler-docs, r=huonw
+    
+    This saves a bunch of a time and will make distributions smaller, as well as
+    avoiding filling the implementors page with internal garbage. Turn it back on
+    with `--enable-compiler-docs` if you want them.
+    
+    (Crates behind the facade are not documented at all)
+    
+    [breaking-change]
+
+commit e64b677ca66d742e7c06738bacf3a160cba827a7
+Author:     Corey Richardson &lt;corey@octayn.net&gt;
+AuthorDate: Fri Mar 27 23:01:19 2015 -0400
+Commit:     Corey Richardson &lt;corey@octayn.net&gt;
+CommitDate: Sun Mar 29 06:15:51 2015 -0400
+
+    mk: don't build docs for internal or behind-the-facade crates in beta/stable
+    
+    This saves a bunch of a time and will make distributions smaller, as well as
+    avoiding filling the implementors page with internal garbage. Turn it back on
+    with `--enable-compiler-docs` if you want compiler docs during development.
+    
+    Crates behind the facade are only documented on nightly/dev builds (where they
+    can be used).
+    
+    [breaking-change]
+    
+    Closes #23772
+    Closes #21297
+
 commit 227b46bdede794d5c8476b810bb1c30926bd9c04
 Merge: 27af78c 3c0c8fc
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2763,45 +2800,6 @@ CommitDate: Fri Feb 27 22:07:02 2015 +0530
     Rollup merge of #22795 - alexcrichton:issue-22617, r=huonw
     
      Keeps the method consistent with `Iterator::any`.
-    
-    Closes #22617
-    [breaking-change]
-
-commit 07dc8d67c92017f950eef3951ec901cb2a3add7e
-Author:     Cody P Schafer &lt;dev@codyps.com&gt;
-AuthorDate: Wed Feb 25 13:37:22 2015 -0500
-Commit:     Cody P Schafer &lt;dev@codyps.com&gt;
-CommitDate: Wed Feb 25 17:38:28 2015 -0500
-
-    Result::or : avoid over-specializing the type
-    
-    Changes .or() so that it can return a Result with a different E type
-    than the one it is called on.
-    
-    Essentially:
-    
-        fn or(self, res: Result&lt;T, E&gt;) -&gt; Result&lt;T, E&gt;
-    
-    becomes
-    
-        fn or&lt;F&gt;(self, res: Result&lt;T, F&gt;) -&gt; Result&lt;T, F&gt;
-    
-    This brings `or` in line with the existing `and` and `or_else` member
-    types.
-    
-    This is a
-    [breaking-change]
-    Due to some code needing additional type annotations.
-
-commit 18878b155ebf3c70445f2a461582475f5ef72c92
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Feb 24 21:52:27 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Feb 24 22:04:21 2015 -0800
-
-    std: Require `&amp;mut self` for Iterator::all
-    
-    Keeps the method consistent with `Iterator::any`.
     
     Closes #22617
     [breaking-change]
