@@ -1,6 +1,53 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 57938041c18ee1c1bef362e60f24f5b2d3a46213
+Merge: 464c18c acd48a2
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Tue Mar 31 09:04:38 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Tue Mar 31 09:04:38 2015 +0530
+
+    Rollup merge of #23866 - alexcrichton:switch-some-orders, r=aturon
+    
+    This functions swaps the order of arguments to a few functions that previously
+    took (output, input) parameters, but now take (input, output) parameters (in
+    that order).
+    
+    The affected functions are:
+    
+    * ptr::copy
+    * ptr::copy_nonoverlapping
+    * slice::bytes::copy_memory
+    * intrinsics::copy
+    * intrinsics::copy_nonoverlapping
+    
+    Closes #22890
+    [breaking-change]
+
+commit acd48a2b3e7fcc0372f7718a2fac1cf80e03db95
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Mar 27 11:12:28 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Mon Mar 30 14:08:40 2015 -0700
+
+    std: Standardize (input, output) param orderings
+    
+    This functions swaps the order of arguments to a few functions that previously
+    took (output, input) parameters, but now take (input, output) parameters (in
+    that order).
+    
+    The affected functions are:
+    
+    * ptr::copy
+    * ptr::copy_nonoverlapping
+    * slice::bytes::copy_memory
+    * intrinsics::copy
+    * intrinsics::copy_nonoverlapping
+    
+    Closes #22890
+    [breaking-change]
+
 commit 14192d6df5cc714e5c9a3ca70b08f2514d977be2
 Merge: f002640 e64b677
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2755,52 +2802,4 @@ CommitDate: Fri Feb 27 16:26:33 2015 -0800
     with no replacement for now.
     
     [breaking-change]
-
-commit f66a3f7bba378d4a308e02a860a11ab5f9f8e4ad
-Author:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
-AuthorDate: Fri Feb 27 11:14:42 2015 -0800
-Commit:     Keegan McAllister &lt;kmcallister@mozilla.com&gt;
-CommitDate: Fri Feb 27 11:17:05 2015 -0800
-
-    Replace MacExpr / MacPat / MacItems with MacEager
-    
-    MacEager is a MacResult implementation for the common case where you've already
-    built each form of AST that you might return.
-    
-    Fixes #17637. Based on #18814.
-    
-    This is a [breaking-change] for syntax extensions:
-    
-      * MacExpr::new becomes MacEager::expr.
-    
-      * MacPat::new becomes MacEager::pat.
-    
-      * MacItems::new becomes MacEager::items. It takes a SmallVector directly,
-        not an iterator.
-
-commit ce5f1b3216be790be590ad71eabccc16c9b86c74
-Merge: ef80ade 07dc8d6
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Fri Feb 27 11:44:19 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Feb 27 22:07:03 2015 +0530
-
-    Rollup merge of #22817 - jmesmon:result-or-type, r=huonw
-    
-     Changes .or() so that it can return a Result with a different E type
-    than the one it is called on.
-    
-    Essentially:
-    
-        fn or(self, res: Result&lt;T, E&gt;) -&gt; Result&lt;T, E&gt;
-    
-    becomes
-    
-        fn or&lt;F&gt;(self, res: Result&lt;T, F&gt;) -&gt; Result&lt;T, F&gt;
-    
-    This brings `or` in line with the existing `and` &amp; `or_else`
-    
-    This is a
-    [breaking-change]
-    Due to some code needing additional type annotations.
 </pre></body></html>
