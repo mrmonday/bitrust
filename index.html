@@ -1,6 +1,85 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 80bf31dd514055177b22c3dc66836d39eb5b1648
+Merge: b3317d6 232424d
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Mar 31 14:50:46 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Mar 31 14:50:46 2015 +0000
+
+    Auto merge of #23549 - aturon:stab-num, r=alexcrichton
+    
+    This commit stabilizes the `std::num` module:
+    
+    * The `Int` and `Float` traits are deprecated in favor of (1) the
+      newly-added inherent methods and (2) the generic traits available in
+      rust-lang/num.
+    
+    * The `Zero` and `One` traits are reintroduced in `std::num`, which
+      together with various other traits allow you to recover the most
+      common forms of generic programming.
+    
+    * The `FromStrRadix` trait, and associated free function, is deprecated
+      in favor of inherent implementations.
+    
+    * A wide range of methods and constants for both integers and floating
+      point numbers are now `#[stable]`, having been adjusted for integer
+      guidelines.
+    
+    * `is_positive` and `is_negative` are renamed to `is_sign_positive` and
+      `is_sign_negative`, in order to address #22985
+    
+    * The `Wrapping` type is moved to `std::num` and stabilized;
+      `WrappingOps` is deprecated in favor of inherent methods on the
+      integer types, and direct implementation of operations on
+      `Wrapping&lt;X&gt;` for each concrete integer type `X`.
+    
+    Closes #22985
+    Closes #21069
+    
+    [breaking-change]
+    
+    r? @alexcrichton
+
+commit 232424d9952700682373ccf2d578109f401ff023
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Thu Mar 19 23:42:18 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Tue Mar 31 07:50:25 2015 -0700
+
+    Stabilize std::num
+    
+    This commit stabilizes the `std::num` module:
+    
+    * The `Int` and `Float` traits are deprecated in favor of (1) the
+      newly-added inherent methods and (2) the generic traits available in
+      rust-lang/num.
+    
+    * The `Zero` and `One` traits are reintroduced in `std::num`, which
+      together with various other traits allow you to recover the most
+      common forms of generic programming.
+    
+    * The `FromStrRadix` trait, and associated free function, is deprecated
+      in favor of inherent implementations.
+    
+    * A wide range of methods and constants for both integers and floating
+      point numbers are now `#[stable]`, having been adjusted for integer
+      guidelines.
+    
+    * `is_positive` and `is_negative` are renamed to `is_sign_positive` and
+      `is_sign_negative`, in order to address #22985
+    
+    * The `Wrapping` type is moved to `std::num` and stabilized;
+      `WrappingOps` is deprecated in favor of inherent methods on the
+      integer types, and direct implementation of operations on
+      `Wrapping&lt;X&gt;` for each concrete integer type `X`.
+    
+    Closes #22985
+    Closes #21069
+    
+    [breaking-change]
+
 commit 57938041c18ee1c1bef362e60f24f5b2d3a46213
 Merge: 464c18c acd48a2
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2751,55 +2830,4 @@ CommitDate: Sat Feb 28 06:06:18 2015 +0000
     `rustc_lint::register_builtins` on their return value.
     
     This should make #22206 easier.
-
-commit 532cd5f85a93921f74f5991db2e419c6da58b188
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Wed Feb 25 22:44:44 2015 +1100
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Sat Feb 28 15:33:59 2015 +1100
-
-    Separate most of rustc::lint::builtin into a separate crate.
-    
-    This pulls out the implementations of most built-in lints into a
-    separate crate, to reduce edit-compile-test iteration times with
-    librustc_lint and increase parallelism. This should enable lints to be
-    refactored, added and deleted much more easily as it slashes the
-    edit-compile cycle to get a minimal working compiler to test with (`make
-    rustc-stage1`) from
-    
-        librustc -&gt; librustc_typeck -&gt; ... -&gt; librustc_driver -&gt;
-            libcore -&gt; ... -&gt; libstd
-    
-    to
-    
-        librustc_lint -&gt; librustc_driver -&gt; libcore -&gt; ... libstd
-    
-    which is significantly faster, mainly due to avoiding the librustc build
-    itself.
-    
-    The intention would be to move as much as possible of the infrastructure
-    into the crate too, but the plumbing is deeply intertwined with librustc
-    itself at the moment. Also, there are lints for which diagnostics are
-    registered directly in the compiler code, not in their own crate
-    traversal, and their definitions have to remain in librustc.
-    
-    This is a [breaking-change] for direct users of the compiler APIs:
-    callers of `rustc::session::build_session` or
-    `rustc::session::build_session_` need to manually call
-    `rustc_lint::register_builtins` on their return value.
-    
-    This should make #22206 easier.
-
-commit d79e91033770fc5a760d34511769f5ba6c872c77
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Feb 27 15:46:02 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Feb 27 16:26:33 2015 -0800
-
-    std: Deprecated the `old_io::extensions` module
-    
-    The `u64_from_be_bytes` and `u64_to_be_bytes` functions are being deprecated
-    with no replacement for now.
-    
-    [breaking-change]
 </pre></body></html>
