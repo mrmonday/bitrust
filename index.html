@@ -1,6 +1,109 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 655634e6ab00707ef98034dcfb32000cbfa7a01c
+Merge: bb252a8 371277f
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Wed Apr 1 13:56:20 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Apr 1 13:56:20 2015 -0700
+
+    rollup merge of #23949: aturon/stab-timeout
+    
+    This commit renames and stabilizes:
+    
+    * `Condvar::wait_timeout_ms` (renamed from `wait_timeout`)
+    * `thread::park_timeout_ms` (renamed from `park_timeout`)
+    * `thread::sleep_ms` (renamed from `sleep`)
+    
+    In each case, the timeout is taken as a `u32` number of milliseconds,
+    rather than a `Duration`.
+    
+    These functions are likely to be deprecated once a stable form of
+    `Duration` is available, but there is little cost to having these named
+    variants around, and it's crucial functionality for 1.0.
+    
+    [breaking-change]
+    
+    r? @alexcrichton
+    
+    cc @sfackler @carllerche
+
+commit 371277fb0d210152eb8c79e30bd7f7749c5af63c
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Wed Apr 1 12:20:57 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Wed Apr 1 13:43:45 2015 -0700
+
+    Stabilize basic timeout functionality
+    
+    This commit renames and stabilizes:
+    
+    * `Condvar::wait_timeout_ms` (renamed from `wait_timeout`)
+    * `thread::park_timeout_ms` (renamed from `park_timeout`)
+    * `thread::sleep_ms` (renamed from `sleep`)
+    
+    In each case, the timeout is taken as a `u32` number of milliseconds,
+    rather than a `Duration`.
+    
+    These functions are likely to be deprecated once a stable form of
+    `Duration` is available, but there is little cost to having these named
+    variants around, and it's crucial functionality for 1.0.
+    
+    [breaking-change]
+
+commit e9bacbaa2c9c88aaecf07ee30f02d08a1999e5c6
+Merge: fb4029f e98dce3
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Wed Apr 1 13:30:08 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Apr 1 13:30:08 2015 -0700
+
+    rollup merge of #23951: alexcrichton/splitn
+    
+    This commit is an implementation of [RFC 979][rfc] which changes the meaning of
+    the count parameter to the `splitn` function on strings and slices. The
+    parameter now means the number of items that are returned from the iterator, not
+    the number of splits that are made.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/pull/979
+    
+    Closes #23911
+    [breaking-change]
+
+commit e98dce3e00a7b6bfd264418ef993bbf9cdb1f0b6
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Wed Apr 1 11:28:34 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Apr 1 13:29:42 2015 -0700
+
+    std: Changing the meaning of the count to splitn
+    
+    This commit is an implementation of [RFC 979][rfc] which changes the meaning of
+    the count parameter to the `splitn` function on strings and slices. The
+    parameter now means the number of items that are returned from the iterator, not
+    the number of splits that are made.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/pull/979
+    
+    Closes #23911
+    [breaking-change]
+
+commit cade32acf6f5ff209ee082d70350d9bc0362985a
+Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+AuthorDate: Wed Apr 1 11:12:30 2015 -0400
+Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+CommitDate: Wed Apr 1 14:41:21 2015 -0400
+
+    Remove `Thunk` struct and `Invoke` trait; change `Thunk` to be an alias
+    for `Box&lt;FnBox()&gt;`. I found the alias was still handy because it is
+    shorter than the fully written type.
+    
+    This is a [breaking-change]: convert code using `Invoke` to use `FnBox`,
+    which is usually pretty straight-forward. Code using thunk mostly works
+    if you change `Thunk::new =&gt; Box::new` and `foo.invoke(arg)` to
+    `foo(arg)`.
+
 commit ac77392f8ab1c201b0c927f6a2d30b632b95acda
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
 AuthorDate: Tue Mar 31 16:01:03 2015 -0700
@@ -2758,164 +2861,6 @@ CommitDate: Thu Mar 5 01:19:15 2015 +0000
     
     The compiler has been migrated to new `std::fs` and `std::path` APIs where
     appropriate as part of this change.
-    
-    [breaking-change]
-
-commit 0dfa9978cc57efc8eb51485fc3a333eafd1aa392
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Mar 3 14:49:03 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Mar 4 17:04:22 2015 -0800
-
-    std: Stabilize portions of the `io` module
-    
-    The new `io` module has had some time to bake and this commit stabilizes some of
-    the utilities associated with it. This commit also deprecates a number of
-    `std::old_io::util` functions and structures.
-    
-    These items are now `#[stable]`
-    
-    * `Cursor`
-    * `Cursor::{new, into_inner, get_ref, get_mut, position, set_position}`
-    * Implementations of I/O traits for `Cursor&lt;T&gt;`
-    * Delegating implementations of I/O traits for references and `Box` pointers
-    * Implementations of I/O traits for primitives like slices and `Vec&lt;T&gt;`
-    * `ReadExt::bytes`
-    * `Bytes` (and impls)
-    * `ReadExt::chain`
-    * `Chain` (and impls)
-    * `ReadExt::take` (and impls)
-    * `BufReadExt::lines`
-    * `Lines` (and impls)
-    * `io::copy`
-    * `io::{empty, Empty}` (and impls)
-    * `io::{sink, Sink}` (and impls)
-    * `io::{repeat, Repeat}` (and impls)
-    
-    These items remain `#[unstable]`
-    
-    * Core I/O traits. These may want a little bit more time to bake along with the
-      commonly used methods like `read_to_end`.
-    * `BufReadExt::split` - this function may be renamed to not conflict with
-      `SliceExt::split`.
-    * `Error` - there are a number of questions about its representation,
-      `ErrorKind`, and usability.
-    
-    These items are now `#[deprecated]` in `old_io`
-    
-    * `LimitReader` - use `take` instead
-    * `NullWriter` - use `io::sink` instead
-    * `ZeroReader` - use `io::repeat` instead
-    * `NullReader` - use `io::empty` instead
-    * `MultiWriter` - use `broadcast` instead
-    * `ChainedReader` - use `chain` instead
-    * `TeeReader` - use `tee` instead
-    * `copy` - use `io::copy` instead
-    
-    [breaking-change]
-
-commit 393ce1820e3f639b43d6058d2681b9757123ac1b
-Merge: d0fcb1f f35f973
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Tue Mar 3 14:12:53 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Tue Mar 3 17:02:20 2015 +0530
-
-    Rollup merge of #22876 - Florob:const, r=nikomatsakis
-    
-     This changes the type of some public constants/statics in libunicode.
-    Notably some `&amp;'static &amp;'static [(char, char)]` have changed
-    to `&amp;'static [(char, char)]`. The regexp crate seems to be the
-    sole user of these, yet this is technically a [breaking-change]
-
-commit d0fcb1f53c9f81fbcae5379dd1c0577a8605172c
-Merge: ea208a8 89776ae
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Tue Mar 3 14:12:44 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Tue Mar 3 17:01:16 2015 +0530
-
-    Rollup merge of #22990 - japaric:privATe, r=alexcrichton
-    
-     Associated types are now treated as part of the public API by the privacy checker.
-    
-    If you were exposing a private type in your public API via an associated type, make that type public:
-    
-    ``` diff
-      pub struct PublicType { .. }
-    
-    - struct Struct { .. }
-    + pub struct Struct { .. }
-    
-      pub trait PublicTrait {
-          type Output;
-    
-          fn foo(&amp;self) -&gt; Self::Output;
-      }
-    
-      impl PublicTrait for PublicType {
-          type Output = Struct;
-    
-          fn foo(&amp;self) -&gt; Struct {  // `Struct` is part of the public API, it must be marked as `pub`lic
-              ..
-          }
-      }
-    ```
-    
-    [breaking-change]
-    
-    ---
-    
-    r? @nikomatsakis
-    closes #22912
-
-commit 3b30b74692cfee533b45e0380591d237975ec215
-Merge: 63a91c2 2b03718
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Tue Mar 3 14:12:12 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Tue Mar 3 17:01:15 2015 +0530
-
-    Rollup merge of #22943 - ipetkov:lint-recursion, r=alexcrichton
-    
-     * The lint visitor's visit_ty method did not recurse, and had a
-      reference to the now closed #10894
-    * The newly enabled recursion has only affected the `deprectated` lint
-      which now detects uses of deprecated items in trait impls and
-      function return types
-    * Renamed some references to `CowString` and `CowVec` to `Cow&lt;str&gt;` and
-      `Cow&lt;[T]&gt;`, respectively, which appear outside of the crate which
-      defines them
-    * Replaced a few instances of `InvariantType&lt;T&gt;` with
-      `PhantomData&lt;Cell&lt;T&gt;&gt;`
-    * Disabled the `deprecated` lint in several places that
-      reference/implement traits on deprecated items which will get cleaned
-      up in the future
-    * Unfortunately, this means that if a library declares
-      `#![deny(deprecated)]` and marks anything as deprecated, it will have
-      to disable the lint for any uses of said item, e.g. any impl the now
-      deprecated item
-    
-    For any library that denies deprecated items but has deprecated items
-    of its own, this is a [breaking-change]
-    
-    I had originally intended for the lint to ignore uses of deprecated items that are declared in the same crate, but this goes against some previous test cases that expect the lint to capture *all* uses of deprecated items, so I maintained the previous approach to avoid changing the expected behavior of the lint.
-    
-    Tested locally on OS X, so hopefully there aren't any deprecated item uses behind a `cfg` that I may have missed.
-
-commit cdfff9db35d037c51dfd5c2bac2174f651294adb
-Author:     Corey Richardson &lt;corey@octayn.net&gt;
-AuthorDate: Tue Jan 6 00:56:30 2015 -0500
-Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-CommitDate: Tue Mar 3 12:09:07 2015 +0100
-
-    rustc: implement arithmetic overflow checking
-    
-    Adds overflow checking to integer addition, multiplication, and subtraction
-    when `-Z force-overflow-checks` is true, or if `--cfg ndebug` is not passed to
-    the compiler. On overflow, it panics with `arithmetic operation overflowed`.
-    Also adds `overflowing_add`, `overflowing_sub`, and `overflowing_mul`
-    intrinsics for doing unchecked arithmetic.
     
     [breaking-change]
 </pre></body></html>
