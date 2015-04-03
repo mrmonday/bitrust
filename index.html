@@ -1,6 +1,22 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 82dcec7ee4a8a71fdfb8e8771ae6785261ec1d5b
+Merge: fc98b19 7c3efcc
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Apr 3 07:13:51 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Apr 3 07:13:51 2015 +0000
+
+    Auto merge of #23934 - lfairy:write-no-deref, r=alexcrichton
+    
+    This means passing in e.g. a `Vec&lt;u8&gt;` or `String` will work as
+    intended, rather than deref-ing to `&amp;mut [u8]` or `&amp;mut str`.
+    
+    [breaking-change]
+    
+    Closes #23768
+
 commit fc98b19cf72ea45851ebb7b28af160be92b19128
 Merge: 5e30f05 883adc6
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -118,6 +134,21 @@ CommitDate: Wed Apr 1 14:41:21 2015 -0400
     which is usually pretty straight-forward. Code using thunk mostly works
     if you change `Thunk::new =&gt; Box::new` and `foo.invoke(arg)` to
     `foo(arg)`.
+
+commit 7c3efcc5bb260234fc163340c9fd7aad3d8d780e
+Author:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
+AuthorDate: Wed Apr 1 19:48:49 2015 +1300
+Commit:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
+CommitDate: Wed Apr 1 19:48:49 2015 +1300
+
+    Don't reborrow the target of a `write!()`
+    
+    This means passing in e.g. a `Vec&lt;u8&gt;` or `String` will work as
+    intended, rather than deref-ing to `&amp;mut [u8]` or `&amp;mut str`.
+    
+    [breaking-change]
+    
+    Closes #23768
 
 commit ac77392f8ab1c201b0c927f6a2d30b632b95acda
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2796,67 +2827,4 @@ CommitDate: Thu Mar 5 10:41:42 2015 -0800
     
     [issue]: https://github.com/rust-lang/rfcs/issues/941
     [breaking-change]
-
-commit f0c74f85f363a8081b31f9ab696463717ce312d5
-Merge: 68740b4 9b332ff
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Thu Mar 5 17:52:21 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Thu Mar 5 17:52:21 2015 +0000
-
-    Auto merge of #23026 - nikomatsakis:issue-20220-supertrait, r=nikomatsakis
-    
-    The main gist of this PR is commit 1077efb which removes the list of supertraits from the `TraitDef` and pulls them into a separate table, which is accessed via `lookup_super_predicates`. This is analogous to `lookup_predicates`, which gets the complete where clause. This allows us to create the `TraitDef`, which contains the list generics and so forth, without fully knowing the list of supertraits. This in turn allows the *supertrait listing* to contain references to associated types like `&lt;Self as Foo&gt;::Item`, which were previously impossible because conversion required having the `TraitDef` for `Foo`.
-    
-    We do not yet support `Self::Item` in a supertrait listing. This doesn't work because to convert that, it attempts to expand out the full set of supertraits, which are in the process of being created. This could potentially be worked out by having the expansion of supertraits proceed in a lazy fashion, but we'd have to define shadowing rules for associated types which we don't currently have.
-    
-    Along the way (in 9de9ec5) I also removed the restriction against duplicate bounds and generalized the code so that it can handle having the same supertrait multiple times with different arguments, e.g. `Foo : Bar&lt;i32&gt; + Bar&lt;u32&gt;`. This restriction was serving no particular purpose, since the same trait could be extended multiple times indirectly, and in the era of multidispatch it is actively harmful.
-    
-    This is technically a [breaking-change] because it affects the definition of a super-trait. Anything in a where clause that looks like `where Self : Foo` is now considered a supertrait. Because cycles are disallowed in supertraits, that could lead to some errors. This has not been observed in any existing code.
-    
-    r? @nrc
-
-commit 84b060ce29bf7dd65fc23e855ad7c5a8748d806c
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Sun Mar 1 14:09:28 2015 +1100
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Fri Mar 6 00:18:28 2015 +1100
-
-    Add #[allow_internal_unstable] to track stability for macros better.
-    
-    Unstable items used in a macro expansion will now always trigger
-    stability warnings, *unless* the unstable items are directly inside a
-    macro marked with `#[allow_internal_unstable]`. IOW, the compiler warns
-    unless the span of the unstable item is a subspan of the definition of a
-    macro marked with that attribute.
-    
-    E.g.
-    
-        #[allow_internal_unstable]
-        macro_rules! foo {
-            ($e: expr) =&gt; {{
-                $e;
-                unstable(); // no warning
-                only_called_by_foo!();
-            }}
-        }
-    
-        macro_rules! only_called_by_foo {
-            () =&gt; { unstable() } // warning
-        }
-    
-        foo!(unstable()) // warning
-    
-    The unstable inside `foo` is fine, due to the attribute. But the
-    `unstable` inside `only_called_by_foo` is not, since that macro doesn't
-    have the attribute, and the `unstable` passed into `foo` is also not
-    fine since it isn't contained in the macro itself (that is, even though
-    it is only used directly in the macro).
-    
-    In the process this makes the stability tracking much more precise,
-    e.g. previously `println!("{}", unstable())` got no warning, but now it
-    does. As such, this is a bug fix that may cause [breaking-change]s.
-    
-    The attribute is definitely feature gated, since it explicitly allows
-    side-stepping the feature gating system.
 </pre></body></html>
