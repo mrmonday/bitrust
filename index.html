@@ -1,6 +1,21 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit fc98b19cf72ea45851ebb7b28af160be92b19128
+Merge: 5e30f05 883adc6
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Apr 3 04:29:52 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Apr 3 04:29:52 2015 +0000
+
+    Auto merge of #23832 - petrochenkov:usize, r=aturon
+    
+    These constants are small and can fit even in `u8`, but semantically they have type `usize` because they denote sizes and are almost always used in `usize` context. The change of their type to `u32` during the integer audit led only to the large amount of `as usize` noise (see the second commit, which removes this noise).
+    
+    This is a minor [breaking-change] to an unstable interface.
+    
+    r? @aturon
+
 commit 655634e6ab00707ef98034dcfb32000cbfa7a01c
 Merge: bb252a8 371277f
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
@@ -2844,23 +2859,4 @@ CommitDate: Fri Mar 6 00:18:28 2015 +1100
     
     The attribute is definitely feature gated, since it explicitly allows
     side-stepping the feature gating system.
-
-commit cc722a4dd3e8110a8bf7e62eea977e99e3a3d128
-Merge: 3b3bb0e 95d9046
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Thu Mar 5 01:19:15 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Thu Mar 5 01:19:15 2015 +0000
-
-    Auto merge of #22873 - alexcrichton:deprecate-fs, r=aturon
-    
-    This commit deprecates the majority of std::old_io::fs in favor of std::fs and
-    its new functionality. Some functions remain non-deprecated but are now behind a
-    feature gate called `old_fs`. These functions will be deprecated once
-    suitable replacements have been implemented.
-    
-    The compiler has been migrated to new `std::fs` and `std::path` APIs where
-    appropriate as part of this change.
-    
-    [breaking-change]
 </pre></body></html>
