@@ -1,6 +1,22 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 97f24a85965c3c51a2c18be029091ae52bbd7920
+Author:     Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
+AuthorDate: Mon Apr 6 17:43:50 2015 +0200
+Commit:     Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
+CommitDate: Wed Apr 8 00:26:35 2015 +0200
+
+    Make `sum` and `product` inherent methods on `Iterator`
+    
+    In addition to being nicer, this also allows you to use `sum` and `product` for
+    iterators yielding custom types aside from the standard integers.
+    
+    Due to removing the `AdditiveIterator` and `MultiplicativeIterator` trait, this
+    is a breaking change.
+    
+    [breaking-change]
+
 commit 82dcec7ee4a8a71fdfb8e8771ae6785261ec1d5b
 Merge: fc98b19 7c3efcc
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2810,21 +2826,5 @@ CommitDate: Thu Mar 5 14:51:38 2015 -0800
     be updated to rely on `debug_assertions` instead.
     
     Closes #22492
-    [breaking-change]
-
-commit 7ed418c3b4ede0364bf419b2c12b27f89b706dcf
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Thu Mar 5 10:41:42 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Mar 5 10:41:42 2015 -0800
-
-    std: Deprecate the old_io::process module
-    
-    This module is now superseded by the `std::process` module. This module still
-    has some room to expand to get quite back up to parity with the `old_io`
-    version, and there is a [tracking issue][issue] for feature requests as well as
-    known room for expansion.
-    
-    [issue]: https://github.com/rust-lang/rfcs/issues/941
     [breaking-change]
 </pre></body></html>
