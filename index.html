@@ -1,6 +1,73 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 5daee19eca622030c598042d9615df17d4ad035f
+Merge: 4e466e7 ec7c800
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Thu Apr 9 15:54:28 2015 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Apr 10 00:24:43 2015 +0530
+
+    Rollup merge of #24212 - alexcrichton:destabilize-begin-unwind, r=huonw
+    
+     Now that we have a `#[allow_internal_unstable]` attribute for macros there's no
+    need for these two `begin_unwind` functions to be stable. Right now the `panic!`
+    interface is the only one we wish to stabilize, so remove the stability markers
+    from these functions.
+    
+    While this is a breaking change, it is highly unlikely to break any actual code.
+    It is recommended to use the `panic!` macro instead if it breaks explicit calls
+    into `std::rt`.
+    
+    [breaking-change]
+    cc #24208
+
+commit e3f324cd9d7b27eda6133c407a4751a8b0217631
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Wed Apr 8 17:01:03 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Thu Apr 9 08:54:09 2015 -0700
+
+    Improve bounds in Iterator API
+    
+    This commit changes `Iterator`'s API by:
+    
+    * Generalizing bounds from `Iterator` to `IntoIterator` whenever
+      possible, matching the semantics and ergonomics of `for` loops.
+    
+    * Tightens up a few method-level bounds so that you get an error
+      earlier. For example, `rev` did not require `DoubleEndedIterator` even
+      though the result is only an `Iterator` when the original iterator was
+      double-ended.
+    
+    Closes #23587
+    
+    The bound-tightening is technically a:
+    
+    [breaking-change]
+    
+    but no code should break in practice.
+
+commit 65e3f0325a64d8f1affa146b3575a4b7c90458d7
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Wed Apr 8 15:48:46 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed Apr 8 15:48:46 2015 -0700
+
+    std: Destabilize the internals of panic!
+    
+    Now that we have a `#[allow_internal_unstable]` attribute for macros there's no
+    need for these two `begin_unwind` functions to be stable. Right now the `panic!`
+    interface is the only one we wish to stabilize, so remove the stability markers
+    from these functions.
+    
+    While this is a breaking change, it is highly unlikely to break any actual code.
+    It is recommended to use the `panic!` macro instead if it breaks explicit calls
+    into `std::rt`.
+    
+    [breaking-change]
+    cc #24208
+
 commit 97f24a85965c3c51a2c18be029091ae52bbd7920
 Author:     Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
 AuthorDate: Mon Apr 6 17:43:50 2015 +0200
@@ -2643,174 +2710,6 @@ CommitDate: Fri Mar 6 08:58:30 2015 +0530
     Rollup merge of #22980 - alexcrichton:debug-assertions, r=pnkfelix
     
      This commit is an implementation of [RFC 563][rfc] which adds a new
-    `cfg(debug_assertions)` directive which is specially recognized and calculated
-    by the compiler. The flag is turned off at any optimization level greater than 1
-    and may also be explicitly controlled through the `-C debug-assertions`
-    flag.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/pull/563
-    
-    The `debug_assert!` and `debug_assert_eq!` macros now respect this instead of
-    the `ndebug` variable and `ndebug` no longer holds any meaning to the standard
-    library.
-    
-    Code which was previously relying on `not(ndebug)` to gate expensive code should
-    be updated to rely on `debug_assertions` instead.
-    
-    Closes #22492
-    [breaking-change]
-
-commit 9eb596ce8f4b70ba73e8671f9b42147c91319842
-Merge: e80fc10 b5c6ab2
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Fri Mar 6 08:58:16 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Mar 6 08:58:16 2015 +0530
-
-    Rollup merge of #22899 - huonw:macro-stability, r=alexcrichton
-    
-     Unstable items used in a macro expansion will now always trigger
-    stability warnings, *unless* the unstable items are directly inside a
-    macro marked with `#[allow_internal_unstable]`. IOW, the compiler warns
-    unless the span of the unstable item is a subspan of the definition of a
-    macro marked with that attribute.
-    
-    E.g.
-    
-        #[allow_internal_unstable]
-        macro_rules! foo {
-            ($e: expr) =&gt; {{
-                $e;
-                unstable(); // no warning
-                only_called_by_foo!();
-            }}
-        }
-    
-        macro_rules! only_called_by_foo {
-            () =&gt; { unstable() } // warning
-        }
-    
-        foo!(unstable()) // warning
-    
-    The unstable inside `foo` is fine, due to the attribute. But the
-    `unstable` inside `only_called_by_foo` is not, since that macro doesn't
-    have the attribute, and the `unstable` passed into `foo` is also not
-    fine since it isn't contained in the macro itself (that is, even though
-    it is only used directly in the macro).
-    
-    In the process this makes the stability tracking much more precise,
-    e.g. previously `println!(\"{}\", unstable())` got no warning, but now it
-    does. As such, this is a bug fix that may cause [breaking-change]s.
-    
-    The attribute is definitely feature gated, since it explicitly allows
-    side-stepping the feature gating system.
-    
-    ---
-    
-    This updates `thread_local!` macro to use the attribute, since it uses
-    unstable features internally (initialising a struct with unstable
-    fields).
-
-commit 73b0b25e326687aba319df99aee4b0c4124d4498
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Mar 3 19:18:29 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Mar 5 16:49:41 2015 -0800
-
-    std: Stabilize the `fs` module
-    
-    This commit performs a stabilization pass over the `std::fs` module now that
-    it's had some time to bake. The change was largely just adding `#[stable]` tags,
-    but there are a few APIs that remain `#[unstable]`.
-    
-    The following apis are now marked `#[stable]`:
-    
-    * `std::fs` (the name)
-    * `File`
-    * `Metadata`
-    * `ReadDir`
-    * `DirEntry`
-    * `OpenOptions`
-    * `Permissions`
-    * `File::{open, create}`
-    * `File::{sync_all, sync_data}`
-    * `File::set_len`
-    * `File::metadata`
-    * Trait implementations for `File` and `&amp;File`
-    * `OpenOptions::new`
-    * `OpenOptions::{read, write, append, truncate, create}`
-    * `OpenOptions::open` - this function was modified, however, to not attempt to
-      reject cross-platform openings of directories. This means that some platforms
-      will succeed in opening a directory and others will fail.
-    * `Metadata::{is_dir, is_file, len, permissions}`
-    * `Permissions::{readonly, set_readonly}`
-    * `Iterator for ReadDir`
-    * `DirEntry::path`
-    * `remove_file` - like with `OpenOptions::open`, the extra windows code to
-      remove a readonly file has been removed. This means that removing a readonly
-      file will succeed on some platforms but fail on others.
-    * `metadata`
-    * `rename`
-    * `copy`
-    * `hard_link`
-    * `soft_link`
-    * `read_link`
-    * `create_dir`
-    * `create_dir_all`
-    * `remove_dir`
-    * `remove_dir_all`
-    * `read_dir`
-    
-    The following apis remain `#[unstable]`.
-    
-    * `WalkDir` and `walk` - there are many methods by which a directory walk can be
-      constructed, and it's unclear whether the current semantics are the right
-      ones. For example symlinks are not handled super well currently. This is now
-      behind a new `fs_walk` feature.
-    * `File::path` - this is an extra abstraction which the standard library
-      provides on top of what the system offers and it's unclear whether we should
-      be doing so. This is now behind a new `file_path` feature.
-    * `Metadata::{accessed, modified}` - we do not currently have a good
-      abstraction for a moment in time which is what these APIs should likely be
-      returning, so these remain `#[unstable]` for now. These are now behind a new
-      `fs_time` feature
-    * `set_file_times` - like with `Metadata::accessed`, we do not currently have
-      the appropriate abstraction for the arguments here so this API remains
-      unstable behind the `fs_time` feature gate.
-    * `PathExt` - the precise set of methods on this trait may change over time and
-      some methods may be removed. This API remains unstable behind the `path_ext`
-      feature gate.
-    * `set_permissions` - we may wish to expose a more granular ability to set the
-      permissions on a file instead of just a blanket "set all permissions" method.
-      This function remains behind the `fs` feature.
-    
-    The following apis are now `#[deprecated]`
-    
-    * The `TempDir` type is now entirely deprecated and is [located on
-      crates.io][tempdir] as the `tempdir` crate with [its source][github] at
-      rust-lang/tempdir.
-    
-    [tempdir]: https://crates.io/crates/tempdir
-    [github]: https://github.com/rust-lang/tempdir
-    
-    The stability of some of these APIs has been questioned over the past few weeks
-    in using these APIs, and it is intentional that the majority of APIs here are
-    marked `#[stable]`. The `std::fs` module has a lot of room to grow and the
-    material is [being tracked in a RFC issue][rfc-issue].
-    
-    [rfc-issue]: https://github.com/rust-lang/rfcs/issues/939
-    
-    [breaking-change]
-
-commit d5d834551cd5a7e7d89ac9f2ae642a93409ed989
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Mar 2 14:51:24 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Mar 5 14:51:38 2015 -0800
-
-    rustc: Add a debug_assertions #[cfg] directive
-    
-    This commit is an implementation of [RFC 563][rfc] which adds a new
     `cfg(debug_assertions)` directive which is specially recognized and calculated
     by the compiler. The flag is turned off at any optimization level greater than 1
     and may also be explicitly controlled through the `-C debug-assertions`
