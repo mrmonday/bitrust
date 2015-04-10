@@ -1,6 +1,38 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit d6c72306c8fc2ec0fd9d6e499c32f2bf52f0b8ba
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Apr 3 15:30:10 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Thu Apr 9 17:07:02 2015 -0700
+
+    std: Set CLOEXEC for all fds opened on unix
+    
+    This commit starts to set the CLOEXEC flag for all files and sockets opened by
+    the standard library by default on all unix platforms. There are a few points of
+    note in this commit:
+    
+    * The implementation is not 100% satisfactory in the face of threads. File
+      descriptors only have the `F_CLOEXEC` flag set *after* they are opened,
+      allowing for a fork/exec to happen in the middle and leak the descriptor.
+      Some platforms do support atomically opening a descriptor while setting the
+      `CLOEXEC` flag, and it is left as a future extension to bind these apis as it
+      is unclear how to do so nicely at this time.
+    
+    * The implementation does not offer a method of opting into the old behavior of
+      not setting `CLOEXEC`. This will possibly be added in the future through
+      extensions on `OpenOptions`, for example.
+    
+    * This change does not yet audit any Windows APIs to see if the handles are
+      inherited by default by accident.
+    
+    This is a breaking change for users who call `fork` or `exec` outside of the
+    standard library itself and expect file descriptors to be inherted. All file
+    descriptors created by the standard library will no longer be inherited.
+    
+    [breaking-change]
+
 commit 5daee19eca622030c598042d9615df17d4ad035f
 Merge: 4e466e7 ec7c800
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -2698,32 +2730,5 @@ CommitDate: Fri Mar 6 08:58:44 2015 +0530
     * `TeeReader` - use `tee` instead
     * `copy` - use `io::copy` instead
     
-    [breaking-change]
-
-commit efb487b503d87f04448fc5e6f75038ca98b8670e
-Merge: 9eb596c d5d8345
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Fri Mar 6 08:58:30 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Mar 6 08:58:30 2015 +0530
-
-    Rollup merge of #22980 - alexcrichton:debug-assertions, r=pnkfelix
-    
-     This commit is an implementation of [RFC 563][rfc] which adds a new
-    `cfg(debug_assertions)` directive which is specially recognized and calculated
-    by the compiler. The flag is turned off at any optimization level greater than 1
-    and may also be explicitly controlled through the `-C debug-assertions`
-    flag.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/pull/563
-    
-    The `debug_assert!` and `debug_assert_eq!` macros now respect this instead of
-    the `ndebug` variable and `ndebug` no longer holds any meaning to the standard
-    library.
-    
-    Code which was previously relying on `not(ndebug)` to gate expensive code should
-    be updated to rely on `debug_assertions` instead.
-    
-    Closes #22492
     [breaking-change]
 </pre></body></html>
