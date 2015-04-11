@@ -1,6 +1,29 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 93f7fe32d30b67baa6abf09c073c5862a978dc57
+Merge: c897ac0 05aaad1
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Apr 10 23:49:24 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Apr 10 23:49:24 2015 +0000
+
+    Auto merge of #24270 - pnkfelix:use-disr-val-for-derive-ord, r=brson
+    
+    Use `discriminant_value` intrinsic for `derive(PartialOrd)`
+    
+    [breaking-change]
+    
+    This is a [breaking-change] because it can change the result of comparison operators when enum discriminants have been explicitly assigned.  Notably in a case like:
+    ```rust
+    #[derive(PartialOrd)]
+    enum E { A = 2, B = 1}
+    ```
+    
+    Under the old deriving, `A &lt; B` held, because `A` came before `B` in the order of declaration.  But now we use the ordering according to the provided values, and thus `A &gt; B`.  (However, this change is very unlikely to break much, if any, code, since the orderings themselves should all remain well-defined, total, etc.)
+    
+    Fix #15523
+
 commit d6c72306c8fc2ec0fd9d6e499c32f2bf52f0b8ba
 Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
 AuthorDate: Fri Apr 3 15:30:10 2015 -0700
@@ -2676,59 +2699,5 @@ CommitDate: Fri Mar 6 09:01:37 2015 +0530
     known room for expansion.
     
     [issue]: https://github.com/rust-lang/rfcs/issues/941
-    [breaking-change]
-
-commit 32631b4138fbaeca0f6496dd83aa327c76d5a900
-Merge: efb487b 0dfa997
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Fri Mar 6 08:58:44 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Mar 6 08:58:44 2015 +0530
-
-    Rollup merge of #23010 - alexcrichton:deprecate-some-old-io, r=aturon
-    
-     The new `io` module has had some time to bake and this commit stabilizes some of
-    the utilities associated with it. This commit also deprecates a number of
-    `std::old_io::util` functions and structures.
-    
-    These items are now `#[stable]`
-    
-    * `Cursor`
-    * `Cursor::{new, into_inner, get_ref, get_mut, position, set_position}`
-    * Implementations of I/O traits for `Cursor&lt;T&gt;`
-    * Delegating implementations of I/O traits for references and `Box` pointers
-    * Implementations of I/O traits for primitives like slices and `Vec&lt;T&gt;`
-    * `ReadExt::bytes`
-    * `Bytes` (and impls)
-    * `ReadExt::chain`
-    * `Chain` (and impls)
-    * `ReadExt::take` (and impls)
-    * `BufReadExt::lines`
-    * `Lines` (and impls)
-    * `io::copy`
-    * `io::{empty, Empty}` (and impls)
-    * `io::{sink, Sink}` (and impls)
-    * `io::{repeat, Repeat}` (and impls)
-    
-    These items remain `#[unstable]`
-    
-    * Core I/O traits. These may want a little bit more time to bake along with the
-      commonly used methods like `read_to_end`.
-    * `BufReadExt::split` - this function may be renamed to not conflict with
-      `SliceExt::split`.
-    * `Error` - there are a number of questions about its representation,
-      `ErrorKind`, and usability.
-    
-    These items are now `#[deprecated]` in `old_io`
-    
-    * `LimitReader` - use `take` instead
-    * `NullWriter` - use `io::sink` instead
-    * `ZeroReader` - use `io::repeat` instead
-    * `NullReader` - use `io::empty` instead
-    * `MultiWriter` - use `broadcast` instead
-    * `ChainedReader` - use `chain` instead
-    * `TeeReader` - use `tee` instead
-    * `copy` - use `io::copy` instead
-    
     [breaking-change]
 </pre></body></html>
