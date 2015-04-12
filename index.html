@@ -1,6 +1,41 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 5afa2704a6fdee62b267a5df9ca0934350dfc3d1
+Merge: 6790b0e 000db38
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Apr 12 01:26:53 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Apr 12 01:26:53 2015 +0000
+
+    Auto merge of #23011 - nagisa:the-war-of-symbol-and-symbol, r=pnkfelix
+    
+    We provide tools to tell what exact symbols to emit for any fn or static, but
+    don’t quite check if that won’t cause any issues later on. Some of the issues
+    include LLVM mangling our names again and our names pointing to wrong locations,
+    us generating dumb foreign call wrappers, linker errors, extern functions
+    resolving to different symbols altogether (`extern {fn fail();} fail();` in some
+    cases calling `fail1()`), etc.
+    
+    Before the commit we had a function called `note_unique_llvm_symbol`, so it is
+    clear somebody was aware of the issue at some point, but the function was barely
+    used, mostly in irrelevant locations.
+    
+    Along with working on it I took liberty to start refactoring trans/base into
+    a few smaller modules. The refactoring is incomplete and I hope I will find some
+    motivation to carry on with it.
+    
+    This is possibly a [breaking-change] because it makes dumbly written code
+    properly invalid.
+    
+    This fixes all those issues about incorrect use of #[no_mangle] being not reported/misreported/ICEd by the compiler.
+    
+    NB. This PR does not attempt to tackle the parallel codegen issue that was mentioned in https://github.com/rust-lang/rust/pull/22811, but I believe it should be very straightforward in a follow up PR by modifying `trans::declare::get_defined_value` to look at all the contexts.
+    
+    cc @alexcrichton @huonw @nrc because you commented on the original RFC issue.
+    
+    EDIT: wow, this became much bigger than I initially intended.
+
 commit 93f7fe32d30b67baa6abf09c073c5862a978dc57
 Merge: c897ac0 05aaad1
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -138,6 +173,32 @@ CommitDate: Wed Apr 8 00:26:35 2015 +0200
     is a breaking change.
     
     [breaking-change]
+
+commit f1dabed82bfed643fbbfc93203473e384c58d20a
+Author:     Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
+AuthorDate: Wed Mar 4 01:08:06 2015 +0200
+Commit:     Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
+CommitDate: Fri Apr 3 15:48:07 2015 +0300
+
+    Introduce trans::declare
+    
+    We provide tools to tell what exact symbols to emit for any fn or static, but
+    don’t quite check if that won’t cause any issues later on. Some of the issues
+    include LLVM mangling our names again and our names pointing to wrong locations,
+    us generating dumb foreign call wrappers, linker errors, extern functions
+    resolving to different symbols altogether (extern {fn fail();} fail(); in some
+    cases calling fail1()), etc.
+    
+    Before the commit we had a function called note_unique_llvm_symbol, so it is
+    clear somebody was aware of the issue at some point, but the function was barely
+    used, mostly in irrelevant locations.
+    
+    Along with working on it I took liberty to start refactoring trans/base into
+    a few smaller modules. The refactoring is incomplete and I hope I will find some
+    motivation to carry on with it.
+    
+    This is possibly a [breaking-change] because it makes dumbly written code
+    properly invalid.
 
 commit 82dcec7ee4a8a71fdfb8e8771ae6785261ec1d5b
 Merge: fc98b19 7c3efcc
@@ -2589,115 +2650,4 @@ CommitDate: Fri Mar 6 05:20:11 2015 +0000
     This updates `thread_local!` macro to use the attribute, since it uses
     unstable features internally (initialising a struct with unstable
     fields).
-
-commit fe41c935603be8192c7481fcd846e629d76337b1
-Merge: c9063e0 73b0b25
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Fri Mar 6 09:01:50 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Mar 6 09:01:50 2015 +0530
-
-    Rollup merge of #23081 - alexcrichton:stabilize-fs, r=aturon
-    
-     This commit performs a stabilization pass over the `std::fs` module now that
-    it's had some time to bake. The change was largely just adding `#[stable]` tags,
-    but there are a few APIs that remain `#[unstable]`.
-    
-    The following apis are now marked `#[stable]`:
-    
-    * `std::fs` (the name)
-    * `File`
-    * `Metadata`
-    * `ReadDir`
-    * `DirEntry`
-    * `OpenOptions`
-    * `Permissions`
-    * `File::{open, create}`
-    * `File::{sync_all, sync_data}`
-    * `File::set_len`
-    * `File::metadata`
-    * Trait implementations for `File` and `&amp;File`
-    * `OpenOptions::new`
-    * `OpenOptions::{read, write, append, truncate, create}`
-    * `OpenOptions::open` - this function was modified, however, to not attempt to
-      reject cross-platform openings of directories. This means that some platforms
-      will succeed in opening a directory and others will fail.
-    * `Metadata::{is_dir, is_file, len, permissions}`
-    * `Permissions::{readonly, set_readonly}`
-    * `Iterator for ReadDir`
-    * `DirEntry::path`
-    * `remove_file` - like with `OpenOptions::open`, the extra windows code to
-      remove a readonly file has been removed. This means that removing a readonly
-      file will succeed on some platforms but fail on others.
-    * `metadata`
-    * `rename`
-    * `copy`
-    * `hard_link`
-    * `soft_link`
-    * `read_link`
-    * `create_dir`
-    * `create_dir_all`
-    * `remove_dir`
-    * `remove_dir_all`
-    * `read_dir`
-    
-    The following apis remain `#[unstable]`.
-    
-    * `WalkDir` and `walk` - there are many methods by which a directory walk can be
-      constructed, and it's unclear whether the current semantics are the right
-      ones. For example symlinks are not handled super well currently. This is now
-      behind a new `fs_walk` feature.
-    * `File::path` - this is an extra abstraction which the standard library
-      provides on top of what the system offers and it's unclear whether we should
-      be doing so. This is now behind a new `file_path` feature.
-    * `Metadata::{accessed, modified}` - we do not currently have a good
-      abstraction for a moment in time which is what these APIs should likely be
-      returning, so these remain `#[unstable]` for now. These are now behind a new
-      `fs_time` feature
-    * `set_file_times` - like with `Metadata::accessed`, we do not currently have
-      the appropriate abstraction for the arguments here so this API remains
-      unstable behind the `fs_time` feature gate.
-    * `PathExt` - the precise set of methods on this trait may change over time and
-      some methods may be removed. This API remains unstable behind the `path_ext`
-      feature gate.
-    * `set_permissions` - we may wish to expose a more granular ability to set the
-      permissions on a file instead of just a blanket \"set all permissions\" method.
-      This function remains behind the `fs` feature.
-    
-    The following apis are now `#[deprecated]`
-    
-    * The `TempDir` type is now entirely deprecated and is [located on
-      crates.io][tempdir] as the `tempdir` crate with [its source][github] at
-      rust-lang/tempdir.
-    
-    [tempdir]: https://crates.io/crates/tempdir
-    [github]: https://github.com/rust-lang/tempdir
-    
-    The stability of some of these APIs has been questioned over the past few weeks
-    in using these APIs, and it is intentional that the majority of APIs here are
-    marked `#[stable]`. The `std::fs` module has a lot of room to grow and the
-    material is [being tracked in a RFC issue][rfc-issue].
-    
-    [rfc-issue]: rust-lang/rfcs#939
-    
-    Closes #22879
-    
-    [breaking-change]
-
-commit c9063e0f98da9eb0cb30427010614ea634b409ed
-Merge: d77fc9f 7ed418c
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Fri Mar 6 09:01:37 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Mar 6 09:01:37 2015 +0530
-
-    Rollup merge of #23079 - alexcrichton:deprecate-process, r=aturon
-    
-     This module is now superseded by the `std::process` module. This module still
-    has some room to expand to get quite back up to parity with the `old_io`
-    version, and there is a [tracking issue][issue] for feature requests as well as
-    known room for expansion.
-    
-    [issue]: https://github.com/rust-lang/rfcs/issues/941
-    [breaking-change]
 </pre></body></html>
