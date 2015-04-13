@@ -1,6 +1,33 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 524547551cd6c9b33a9677e1a58e9a9d1e19c0fc
+Merge: 49798c5 5308ac9
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Apr 13 08:08:23 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Apr 13 08:08:23 2015 +0000
+
+    Auto merge of #24339 - lfairy:remove-regex-data, r=alexcrichton
+    
+    The regex crate keeps its own tables now (rust-lang/regex#41) so we
+    don't need them here.
+    
+    [breaking-change]
+
+commit 5308ac939a330b74540bea5920b0086a2d954648
+Author:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
+AuthorDate: Sun Apr 12 13:24:19 2015 +1200
+Commit:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
+CommitDate: Mon Apr 13 10:30:10 2015 +1200
+
+    Remove regex module from libunicode
+    
+    The regex crate keeps its own tables now (rust-lang/regex#41) so we
+    don't need them here.
+    
+    [breaking-change]
+
 commit 5afa2704a6fdee62b267a5df9ca0934350dfc3d1
 Merge: 6790b0e 000db38
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2579,75 +2606,4 @@ CommitDate: Fri Mar 6 15:36:08 2015 -0800
     [unix]: https://crates.io/crates/unix_socket
     
     [breaking-change]
-
-commit 9aea749b835a6fdcad6f2840a00adac996cc0339
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Feb 25 13:08:51 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Mar 6 10:27:28 2015 -0800
-
-    std: Deprecate the std::old_io::net primitives
-    
-    The `std::net` primitives should be ready for use now and as a result the old
-    ones are now deprecated and slated for removal. Most TCP/UDP functionality is
-    now available through `std::net` but the `std::old_io::net::pipe` module is
-    removed entirely from the standard library.
-    
-    Unix socket funtionality can be found in sfackler's [`unix_socket`][unix] crate
-    and there is currently no replacement for named pipes on Windows.
-    
-    [unix]: https://crates.io/crates/unix_socket
-    
-    [breaking-change]
-
-commit 1fe8f221450bad3ffb1351c6549f67c18ce0b94e
-Merge: b0746ff b5c6ab2
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri Mar 6 05:20:11 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri Mar 6 05:20:11 2015 +0000
-
-    Auto merge of #22899 - huonw:macro-stability, r=alexcrichton
-    
-    Unstable items used in a macro expansion will now always trigger
-    stability warnings, *unless* the unstable items are directly inside a
-    macro marked with `#[allow_internal_unstable]`. IOW, the compiler warns
-    unless the span of the unstable item is a subspan of the definition of a
-    macro marked with that attribute.
-    
-    E.g.
-    
-        #[allow_internal_unstable]
-        macro_rules! foo {
-            ($e: expr) =&gt; {{
-                $e;
-                unstable(); // no warning
-                only_called_by_foo!();
-            }}
-        }
-    
-        macro_rules! only_called_by_foo {
-            () =&gt; { unstable() } // warning
-        }
-    
-        foo!(unstable()) // warning
-    
-    The unstable inside `foo` is fine, due to the attribute. But the
-    `unstable` inside `only_called_by_foo` is not, since that macro doesn't
-    have the attribute, and the `unstable` passed into `foo` is also not
-    fine since it isn't contained in the macro itself (that is, even though
-    it is only used directly in the macro).
-    
-    In the process this makes the stability tracking much more precise,
-    e.g. previously `println!("{}", unstable())` got no warning, but now it
-    does. As such, this is a bug fix that may cause [breaking-change]s.
-    
-    The attribute is definitely feature gated, since it explicitly allows
-    side-stepping the feature gating system.
-    
-    ---
-    
-    This updates `thread_local!` macro to use the attribute, since it uses
-    unstable features internally (initialising a struct with unstable
-    fields).
 </pre></body></html>
