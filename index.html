@@ -1,6 +1,28 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit e6a812402828f0f11b0de7a7e0c08c1d85a437f1
+Merge: f55e66a 2705051
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Apr 14 00:07:50 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Apr 14 00:07:50 2015 +0000
+
+    Auto merge of #24251 - alexcrichton:unsafe-from-raw-fd, r=aturon
+    
+    As pointed out in [RFC issue 1043][rfc] it is quite useful to have the standard
+    I/O types to provide the contract that they are the sole owner of the underlying
+    object they represent. This guarantee enables writing safe interfaces like the
+    `MemoryMap` API sketched out in that issue.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/issues/1043
+    
+    As constructing objects from these raw handles may end up violating these
+    ownership gurantees, the functions for construction are now marked unsafe.
+    
+    [breaking-change]
+    Closes rust-lang/rfcs#1043
+
 commit f55e66aaed42589dcda0221a4545dbaaec68e577
 Merge: 588d37c f3f99fb
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -133,6 +155,27 @@ CommitDate: Thu Apr 9 17:07:02 2015 -0700
     descriptors created by the standard library will no longer be inherited.
     
     [breaking-change]
+
+commit 2705051e2067e8f467b4cb9bc75e801a5cd4f0e7
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Thu Apr 9 15:43:27 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Thu Apr 9 16:12:33 2015 -0700
+
+    std: Make FromRawFd::from_raw_fd an unsafe method
+    
+    As pointed out in [RFC issue 1043][rfc] it is quite useful to have the standard
+    I/O types to provide the contract that they are the sole owner of the underlying
+    object they represent. This guarantee enables writing safe interfaces like the
+    `MemoryMap` API sketched out in that issue.
+    
+    [rfc]: https://github.com/rust-lang/rfcs/issues/1043
+    
+    As constructing objects from these raw handles may end up violating these
+    ownership gurantees, the functions for construction are now marked unsafe.
+    
+    [breaking-change]
+    Closes rust-lang/rfcs#1043
 
 commit 5daee19eca622030c598042d9615df17d4ad035f
 Merge: 4e466e7 ec7c800
@@ -2543,57 +2586,4 @@ CommitDate: Tue Mar 10 22:45:10 2015 +0000
     [breaking-change]
     
     Closes #20333
-
-commit 0f6a0b58f9dbc3a741abd898f2d06a8ba78a938d
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Thu Mar 5 18:23:57 2015 -0800
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Mar 10 15:08:31 2015 -0700
-
-    std: Stabilize more of the `char` module
-    
-    This commit performs another pass over the `std::char` module for stabilization.
-    Some minor cleanup is performed such as migrating documentation from libcore to
-    libunicode (where the `std`-facing trait resides) as well as a slight
-    reorganiation in libunicode itself. Otherwise, the stability modifications made
-    are:
-    
-    * `char::from_digit` is now stable
-    * `CharExt::is_digit` is now stable
-    * `CharExt::to_digit` is now stable
-    * `CharExt::to_{lower,upper}case` are now stable after being modified to return
-      an iterator over characters. While the implementation today has not changed
-      this should allow us to implement the full set of case conversions in unicode
-      where some characters can map to multiple when doing an upper or lower case
-      mapping.
-    * `StrExt::to_{lower,upper}case` was added as unstable for a convenience of not
-      having to worry about characters expanding to more characters when you just
-      want the whole string to get into upper or lower case.
-    
-    This is a breaking change due to the change in the signatures of the
-    `CharExt::to_{upper,lower}case` methods. Code can be updated to use functions
-    like `flat_map` or `collect` to handle the difference.
-    
-    [breaking-change]
-
-commit 668c6474081a10768ef143b9984efcab5376bf68
-Merge: b8c6eb1 491054f
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sat Mar 7 18:39:17 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sat Mar 7 18:39:17 2015 +0000
-
-    Auto merge of #23137 - kmcallister:derive-sugar, r=sfackler
-    
-    This is a hack, but I don't think we can do much better as long as `derive` is running at the syntax expansion phase.
-    
-    If the `custom_derive` feature gate is enabled, this works with user-defined traits and syntax extensions. Without the gate, you can't use e.g. `#[derive_Clone]` directly, so this does not change the stable language.
-    
-    To make this effective, we now check gated attributes both before and after macro expansion. This uncovered a number of tests that were missing feature gates.
-    
-    This PR also cleans up the deriving code somewhat, and forbids some previously-meaningless attribute syntax. For this reason it's technically a
-    
-        [breaking-change]
-    
-    r? @sfackler
 </pre></body></html>
