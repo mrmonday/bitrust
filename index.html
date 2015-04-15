@@ -23,6 +23,49 @@ CommitDate: Tue Apr 14 00:07:50 2015 +0000
     [breaking-change]
     Closes rust-lang/rfcs#1043
 
+commit 6e0fb70ff6effe7b7be2c5fe951e9161613e6707
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Mon Apr 13 14:48:17 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Mon Apr 13 14:48:17 2015 -0700
+
+    Generalize `spawn` beyond unit closures
+    
+    `thread::spawn` was previously restricted to closures that return `()`,
+    which limited the utility of joining on a spawned thread. However, there
+    is no reason for this restriction, and this commit allows arbitrary
+    return types.
+    
+    Since it introduces a type parameter to `JoinHandle`, it's technically
+    a:
+    
+    [breaking-change]
+    
+    However, no code is actually expected to break.
+
+commit 6399bb425b3a82111cd554737f194c95b8f6bad5
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Mon Apr 13 12:08:20 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Mon Apr 13 12:15:28 2015 -0700
+
+    De-stabilize `thread::scoped` and friends
+    
+    Issue #24292 demonstrates that the `scoped` API as currently offered can
+    be memory-unsafe: the `JoinGuard` can be moved into a context that will
+    fail to execute destructors prior to the stack frame being popped (for
+    example, by creating an `Rc` cycle).
+    
+    This commit reverts the APIs to `unstable` status while a long-term
+    solution is worked out.
+    
+    (There are several possible ways to address this issue; it's not a
+    fundamental problem with the `scoped` idea, but rather an indication
+    that Rust doesn't currently provide a good way to ensure that
+    destructors are run within a particular stack frame.)
+    
+    [breaking-change]
+
 commit f55e66aaed42589dcda0221a4545dbaaec68e577
 Merge: 588d37c f3f99fb
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2532,58 +2575,4 @@ CommitDate: Thu Mar 12 16:38:58 2015 -0700
     Closes #23264
     
     [breaking-change]
-
-commit c9b03c24ec346e6405883032094f47805ef9c43e
-Merge: 538840b 9da9185
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Thu Mar 12 20:13:23 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Thu Mar 12 20:13:23 2015 +0000
-
-    Auto merge of #23265 - eddyb:meth-ast-refactor, r=nikomatsakis
-    
-    The end result is that common fields (id, name, attributes, etc.) are stored in now-structures `ImplItem` and `TraitItem`.
-    The signature of a method is no longer duplicated between methods with a body (default/impl) and those without, they now share `MethodSig`.
-    
-    This is also a [breaking-change] because of minor bugfixes and changes to syntax extensions:
-    * `pub fn` methods in a trait no longer parse - remove the `pub`, it has no meaning anymore
-    * `MacResult::make_methods` is now `make_impl_items` and the return type has changed accordingly
-    * `quote_method` is gone, because `P&lt;ast::Method&gt;` doesn't exist and it couldn't represent a full method anyways - could be replaced by `quote_impl_item`/`quote_trait_item` in the future, but I do hope we realize how silly that combinatorial macro expansion is and settle on a single `quote` macro + some type hints - or just no types at all (only token-trees)
-    
-    r? @nikomatsakis This is necessary (hopefully also sufficient) for associated constants.
-
-commit cfea8ec41699e25c8fb524d625190f0cb860dc71
-Merge: 6048ba8 0f6a0b5
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Mar 10 22:45:10 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Mar 10 22:45:10 2015 +0000
-
-    Auto merge of #23126 - alexcrichton:char-third-pass, r=aturon
-    
-    This commit performs another pass over the `std::char` module for stabilization.
-    Some minor cleanup is performed such as migrating documentation from libcore to
-    libunicode (where the `std`-facing trait resides) as well as a slight
-    reorganiation in libunicode itself. Otherwise, the stability modifications made
-    are:
-    
-    * `char::from_digit` is now stable
-    * `CharExt::is_digit` is now stable
-    * `CharExt::to_digit` is now stable
-    * `CharExt::to_{lower,upper}case` are now stable after being modified to return
-      an iterator over characters. While the implementation today has not changed
-      this should allow us to implement the full set of case conversions in unicode
-      where some characters can map to multiple when doing an upper or lower case
-      mapping.
-    * `StrExt::to_{lower,upper}case` was added as unstable for a convenience of not
-      having to worry about characters expanding to more characters when you just
-      want the whole string to get into upper or lower case.
-    
-    This is a breaking change due to the change in the signatures of the
-    `CharExt::to_{upper,lower}case` methods. Code can be updated to use functions
-    like `flat_map` or `collect` to handle the difference.
-    
-    [breaking-change]
-    
-    Closes #20333
 </pre></body></html>
