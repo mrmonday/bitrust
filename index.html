@@ -1,6 +1,27 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 07f807d01f191ced1d7f4857c73fc57fbe31f421
+Merge: ce27d02 77bf827
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Apr 15 21:05:16 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Apr 15 21:05:16 2015 +0000
+
+    Auto merge of #24330 - pnkfelix:issue-24267, r=nikomatsakis
+    
+    Extend rustc::middle::dataflow to allow filtering kills from flow-exits.
+    
+    Fix borrowck analysis so that it will not treat a break that pops through an assignment
+    ```rust
+    x = { ... break; ... }
+    ```
+    as a kill of the "moved-out" bit for `x`.
+    
+    Fix #24267.
+    
+    [breaking-change], but really, its only breaking code that was already buggy.
+
 commit e6a812402828f0f11b0de7a7e0c08c1d85a437f1
 Merge: f55e66a 2705051
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2544,35 +2565,4 @@ CommitDate: Fri Mar 13 01:00:02 2015 +0000
     [breaking-change]
     
     r? @alexcrichton
-
-commit 42c4e481cd98bd392839144c9ac83e55e445a12a
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Mon Mar 9 08:49:10 2015 -0700
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Thu Mar 12 16:38:58 2015 -0700
-
-    Stabilize std::path
-    
-    This commit stabilizes essentially all of the new `std::path` API. The
-    API itself is changed in a couple of ways (which brings it in closer
-    alignment with the RFC):
-    
-    * `.` components are now normalized away, unless they appear at the
-      start of a path. This in turn effects the semantics of e.g. asking for
-      the file name of `foo/` or `foo/.`, both of which yield `Some("foo")`
-      now. This semantics is what the original RFC specified, and is also
-      desirable given early experience rolling out the new API.
-    
-    * The `parent` function now succeeds if, and only if, the path has at
-      least one non-root/prefix component. This change affects `pop` as
-      well.
-    
-    * The `Prefix` component now involves a separate `PrefixComponent`
-      struct, to better allow for keeping both parsed and unparsed prefix data.
-    
-    In addition, the `old_path` module is now deprecated.
-    
-    Closes #23264
-    
-    [breaking-change]
 </pre></body></html>
