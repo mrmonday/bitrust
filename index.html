@@ -1,6 +1,31 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit e40449e0d545561c73a9b9b324b5971b533a87b7
+Merge: abf0548 5a3a599
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Apr 16 01:17:04 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Apr 16 01:17:04 2015 +0000
+
+    Auto merge of #24485 - brson:is, r=alexcrichton
+    
+    It was an oversight that this was not done in the great int upheaval.
+    
+    [breaking-change]
+
+commit 5a3a599428f5af024857d19b5d360b148e885fa2
+Author:     Brian Anderson &lt;banderson@mozilla.com&gt;
+AuthorDate: Wed Apr 15 16:11:56 2015 -0700
+Commit:     Brian Anderson &lt;banderson@mozilla.com&gt;
+CommitDate: Wed Apr 15 16:13:26 2015 -0700
+
+    Forbid is/us suffixes. Fixes #22496
+    
+    It was an oversight that this was not done in the great int upheaval.
+    
+    [breaking-change]
+
 commit 07f807d01f191ced1d7f4857c73fc57fbe31f421
 Merge: ce27d02 77bf827
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2436,133 +2461,4 @@ CommitDate: Fri Mar 13 20:22:16 2015 +0000
       backtraces has migrated to `std::io`.
     
     [breaking-change]
-
-commit d54bd9f29af67748b7ddf80a5cf285145949ddc2
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Mar 11 14:16:46 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Mar 12 20:39:03 2015 -0700
-
-    std: Stabilize the `io` module
-    
-    The new `std::io` module has had some time to bake now, and this commit
-    stabilizes its functionality. There are still portions of the module which
-    remain unstable, and below contains a summart of the actions taken.
-    
-    This commit also deprecates the entire contents of the `old_io` module in a
-    blanket fashion. All APIs should now have a reasonable replacement in the
-    new I/O modules.
-    
-    Stable APIs:
-    
-    * `std::io` (the name)
-    * `std::io::prelude` (the name)
-    * `Read`
-    * `Read::read`
-    * `Read::{read_to_end, read_to_string}` after being modified to return a `usize`
-      for the number of bytes read.
-    * `Write`
-    * `Write::write`
-    * `Write::{write_all, write_fmt}`
-    * `BufRead`
-    * `BufRead::{fill_buf, consume}`
-    * `BufRead::{read_line, read_until}` after being modified to return a `usize`
-      for the number of bytes read.
-    * `BufReader`
-    * `BufReader::{new, with_capacity}`
-    * `BufReader::{get_ref, get_mut, into_inner}`
-    * `{Read,BufRead} for BufReader`
-    * `BufWriter`
-    * `BufWriter::{new, with_capacity}`
-    * `BufWriter::{get_ref, get_mut, into_inner}`
-    * `Write for BufWriter`
-    * `IntoInnerError`
-    * `IntoInnerError::{error, into_inner}`
-    * `{Error,Display} for IntoInnerError`
-    * `LineWriter`
-    * `LineWriter::{new, with_capacity}` - `with_capacity` was added
-    * `LineWriter::{get_ref, get_mut, into_inner}` - `get_mut` was added)
-    * `Write for LineWriter`
-    * `BufStream`
-    * `BufStream::{new, with_capacities}`
-    * `BufStream::{get_ref, get_mut, into_inner}`
-    * `{BufRead,Read,Write} for BufStream`
-    * `stdin`
-    * `Stdin`
-    * `Stdin::lock`
-    * `Stdin::read_line` - added method
-    * `StdinLock`
-    * `Read for Stdin`
-    * `{Read,BufRead} for StdinLock`
-    * `stdout`
-    * `Stdout`
-    * `Stdout::lock`
-    * `StdoutLock`
-    * `Write for Stdout`
-    * `Write for StdoutLock`
-    * `stderr`
-    * `Stderr`
-    * `Stderr::lock`
-    * `StderrLock`
-    * `Write for Stderr`
-    * `Write for StderrLock`
-    * `io::Result`
-    * `io::Error`
-    * `io::Error::last_os_error`
-    * `{Display, Error} for Error`
-    
-    Unstable APIs:
-    
-    (reasons can be found in the commit itself)
-    
-    * `Write::flush`
-    * `Seek`
-    * `ErrorKind`
-    * `Error::new`
-    * `Error::from_os_error`
-    * `Error::kind`
-    
-    Deprecated APIs
-    
-    * `Error::description` - available via the `Error` trait
-    * `Error::detail` - available via the `Display` implementation
-    * `thread::Builder::{stdout, stderr}`
-    
-    Changes in functionality:
-    
-    * `old_io::stdio::set_stderr` is now a noop as the infrastructure for printing
-      backtraces has migrated to `std::io`.
-    * The `ReadExt`, `WriteExt`, and `BufReadExt` extension traits were all removed
-      by folding functionality into the corresponding trait.
-    
-    [breaking-change]
-
-commit 79dd393a4f144fa5e6f81c720c782de3175810d7
-Merge: c9b03c2 42c4e48
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri Mar 13 01:00:02 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri Mar 13 01:00:02 2015 +0000
-
-    Auto merge of #23229 - aturon:stab-path, r=alexcrichton
-    
-    This commit stabilizes essentially all of the new `std::path` API. The
-    API itself is changed in a couple of ways (which brings it in closer
-    alignment with the RFC):
-    
-    * `.` components are now normalized away, unless they appear at the
-      start of a path. This in turn effects the semantics of e.g. asking for
-      the file name of `foo/` or `foo/.`, both of which yield `Some("foo")`
-      now. This semantics is what the original RFC specified, and is also
-      desirable given early experience rolling out the new API.
-    
-    * The `parent` method is now `without_file` and succeeds if, and only
-      if, `file_name` is `Some(_)`. That means, in particular, that it fails
-      for a path like `foo/../`. This change affects `pop` as well.
-    
-    In addition, the `old_path` module is now deprecated.
-    
-    [breaking-change]
-    
-    r? @alexcrichton
 </pre></body></html>
