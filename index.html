@@ -1,6 +1,24 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit efa6a46a8eceb4ab792d5ec8e28cf3baaaa96491
+Merge: 1284be4 9868529
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Apr 18 02:53:53 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Apr 18 02:53:53 2015 +0000
+
+    Auto merge of #24133 - kballard:add-sync-to-io-error, r=alexcrichton
+    
+    This allows `io::Error` values to be stored in `Arc` properly.
+    
+    Because this requires `Sync` of any value passed to `io::Error::new()`
+    and modifies the relevant `convert::From` impls, this is a
+    
+    [breaking-change]
+    
+    Fixes #24049.
+
 commit e40449e0d545561c73a9b9b324b5971b533a87b7
 Merge: abf0548 5a3a599
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -363,6 +381,23 @@ CommitDate: Wed Apr 8 00:26:35 2015 +0200
     is a breaking change.
     
     [breaking-change]
+
+commit 986852911464df87088007e64780165cc538f9b9
+Author:     Kevin Ballard &lt;kevin@sb.org&gt;
+AuthorDate: Mon Apr 6 16:30:18 2015 -0700
+Commit:     Kevin Ballard &lt;kevin@sb.org&gt;
+CommitDate: Mon Apr 6 17:20:23 2015 -0700
+
+    Add `Sync` to the bounds in `io::Error`
+    
+    This allows `io::Error` values to be stored in `Arc` properly.
+    
+    Because this requires `Sync` of any value passed to `io::Error::new()`
+    and modifies the relevant `convert::From` impls, this is a
+    
+    [breaking-change]
+    
+    Fixes #24049.
 
 commit f1dabed82bfed643fbbfc93203473e384c58d20a
 Author:     Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
@@ -2342,123 +2377,6 @@ CommitDate: Fri Mar 13 16:47:42 2015 -0700
     fairly straightforward, however, after accounting for the new level of
     abstraction in `SocketAddr` (protocol distinction at the socket address level,
     not the IP address).
-    
-    [breaking-change]
-
-commit 1d5983aded687149239e8943debd51abdce5d27b
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Fri Mar 13 11:35:53 2015 -0700
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Fri Mar 13 14:45:13 2015 -0700
-
-    Deprecate range, range_step, count, distributions
-    
-    This commit deprecates the `count`, `range` and `range_step` functions
-    in `iter`, in favor of range notation. To recover all existing
-    functionality, a new `step_by` adapter is provided directly on `ops::Range`
-    and `ops::RangeFrom`.
-    
-    [breaking-change]
-
-commit 3e4be02b80a3dd27bce20870958fe0aef7e7336d
-Merge: 9eb69ab 981bf5f
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri Mar 13 20:22:16 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri Mar 13 20:22:16 2015 +0000
-
-    Auto merge of #23292 - alexcrichton:stabilize-io, r=aturon
-    
-    The new `std::io` module has had some time to bake now, and this commit
-    stabilizes its functionality. There are still portions of the module which
-    remain unstable, and below contains a summart of the actions taken.
-    
-    This commit also deprecates the entire contents of the `old_io` module in a
-    blanket fashion. All APIs should now have a reasonable replacement in the
-    new I/O modules.
-    
-    Stable APIs:
-    
-    * `std::io` (the name)
-    * `std::io::prelude` (the name)
-    * `Read`
-    * `Read::read`
-    * `Read::{read_to_end, read_to_string}` after being modified to return a `usize`
-      for the number of bytes read.
-    * `ReadExt`
-    * `Write`
-    * `Write::write`
-    * `Write::{write_all, write_fmt}`
-    * `WriteExt`
-    * `BufRead`
-    * `BufRead::{fill_buf, consume}`
-    * `BufRead::{read_line, read_until}` after being modified to return a `usize`
-      for the number of bytes read.
-    * `BufReadExt`
-    * `BufReader`
-    * `BufReader::{new, with_capacity}`
-    * `BufReader::{get_ref, get_mut, into_inner}`
-    * `{Read,BufRead} for BufReader`
-    * `BufWriter`
-    * `BufWriter::{new, with_capacity}`
-    * `BufWriter::{get_ref, get_mut, into_inner}`
-    * `Write for BufWriter`
-    * `IntoInnerError`
-    * `IntoInnerError::{error, into_inner}`
-    * `{Error,Display} for IntoInnerError`
-    * `LineWriter`
-    * `LineWriter::{new, with_capacity}` - `with_capacity` was added
-    * `LineWriter::{get_ref, get_mut, into_inner}` - `get_mut` was added)
-    * `Write for LineWriter`
-    * `BufStream`
-    * `BufStream::{new, with_capacities}`
-    * `BufStream::{get_ref, get_mut, into_inner}`
-    * `{BufRead,Read,Write} for BufStream`
-    * `stdin`
-    * `Stdin`
-    * `Stdin::lock`
-    * `Stdin::read_line` - added method
-    * `StdinLock`
-    * `Read for Stdin`
-    * `{Read,BufRead} for StdinLock`
-    * `stdout`
-    * `Stdout`
-    * `Stdout::lock`
-    * `StdoutLock`
-    * `Write for Stdout`
-    * `Write for StdoutLock`
-    * `stderr`
-    * `Stderr`
-    * `Stderr::lock`
-    * `StderrLock`
-    * `Write for Stderr`
-    * `Write for StderrLock`
-    * `io::Result`
-    * `io::Error`
-    * `io::Error::last_os_error`
-    * `{Display, Error} for Error`
-    
-    Unstable APIs:
-    
-    (reasons can be found in the commit itself)
-    
-    * `Write::flush`
-    * `Seek`
-    * `ErrorKind`
-    * `Error::new`
-    * `Error::from_os_error`
-    * `Error::kind`
-    
-    Deprecated APIs
-    
-    * `Error::description` - available via the `Error` trait
-    * `Error::detail` - available via the `Display` implementation
-    * `thread::Builder::{stdout, stderr}`
-    
-    Changes in functionality:
-    
-    * `old_io::stdio::set_stderr` is now a noop as the infrastructure for printing
-      backtraces has migrated to `std::io`.
     
     [breaking-change]
 </pre></body></html>
