@@ -1,6 +1,49 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 98e9765d973d46faa5c80fb37a48040ca9e87b28
+Merge: 44338cb 8f5b5f9
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Tue Apr 21 15:28:06 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Apr 21 15:28:06 2015 -0700
+
+    rollup merge of #24541: alexcrichton/issue-24538
+    
+    This is an implementation of [RFC 1030][rfc] which adds these traits to the
+    prelude and additionally removes all inherent `into_iter` methods on collections
+    in favor of the trait implementation (which is now accessible by default).
+    
+    [rfc]: https://github.com/rust-lang/rfcs/pull/1030
+    
+    This is technically a breaking change due to the prelude additions and removal
+    of inherent methods, but it is expected that essentially no code breaks in
+    practice.
+    
+    [breaking-change]
+    Closes #24538
+
+commit eeb94886adccb3f13003f92f117115d17846ce1f
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Apr 17 15:32:42 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Tue Apr 21 11:37:43 2015 -0700
+
+    std: Remove deprecated/unstable num functionality
+    
+    This commit removes all the old casting/generic traits from `std::num` that are
+    no longer in use by the standard library. This additionally removes the old
+    `strconv` module which has not seen much use in quite a long time. All generic
+    functionality has been supplanted with traits in the `num` crate and the
+    `strconv` module is supplanted with the [rust-strconv crate][rust-strconv].
+    
+    [rust-strconv]: https://github.com/lifthrasiir/rust-strconv
+    
+    This is a breaking change due to the removal of these deprecated crates, and the
+    alternative crates are listed above.
+    
+    [breaking-change]
+
 commit efa6a46a8eceb4ab792d5ec8e28cf3baaaa96491
 Merge: 1284be4 9868529
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -18,6 +61,27 @@ CommitDate: Sat Apr 18 02:53:53 2015 +0000
     [breaking-change]
     
     Fixes #24049.
+
+commit 8f5b5f94dcdb9884737dfbc8efd893d1d70f0b14
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Fri Apr 17 14:31:30 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Fri Apr 17 16:37:30 2015 -0700
+
+    std: Add Default/IntoIterator/ToOwned to the prelude
+    
+    This is an implementation of [RFC 1030][rfc] which adds these traits to the
+    prelude and additionally removes all inherent `into_iter` methods on collections
+    in favor of the trait implementation (which is now accessible by default).
+    
+    [rfc]: https://github.com/rust-lang/rfcs/pull/1030
+    
+    This is technically a breaking change due to the prelude additions and removal
+    of inherent methods, but it is expected that essentially no code breaks in
+    practice.
+    
+    [breaking-change]
+    Closes #24538
 
 commit e40449e0d545561c73a9b9b324b5971b533a87b7
 Merge: abf0548 5a3a599
@@ -2258,125 +2322,6 @@ CommitDate: Sun Mar 15 10:28:34 2015 -0700
     Due to the reorgnization of the platform extension modules, this commit is a
     breaking change. Most imports can be fixed by adding the relevant libstd module
     in the `use` path (such as `ffi` or `fs`).
-    
-    [breaking-change]
-
-commit 54660fc392343e4ddee8a0ea1ca196ffc533585b
-Merge: f59af75 60a4a2d
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sun Mar 15 09:18:42 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sun Mar 15 09:18:42 2015 +0000
-
-    Auto merge of #23316 - alexcrichton:less-question-sized, r=aturon
-    
-    It is a frequent pattern among I/O functions to take `P: AsPath + ?Sized` or
-    `AsOsStr` instead of `AsPath`. Most of these functions do not need to take
-    ownership of their argument, but for libraries in general it's much more
-    ergonomic to not deal with `?Sized` at all and simply require an argument `P`
-    instead of `&amp;P`.
-    
-    This change is aimed at removing unsightly `?Sized` bounds while retaining the
-    same level of usability as before. All affected functions now take ownership of
-    their arguments instead of taking them by reference, but due to the forwarding
-    implementations of `AsOsStr` and `AsPath` all code should continue to work as it
-    did before.
-    
-    This is strictly speaking a breaking change due to the signatures of these
-    functions changing, but normal idiomatic usage of these APIs should not break in
-    practice.
-    
-    [breaking-change]
-
-commit 60a4a2db8837be91bdae051bd51ab181077e5dc6
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Thu Mar 12 12:59:53 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Sat Mar 14 23:23:54 2015 -0700
-
-    std: Remove ?Sized bounds from many I/O functions
-    
-    It is a frequent pattern among I/O functions to take `P: AsPath + ?Sized` or
-    `AsOsStr` instead of `AsPath`. Most of these functions do not need to take
-    ownership of their argument, but for libraries in general it's much more
-    ergonomic to not deal with `?Sized` at all and simply require an argument `P`
-    instead of `&amp;P`.
-    
-    This change is aimed at removing unsightly `?Sized` bounds while retaining the
-    same level of usability as before. All affected functions now take ownership of
-    their arguments instead of taking them by reference, but due to the forwarding
-    implementations of `AsOsStr` and `AsPath` all code should continue to work as it
-    did before.
-    
-    This is strictly speaking a breaking change due to the signatures of these
-    functions changing, but normal idiomatic usage of these APIs should not break in
-    practice.
-    
-    [breaking-change]
-
-commit f798674b86382929ca17c88de422a6e2fdb27f2a
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Mar 13 14:22:33 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Mar 13 16:47:42 2015 -0700
-
-    std: Stabilize the `net` module
-    
-    This commit performs a stabilization pass over the std::net module,
-    incorporating the changes from RFC 923. Specifically, the following actions were
-    taken:
-    
-    Stable functionality:
-    
-    * `net` (the name)
-    * `Shutdown`
-    * `Shutdown::{Read, Write, Both}`
-    * `lookup_host`
-    * `LookupHost`
-    * `SocketAddr`
-    * `SocketAddr::{V4, V6}`
-    * `SocketAddr::port`
-    * `SocketAddrV4`
-    * `SocketAddrV4::{new, ip, port}`
-    * `SocketAddrV6`
-    * `SocketAddrV4::{new, ip, port, flowinfo, scope_id}`
-    * Common trait impls for socket addr structures
-    * `ToSocketAddrs`
-    * `ToSocketAddrs::Iter`
-    * `ToSocketAddrs::to_socket_addrs`
-    * `ToSocketAddrs for {SocketAddr*, (Ipv*Addr, u16), str, (str, u16)}`
-    * `Ipv4Addr`
-    * `Ipv4Addr::{new, octets, to_ipv6_compatible, to_ipv6_mapped}`
-    * `Ipv6Addr`
-    * `Ipv6Addr::{new, segments, to_ipv4}`
-    * `TcpStream`
-    * `TcpStream::connect`
-    * `TcpStream::{peer_addr, local_addr, shutdown, try_clone}`
-    * `{Read,Write} for {TcpStream, &amp;TcpStream}`
-    * `TcpListener`
-    * `TcpListener::bind`
-    * `TcpListener::{local_addr, try_clone, accept, incoming}`
-    * `Incoming`
-    * `UdpSocket`
-    * `UdpSocket::bind`
-    * `UdpSocket::{recv_from, send_to, local_addr, try_clone}`
-    
-    Unstable functionality:
-    
-    * Extra methods on `Ipv{4,6}Addr` for various methods of inspecting the address
-      and determining qualities of it.
-    * Extra methods on `TcpStream` to configure various protocol options.
-    * Extra methods on `UdpSocket` to configure various protocol options.
-    
-    Deprecated functionality:
-    
-    * The `socket_addr` method has been renamed to `local_addr`
-    
-    This commit is a breaking change due to the restructuring of the `SocketAddr`
-    type as well as the renaming of the `socket_addr` method. Migration should be
-    fairly straightforward, however, after accounting for the new level of
-    abstraction in `SocketAddr` (protocol distinction at the socket address level,
-    not the IP address).
     
     [breaking-change]
 </pre></body></html>
