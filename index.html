@@ -1,6 +1,67 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 6365080c5cd27b74ec87420c351a3e7bdcff988e
+Merge: b0043db 24ef905
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Apr 26 09:52:28 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Apr 26 09:52:28 2015 +0000
+
+    Auto merge of #23085 - goffrie:interpolating-quote, r=huonw
+    
+    This changes the `ToTokens` implementations for expressions, statements, etc. with almost-trivial ones that produce `Interpolated(*Nt(...))` pseudo-tokens. In this way, quasiquote now works the same way as macros do: already-parsed AST fragments are used as-is, not reparsed.
+    
+    The `ToSource` trait is removed. Quasiquote no longer involves pretty-printing at all, which removes the need for the `encode_with_hygiene` hack. All associated machinery is removed.
+    
+    New `Nonterminal`s are added: NtArm, NtImplItem, and NtTraitItem. These are just for quasiquote, not macros.
+    
+    `ToTokens` is no longer implemented for `Arg` (although this could be added again) and `Generics` (which I don't think makes sense).
+    
+    This breaks any compiler extensions that relied on the ability of `ToTokens` to turn AST fragments back into inspectable token trees. For this reason, this closes #16987.
+    
+    As such, this is a [breaking-change].
+    
+    Fixes #16472.
+    Fixes #15962.
+    Fixes #17397.
+    Fixes #16617.
+
+commit 2d9831dea598d8a45c69e8c799503e8a397aacc0
+Author:     Geoffry Song &lt;goffrie@gmail.com&gt;
+AuthorDate: Thu Mar 5 15:06:49 2015 -0500
+Commit:     Geoffry Song &lt;goffrie@gmail.com&gt;
+CommitDate: Sat Apr 25 21:42:10 2015 -0400
+
+    Interpolate AST nodes in quasiquote.
+    
+    This changes the `ToTokens` implementations for expressions, statements,
+    etc. with almost-trivial ones that produce `Interpolated(*Nt(...))`
+    pseudo-tokens. In this way, quasiquote now works the same way as macros
+    do: already-parsed AST fragments are used as-is, not reparsed.
+    
+    The `ToSource` trait is removed. Quasiquote no longer involves
+    pretty-printing at all, which removes the need for the
+    `encode_with_hygiene` hack. All associated machinery is removed.
+    
+    A new `Nonterminal` is added, NtArm, which the parser now interpolates.
+    This is just for quasiquote, not macros (although it could be in the
+    future).
+    
+    `ToTokens` is no longer implemented for `Arg` (although this could be
+    added again) and `Generics` (which I don't think makes sense).
+    
+    This breaks any compiler extensions that relied on the ability of
+    `ToTokens` to turn AST fragments back into inspectable token trees. For
+    this reason, this closes #16987.
+    
+    As such, this is a [breaking-change].
+    
+    Fixes #16472.
+    Fixes #15962.
+    Fixes #17397.
+    Fixes #16617.
+
 commit 00c48d3779fb4c372d2dfe7a8654c6cd1e065511
 Merge: 0d8309e 0ad48e4
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2211,73 +2272,4 @@ CommitDate: Mon Mar 16 17:02:11 2015 +0000
     [breaking-change]
     
     r? @alexcrichton
-
-commit 170ccd615f976fc9e90a8f14ce6c373bfdf01533
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Sun Mar 15 18:47:00 2015 +1300
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Mon Mar 16 11:03:54 2015 +1300
-
-    Error if `pub use` references a private item.
-    
-    [breaking-change]
-    
-    Closes #23266
-
-commit 542e2bb3910f8860d49b4b40bcd78d9c74e733ff
-Merge: b4f5e78 1f5f76a
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sun Mar 15 18:42:54 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sun Mar 15 18:42:54 2015 +0000
-
-    Auto merge of #23353 - alexcrichton:stabilize-os, r=aturon
-    
-    This commit starts to organize the `std::os::$platform` modules and in the
-    process stabilizes some of the functionality contained within. The organization
-    of these modules will reflect the organization of the standard library itself
-    with extension traits for primitives in the same corresponding module.
-    
-    The OS-specific modules will grow more functionality over time including
-    concrete types that are not extending functionality of other structures, and
-    these will either go into the closest module in `std::os::$platform` or they
-    will grow a new module in the hierarchy.
-    
-    The following items are now stable:
-    
-    * `os::{unix, windows}`
-    * `unix::ffi`
-    * `unix::ffi::OsStrExt`
-    * `unix::ffi::OsStrExt::{from_bytes, as_bytes, to_cstring}`
-    * `unix::ffi::OsString`
-    * `unix::ffi::OsStringExt::{from_vec, into_vec}`
-    * `unix::process`
-    * `unix::process::CommandExt`
-    * `unix::process::CommandExt::{uid, gid}`
-    * `unix::process::ExitStatusExt`
-    * `unix::process::ExitStatusExt::signal`
-    * `unix::prelude`
-    * `windows::ffi`
-    * `windows::ffi::OsStringExt`
-    * `windows::ffi::OsStringExt::from_wide`
-    * `windows::ffi::OsStrExt`
-    * `windows::ffi::OsStrExt::encode_wide`
-    * `windows::prelude`
-    
-    The following items remain unstable:
-    
-    * `unix::io`
-    * `unix::io::{Fd, AsRawFd}`
-    * `unix::fs::{PermissionsExt, OpenOptionsExt}`
-    * `windows::io`
-    * `windows::io::{Handle, AsRawHandle}`
-    * `windows::io::{Socket, AsRawSocket}`
-    * `windows::fs`
-    * `windows::fs::OpenOptionsExt`
-    
-    Due to the reorgnization of the platform extension modules, this commit is a
-    breaking change. Most imports can be fixed by adding the relevant libstd module
-    in the `use` path (such as `ffi` or `fs`).
-    
-    [breaking-change]
 </pre></body></html>
