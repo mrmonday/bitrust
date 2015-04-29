@@ -80,6 +80,20 @@ CommitDate: Tue Apr 28 17:47:16 2015 +0200
     }
     ```
 
+commit b475fc7d6aa1cafa91790c273908fddfb669a82e
+Author:     Ulrik Sverdrup &lt;root@localhost&gt;
+AuthorDate: Mon Apr 27 19:37:13 2015 +0200
+Commit:     Ulrik Sverdrup &lt;root@localhost&gt;
+CommitDate: Tue Apr 28 11:38:33 2015 +0200
+
+    collections: Implement vec::drain(range) according to RFC 574
+    
+    Old `.drain()` on vec is performed using `.drain(..)` now.
+    
+    `.drain(range)` is unstable and under feature(collections_drain)
+    
+    [breaking-change]
+
 commit 9c88f3be126d0fe02a92c20e1d78192f4b648401
 Merge: 857ef6e 805349a
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2241,48 +2255,4 @@ CommitDate: Tue Mar 17 15:19:57 2015 +0530
     I really doubt this will break anybody's but my own code.
     
     [breaking-change]
-
-commit e46610966f798a083350724461648c6ffdd151f4
-Merge: a257288 b65ebc4
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Mar 17 03:23:50 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Mar 17 03:23:50 2015 +0000
-
-    Auto merge of #23104 - japaric:inherent, r=nikomatsakis
-    
-    - Allow inherent implementations on `char`, `str`, `[T]`, `*const T`, `*mut T` and all the numeric primitives.
-    - copy `unicode::char::CharExt` methods into `impl char`
-    - remove `unicode::char::CharExt`, its re-export `std::char::CharExt` and `CharExt` from the prelude
-    - copy `collections::str::StrExt` methods into `impl str`
-    - remove `collections::str::StrExt` its re-export `std::str::StrExt`, and `StrExt` from the prelude
-    - copy `collections::slice::SliceExt` methods into `impl&lt;T&gt; [T]`
-    - remove `collections::slice::SliceExt` its re-export `std::slice::SliceExt`, and `SliceExt` from the prelude
-    - copy `core::ptr::PtrExt` methods into `impl&lt;T&gt; *const T`
-    - remove `core::ptr::PtrExt` its re-export `std::ptr::PtrExt`, and `PtrExt` from the prelude
-    - copy `core::ptr::PtrExt` and `core::ptr::MutPtrExt` methods into `impl&lt;T&gt; *mut T`
-    - remove `core::ptr::MutPtrExt` its re-export `std::ptr::MutPtrExt`, and `MutPtrExt` from the prelude
-    - copy `core::num::Int` and `core::num::SignedInt` methods into `impl i{8,16,32,64,size}`
-    - copy `core::num::Int` and `core::num::UnsignedInt` methods into `impl u{8,16,32,64,size}`
-    - remove `core::num::UnsignedInt` and its re-export `std::num::UnsignedInt`
-    - move `collections` tests into its own crate: `collectionstest`
-    - copy `core::num::Float` methods into `impl f{32,64}`
-    
-    Because this PR removes several traits, this is a [breaking-change], however functionality remains unchanged and breakage due to unresolved imports should be minimal. If you encounter an error due to an unresolved import, simply remove the import:
-    
-    ``` diff
-      fn main() {
-    -     use std::num::UnsignedInt;  //~ error: unresolved import `std::num::UnsignedInt`.
-    -
-          println!("{}", 8_usize.is_power_of_two());
-      }
-    ```
-    
-    ---
-    
-    cc  #16862
-    [preview docs](http://japaric.github.io/inherent/std/index.html)
-    [unicode::char](http://japaric.github.io/inherent/unicode/primitive.char.html)
-    [collections::str](http://japaric.github.io/inherent/collections/primitive.str.html)
-    [std::f32](http://japaric.github.io/inherent/std/primitive.f32.html)
 </pre></body></html>
