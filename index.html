@@ -1,6 +1,91 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 5c710b593b429d39ea01375172a9ce968f43ab26
+Merge: c634ec2 a576262
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri May 1 04:22:53 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri May 1 04:22:53 2015 +0000
+
+    Auto merge of #24793 - aturon:io-error-any, r=alexcrichton
+    
+    This commit brings the `Error` trait in line with the [Error interoperation
+    RFC](https://github.com/rust-lang/rfcs/pull/201) by adding downcasting,
+    which has long been intended. This change means that for any `Error`
+    trait objects that are `'static`, you can downcast to concrete error
+    types.
+    
+    To make this work, it is necessary for `Error` to inherit from
+    `Reflect` (which is currently used to mark concrete types as "permitted
+    for reflection, aka downcasting"). This is a breaking change: it means
+    that impls like
+    
+    ```rust
+    impl&lt;T&gt; Error for MyErrorType&lt;T&gt; { ... }
+    ```
+    
+    must change to
+    
+    ```rust
+    impl&lt;T: Reflect&gt; Error for MyErrorType&lt;T&gt; { ... }
+    ```
+    
+    This commit furthermore marks `Reflect` as stable, since we are already
+    essentially committed to it via `Any`. Note that in the future, if we
+    determine that the parametricity aspects of `Reflect` are not needed, we
+    can deprecate the trait and provide a blanket implementation for it
+    for *all* types (rather than by using OIBIT), which would allow all
+    mentions of `Reflect` to be dropped over time. So there is not a strong
+    commitment here.
+    
+    [breaking-change]
+    
+    r? @alexcrichton
+
+commit a5762625a168f195afbc5b74d674a93f8c692a8e
+Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
+AuthorDate: Fri Apr 24 14:34:57 2015 -0700
+Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
+CommitDate: Thu Apr 30 18:20:22 2015 -0700
+
+    Add downcasting to std::error::Error
+    
+    This commit brings the `Error` trait in line with the [Error interoperation
+    RFC](https://github.com/rust-lang/rfcs/pull/201) by adding downcasting,
+    which has long been intended. This change means that for any `Error`
+    trait objects that are `'static`, you can downcast to concrete error
+    types.
+    
+    To make this work, it is necessary for `Error` to inherit from
+    `Reflect` (which is currently used to mark concrete types as "permitted
+    for reflection, aka downcasting"). This is a breaking change: it means
+    that impls like
+    
+    ```rust
+    impl&lt;T&gt; Error for MyErrorType&lt;T&gt; { ... }
+    ```
+    
+    must change to something like
+    
+    ```rust
+    impl&lt;T: Reflect&gt; Error for MyErrorType&lt;T&gt; { ... }
+    ```
+    
+    except that `Reflect` is currently unstable (and should remain so for
+    the time being). For now, code can instead bound by `Any`:
+    
+    ```rust
+    impl&lt;T: Any&gt; Error for MyErrorType&lt;T&gt; { ... }
+    ```
+    
+    which *is* stable and has `Reflect` as a super trait. The downside is
+    that this imposes a `'static` constraint, but that only
+    constrains *when* `Error` is implemented -- it does not actually
+    constrain the types that can implement `Error`.
+    
+    [breaking-change]
+
 commit 441b3f0c26c2e30ddb012be968141da7ce7d9d62
 Merge: d8b64c7 1f79348
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2225,34 +2310,4 @@ CommitDate: Tue Mar 17 21:23:02 2015 +0000
     * the only way to get the destructor is from a trait object's vtable (see libarena changes)
     
     r? @pcwalton f? @dotdash
-
-commit c64d671671aea2e44ee7fc6eb00ee75fc30ed7b9
-Merge: 31ba212 277b4f0
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Mar 17 13:29:48 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Mar 17 13:29:48 2015 +0000
-
-    Auto merge of #23423 - nikomatsakis:issue-18737-trait-subtyping, r=nrc
-    
-    This upcast coercion currently never requires vtable changes. It should be generalized.
-    
-    This is a [breaking-change] -- if you have an impl on an object type like `impl SomeTrait`, then this will no longer be applicable to object types like `SomeTrait+Send`. In the standard library, this primarily affected `Any`, and this PR adds impls for `Any+Send` as to keep the API the same in practice. An alternate workaround is to use UFCS form or standalone fns. For more details, see &lt;https://github.com/rust-lang/rust/issues/18737#issuecomment-78450798&gt;.
-    
-    r? @nrc
-
-commit c2671b59ccbc899b8defbabf453e88f89900c3a0
-Merge: a4b57be cbd37d8
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Tue Mar 17 15:19:57 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Tue Mar 17 15:19:57 2015 +0530
-
-    Rollup merge of #23409 - GBGamer:patch-2, r=alexcrichton
-    
-     To the correct MAP_NORESERVE. Every other instance is known as MAP_NORESERVE, so this is just a basic typo.
-    
-    I really doubt this will break anybody's but my own code.
-    
-    [breaking-change]
 </pre></body></html>
