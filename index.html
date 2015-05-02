@@ -1,6 +1,29 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit f6574c5b0404f55c4dd4056be47d37eff33684b5
+Merge: f3345cb b1976f1
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri May 1 22:54:09 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri May 1 22:54:09 2015 +0000
+
+    Auto merge of #25006 - alexcrichton:unstable-indexing, r=aturon
+    
+    These implementations were intended to be unstable, but currently the stability
+    attributes cannot handle a stable trait with an unstable `impl` block. This
+    commit also audits the rest of the standard library for explicitly-`#[unstable]`
+    impl blocks. No others were removed but some annotations were changed to
+    `#[stable]` as they're defacto stable anyway.
+    
+    One particularly interesting `impl` marked `#[stable]` as part of this commit
+    is the `Add&lt;&amp;[T]&gt;` impl for `Vec&lt;T&gt;`, which uses `push_all` and implicitly
+    clones all elements of the vector provided.
+    
+    Closes #24791
+    
+    [breaking-change]
+
 commit 5c710b593b429d39ea01375172a9ce968f43ab26
 Merge: c634ec2 a576262
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2292,22 +2315,4 @@ CommitDate: Wed Mar 18 03:22:12 2015 +0000
     Fixes #23449.
     
     r? @nrc
-
-commit ea8b82e90c450febb1f26a07862a1ec89c22addd
-Merge: bfac337 e256b7f
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Mar 17 21:23:02 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Mar 17 21:23:02 2015 +0000
-
-    Auto merge of #23376 - eddyb:die-tydesc-die, r=nikomatsakis
-    
-    Final remnant of reflection is gone. Also, virtual `Trait` destructors are no longer tied to `Box`.
-    That means they can be used to drop any instance of the type (used in libarena to replace TyDesc).
-    
-    This is [breaking-change] for direct users of intrinsics:
-    * use `intrinsics::type_name::&lt;T&gt;()` instead of `(*intrinsics::get_tydesc::&lt;T&gt;()).name`
-    * the only way to get the destructor is from a trait object's vtable (see libarena changes)
-    
-    r? @pcwalton f? @dotdash
 </pre></body></html>
