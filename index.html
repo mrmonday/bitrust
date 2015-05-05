@@ -1,6 +1,25 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit eae692e375cec222803efb7175c79fedc228eea9
+Merge: 6cd7486 db477ee
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue May 5 18:18:27 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue May 5 18:18:27 2015 +0000
+
+    Auto merge of #25009 - alexcrichton:less-buffered-stream, r=aturon
+    
+    As pointed out in #17136 the semantics of a `BufStream` aren't always what one
+    expects, and it looks like other [languages like C#][c-sharp] implement a
+    buffered stream with only one underlying buffer. For now this commit
+    destabilizes the primitive in the `std::io` module to give us some more time in
+    figuring out what to do with it.
+    
+    [c-sharp]: https://msdn.microsoft.com/en-us/library/system.io.bufferedstream%28v=vs.110%29.aspx
+    
+    [breaking-change]
+
 commit f6574c5b0404f55c4dd4056be47d37eff33684b5
 Merge: f3345cb b1976f1
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -106,6 +125,24 @@ CommitDate: Thu Apr 30 18:20:22 2015 -0700
     that this imposes a `'static` constraint, but that only
     constrains *when* `Error` is implemented -- it does not actually
     constrain the types that can implement `Error`.
+    
+    [breaking-change]
+
+commit db477eef72924c7b34e9617627eaae37c71bdc1c
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Thu Apr 30 15:45:48 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Thu Apr 30 16:02:58 2015 -0700
+
+    std: Destabilize io::BufStream
+    
+    As pointed out in #17136 the semantics of a `BufStream` aren't always what one
+    expects, and it looks like other [languages like C#][c-sharp] implement a
+    buffered stream with only one underlying buffer. For now this commit
+    destabilizes the primitive in the `std::io` module to give us some more time in
+    figuring out what to do with it.
+    
+    [c-sharp]: https://msdn.microsoft.com/en-us/library/system.io.bufferedstream%28v=vs.110%29.aspx
     
     [breaking-change]
 
@@ -2283,36 +2320,4 @@ CommitDate: Wed Mar 18 20:07:27 2015 -0400
     -&gt; i32 { 22 }`.
     
     Fixes #23420.
-
-commit 46f649c479ce40f3b4590590dda6c2895e8d60f6
-Merge: f9a7bc5 dccd17d
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Wed Mar 18 08:27:22 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Wed Mar 18 08:27:22 2015 +0000
-
-    Auto merge of #22838 - petrochenkov:bytelit, r=alexcrichton
-    
-    This patch changes the type of byte string literals from `&amp;[u8]` to `&amp;[u8; N]`.
-    It also implements some necessary traits (`IntoBytes`, `Seek`, `Read`, `BufRead`) for fixed-size arrays (also related to #21725) and adds test for #17233, which seems to be resolved.
-    
-    Fixes #18465
-    [breaking-change]
-
-commit c10918905fda1344e78bc16e6e73294d096ee97d
-Merge: 1ae32de 0947f40
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Wed Mar 18 03:22:12 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Wed Mar 18 03:22:12 2015 +0000
-
-    Auto merge of #23452 - nikomatsakis:unsafety-subtyping, r=nrc
-    
-    Safe fns are no longer subtypes of unsafe fns, but you can coerce from one to the other.
-    
-    This is a [breaking-change] in that impl fns must now be declared `unsafe` if the trait is declared `unsafe`. In some rare cases, the subtyping change may also direct affect you, but no such cases were encountered in practice.
-    
-    Fixes #23449.
-    
-    r? @nrc
 </pre></body></html>
