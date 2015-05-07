@@ -1,6 +1,41 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 5ae026e8923d71d16a4d2b9a592bbcab92d8723a
+Merge: f0ac7e0 8d3f84e
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu May 7 21:45:11 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu May 7 21:45:11 2015 +0000
+
+    Auto merge of #25157 - alexcrichton:remove-vec-add, r=aturon
+    
+    Ideally this trait implementation would be unstable, requiring crates to opt-in
+    if they would like the functionality, but that's not currently how stability
+    works so the implementation needs to be removed entirely.
+    
+    This may come back at a future date, but for now the conservative option is to
+    remove it.
+    
+    [breaking-change]
+
+commit 8d3f84e235b22688dd1592cfb86f31459a79ac5f
+Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+AuthorDate: Wed May 6 10:51:10 2015 -0700
+Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
+CommitDate: Wed May 6 10:52:34 2015 -0700
+
+    std: Remove addition on vectors for now
+    
+    Ideally this trait implementation would be unstable, requiring crates to opt-in
+    if they would like the functionality, but that's not currently how stability
+    works so the implementation needs to be removed entirely.
+    
+    This may come back at a future date, but for now the conservative option is to
+    remove it.
+    
+    [breaking-change]
+
 commit d131f335579b8c080a2416a65ca703169fae560b
 Author:     Sean McArthur &lt;sean.monstar@gmail.com&gt;
 AuthorDate: Mon Apr 13 14:49:10 2015 -0700
@@ -2290,37 +2325,5 @@ CommitDate: Thu Mar 19 19:15:22 2015 +0000
     
     Closes #16666
     
-    [breaking-change]
-
-commit a32bb1bcc4c6b8806b1058c2f654415341240233
-Merge: c7392be c225824
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Thu Mar 19 06:08:56 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Thu Mar 19 08:49:34 2015 +0530
-
-    Rollup merge of #23475 - nikomatsakis:closure-ret-syntax, r=acrichto
-    
-     Require braces when a closure has an explicit return type. This is a [breaking-change]: instead of a closure like `|| -&gt; i32 22`, prefer `|| -&gt; i32 { 22 }`.
-    
-    Fixes #23420.
-
-commit f2e3c7469b56cd744e613a05a1ea73f441f66401
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Mar 18 20:08:15 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Mar 18 20:10:15 2015 -0700
-
-    std: Stabilize FromStr implementations in std::net
-    
-    The IP and socket address types all had `FromStr` implemented but the
-    implementations were not marked stable, nor was the error type returned ready to
-    be properly stabilized.
-    
-    This commit marks the implementations of `FromStr` as stable and also renamed
-    the `ParseError` structure to `AddrParseError`. The error is now also an opaque
-    structure that cannot be constructed outside the standard library.
-    
-    cc #22949
     [breaking-change]
 </pre></body></html>
