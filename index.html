@@ -1,6 +1,21 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit d131f335579b8c080a2416a65ca703169fae560b
+Author:     Sean McArthur &lt;sean.monstar@gmail.com&gt;
+AuthorDate: Mon Apr 13 14:49:10 2015 -0700
+Commit:     Sean McArthur &lt;sean.monstar@gmail.com&gt;
+CommitDate: Tue May 5 22:26:23 2015 -0700
+
+    lint: deny transmuting from immutable to mutable, since it's undefined behavior
+    
+    [breaking-change] Technically breaking, since code that had been using
+    these transmutes before will no longer compile. However, it was
+    undefined behavior, so really, it's a good thing. Fixing your code would
+    require some re-working to use an UnsafeCell instead.
+    
+    Closes #13146
+
 commit eae692e375cec222803efb7175c79fedc228eea9
 Merge: 6cd7486 db477ee
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2308,16 +2323,4 @@ CommitDate: Wed Mar 18 20:10:15 2015 -0700
     
     cc #22949
     [breaking-change]
-
-commit c225824bded695c8bced713f5a4c62fe327277bc
-Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-AuthorDate: Wed Mar 18 09:22:38 2015 -0400
-Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-CommitDate: Wed Mar 18 20:07:27 2015 -0400
-
-    Require braces when a closure has an explicit return type. This is a
-    [breaking-change]: instead of a closure like `|| -&gt; i32 22`, prefer `||
-    -&gt; i32 { 22 }`.
-    
-    Fixes #23420.
 </pre></body></html>
