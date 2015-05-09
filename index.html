@@ -1,6 +1,77 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 3906edf41e8faa0610daea954ffbda39841fbc0d
+Merge: 95400c5 8654dfb
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat May 9 09:20:43 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat May 9 09:20:43 2015 +0000
+
+    Auto merge of #25212 - pnkfelix:dropck-box-trait, r=nikomatsakis
+    
+    dropck: must assume `Box&lt;Trait + 'a&gt;` has a destructor of interest.
+    
+    Fix #25199.
+    
+    This detail was documented in [RFC 769]; the implementation was just missing.
+    
+    [breaking-change]
+    
+    The breakage here falls into both obvious and non-obvious cases.
+    
+    The obvious case: if you were relying on the unsoundness this exposes (namely being able to reference dead storage from a destructor, by doing it via a boxed trait object bounded by the lifetime of the dead storage), then this change disallows that.
+    
+    The non-obvious cases: The way dropck works, it causes lifetimes to be extended to longer extents than they covered before. I.e.  lifetimes that are attached as trait-bounds may become longer than they were previously.
+    
+    * This includes lifetimes that are only *implicitly* attached as trait-bounds (due to [RFC 599]). So you may have code that was e.g. taking a parameter of type `&amp;'a Box&lt;Trait&gt;` (which expands to `&amp;'a Box&lt;Trait+'a&gt;`), that now may need to be assigned type `&amp;'a Box&lt;Trait+'static&gt;` to ensure that `'a` is not inadvertantly inferred to a region that is actually too long.  (See commit ee06263 for an example of this.)
+    
+    [RFC 769]: https://github.com/rust-lang/rfcs/blob/master/text/0769-sound-generic-drop.md#the-drop-check-rule
+    
+    [RFC 599]: https://github.com/rust-lang/rfcs/blob/master/text/0599-default-object-bound.md
+
+commit b5b5a177588c0e8dfc6b9e79540bcbd1eeb9ef91
+Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+AuthorDate: Fri May 8 15:06:16 2015 +0200
+Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
+CommitDate: Fri May 8 15:06:16 2015 +0200
+
+    dropck: must assume `Box&lt;Trait + 'a&gt;` has a destructor of interest.
+    
+    Implements this (previously overlooked) note from [RFC 769]:
+    
+    &gt; (Note: When encountering a D of the form `Box&lt;Trait+'b&gt;`, we
+    &gt; conservatively assume that such a type has a Drop implementation
+    &gt; parametric in 'b.)
+    
+    Fix #25199.
+    
+    [breaking-change]
+    
+    The breakage here falls into both obvious and non-obvious cases.
+    
+    The obvious case: if you were relying on the unsoundness this exposes
+    (namely being able to reference dead storage from a destructor, by
+    doing it via a boxed trait object bounded by the lifetime of the dead
+    storage), then this change disallows that.
+    
+    The non-obvious cases: The way dropck works, it causes lifetimes to be
+    extended to longer extents than they covered before. I.e.  lifetimes
+    that are attached as trait-bounds may become longer than they were
+    previously.
+    
+    * This includes lifetimes that are only *implicitly* attached as
+      trait-bounds (due to [RFC 599]). So you may have code that was
+      e.g. taking a parameter of type `&amp;'a Box&lt;Trait&gt;` (which expands to
+      `&amp;'a Box&lt;Trait+'a&gt;`), that now may need to be assigned type `&amp;'a
+      Box&lt;Trait+'static&gt;` to ensure that `'a` is not inadvertantly
+      inferred to a region that is actually too long.  (See earlier commit
+      in this PR for an example of this.)
+    
+    [RFC 769]: https://github.com/rust-lang/rfcs/blob/master/text/0769-sound-generic-drop.md#the-drop-check-rule
+    
+    [RFC 599]: https://github.com/rust-lang/rfcs/blob/master/text/0599-default-object-bound.md
+
 commit 5ae026e8923d71d16a4d2b9a592bbcab92d8723a
 Merge: f0ac7e0 8d3f84e
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2280,50 +2351,4 @@ CommitDate: Fri Mar 20 05:36:07 2015 +0530
     
     Conflicts:
     	src/libtest/lib.rs
-
-commit 7cbc42849f7586d3c567d7ac8f202839f9b968e8
-Author:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
-AuthorDate: Thu Mar 19 15:42:53 2015 -0400
-Commit:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
-CommitDate: Thu Mar 19 15:42:56 2015 -0400
-
-    RUST_TEST_TASKS -&gt; RUST_TEST_THREADS
-    
-    We don't use 'task' anymore, these are now threads.
-    
-    Because this changes the name of a compiler option, this is
-    
-    [breaking-change]
-
-commit 7f53b943f94b338e4c5401f1ce9efbe7da92b0c5
-Merge: 81e2396 dedac5e
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Thu Mar 19 19:15:22 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Thu Mar 19 19:15:22 2015 +0000
-
-    Auto merge of #23430 - alexcrichton:io-error, r=aturon
-    
-    This commit stabilizes the `ErrorKind` enumeration which is consumed by and
-    generated by the `io::Error` type. The purpose of this type is to serve as a
-    cross-platform namespace to categorize errors into. Two specific issues are
-    addressed as part of this stablization:
-    
-    * The naming of each variant was scrutinized and some were tweaked. An example
-      is how `FileNotFound` was renamed to simply `NotFound`. These names should not
-      show either a Unix or Windows bias and the set of names is intended to grow
-      over time. For now the names will likely largely consist of those errors
-      generated by the I/O APIs in the standard library.
-    
-    * The mapping of OS error codes onto kinds has been altered. Coalescing no
-      longer occurs (multiple error codes become one kind). It is intended that each
-      OS error code, if bound, corresponds to only one `ErrorKind`. The current set
-      of error kinds was expanded slightly to include some networking errors.
-    
-    This commit also adds a `raw_os_error` function which returns an `Option&lt;i32&gt;`
-    to extract the underlying raw error code from the `Error`.
-    
-    Closes #16666
-    
-    [breaking-change]
 </pre></body></html>
