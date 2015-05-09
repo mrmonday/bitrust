@@ -1,6 +1,36 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 67ba6dcf68860d8a20891faad88a33b35ed58df5
+Merge: 4979423 1aecd17
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat May 9 14:56:56 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat May 9 14:56:56 2015 +0000
+
+    Auto merge of #24612 - lifthrasiir:flt2dec, r=pnkfelix
+    
+    This is a direct port of my prior work on the float formatting. The detailed description is available [here](https://github.com/lifthrasiir/rust-strconv#flt2dec). In brief,
+    
+    * This adds a new hidden module `core::num::flt2dec` for testing from `libcoretest`. Why is it in `core::num` instead of `core::fmt`? Because I envision that the table used by `flt2dec` is directly applicable to `dec2flt` (cf. #24557) as well, which exceeds the realm of "formatting".
+    * This contains both Dragon4 algorithm (exact, complete but slow) and Grisu3 algorithm (exact, fast but incomplete).
+    * The code is accompanied with a large amount of self-tests and some exhaustive tests. In particular, `libcoretest` gets a new dependency on `librand`. For the external interface it relies on the existing test suite.
+    * It is known that, in the best case, the entire formatting code has about 30 KBs of binary overhead (judged from strconv experiments). Not too bad but there might be a potential room for improvements.
+    
+    This is rather large code. I did my best to comment and annotate the code, but you have been warned.
+    
+    For the maximal availability the original code was licensed in CC0, but I've also dual-licensed it in MIT/Apache as well so there should be no licensing concern.
+    
+    This is [breaking-change] as it changes the float output slightly (and it also affects the casing of `inf` and `nan`). I hope this is not a big deal though :)
+    
+    Fixes #7030, #18038 and #24556. Also related to #6220 and #20870.
+    
+    ## Known Issues
+    
+    - [x] I've yet to finish `make check-stage1`. It does pass main test suites including `run-pass` but there might be some unknown edges on the doctests.
+    - [ ] Figure out how this PR affects rustc.
+    - [ ] Determine which internal routine is mapped to the formatting specifier. Depending on the decision, some internal routine can be safely removed (for instance, currently `to_shortest_str` is unused).
+
 commit 3906edf41e8faa0610daea954ffbda39841fbc0d
 Merge: 95400c5 8654dfb
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -121,6 +151,19 @@ CommitDate: Tue May 5 22:26:23 2015 -0700
     require some re-working to use an UnsafeCell instead.
     
     Closes #13146
+
+commit 5aa9f38285b47e2eadaaac0e343da90b922994f1
+Author:     Kang Seonghoon &lt;public+git@mearie.org&gt;
+AuthorDate: Mon Apr 20 01:36:55 2015 +0900
+Commit:     Kang Seonghoon &lt;public+git@mearie.org&gt;
+CommitDate: Wed May 6 14:21:41 2015 +0900
+
+    core: made the core formatter to use a new flt2dec.
+    
+    As a side effect `core::fmt::float` is gone now. This also slightly
+    changes the float output, so this is:
+    
+    [breaking-change]
 
 commit eae692e375cec222803efb7175c79fedc228eea9
 Merge: 6cd7486 db477ee
@@ -2313,42 +2356,4 @@ CommitDate: Fri Mar 20 12:43:11 2015 +0530
     
     cc #22949
     [breaking-change]
-
-commit fda8673531c2ecea13c86216f964feb6091b4ade
-Merge: e98e391 f2e3c74
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri Mar 20 04:30:04 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri Mar 20 04:30:04 2015 +0000
-
-    Auto merge of #23504 - alexcrichton:parse-error-not-unit, r=aturon
-    
-    The IP and socket address types all had `FromStr` implemented but the
-    implementations were not marked stable, nor was the error type returned ready to
-    be properly stabilized.
-    
-    This commit marks the implementations of `FromStr` as stable and also renamed
-    the `ParseError` structure to `AddrParseError`. The error is now also an opaque
-    structure that cannot be constructed outside the standard library.
-    
-    cc #22949
-    [breaking-change]
-
-commit 71321ff33fa3fe71cc1df541b3d0547b4e208923
-Author:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
-AuthorDate: Thu Mar 19 18:38:16 2015 -0400
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Mar 20 05:36:07 2015 +0530
-
-    Remove rt::default_sched_threads and RUST_THREADS.
-    
-    As @alexcrichton says, this was really a libgreen thing, and isn't
-    relevant now.
-    
-    As this removes a technically-public function, this is a
-    
-    [breaking-change]
-    
-    Conflicts:
-    	src/libtest/lib.rs
 </pre></body></html>
