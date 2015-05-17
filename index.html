@@ -1,6 +1,26 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit c23a9d42ea082830593a73d25821842baf9ccf33
+Merge: 2da9efe 8cc9878
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun May 17 00:05:34 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun May 17 00:05:34 2015 +0000
+
+    Auto merge of #25387 - eddyb:syn-file-loader, r=nikomatsakis
+    
+    This allows compiling entire crates from memory or preprocessing source files before they are tokenized.
+    
+    Minor API refactoring included, which is a [breaking-change] for libsyntax users:
+    * `ParseSess::{next_node_id, reserve_node_ids}` moved to rustc's `Session`
+    * `new_parse_sess` -&gt; `ParseSess::new`
+    * `new_parse_sess_special_handler` -&gt; `ParseSess::with_span_handler`
+    * `mk_span_handler` -&gt; `SpanHandler::new`
+    * `default_handler` -&gt; `Handler::new`
+    * `mk_handler` -&gt; `Handler::with_emitter`
+    * `string_to_filemap(sess source, path)` -&gt; `sess.codemap().new_filemap(path, source)`
+
 commit 67ba6dcf68860d8a20891faad88a33b35ed58df5
 Merge: 4979423 1aecd17
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2336,24 +2356,4 @@ CommitDate: Fri Mar 20 12:43:11 2015 +0530
     [breaking-change]
     
     I think this is small enough to not need an RFC, nor a period of accepting both. If we want to take both for a while, I can change the patch.
-
-commit 3e433738fb1ab9f353c943d60061d72024c6af07
-Merge: 4294327 f2e3c74
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Fri Mar 20 05:30:23 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Mar 20 12:43:11 2015 +0530
-
-    Rollup merge of #23504 - alexcrichton:parse-error-not-unit, r=aturon
-    
-     The IP and socket address types all had `FromStr` implemented but the
-    implementations were not marked stable, nor was the error type returned ready to
-    be properly stabilized.
-    
-    This commit marks the implementations of `FromStr` as stable and also renamed
-    the `ParseError` structure to `AddrParseError`. The error is now also an opaque
-    structure that cannot be constructed outside the standard library.
-    
-    cc #22949
-    [breaking-change]
 </pre></body></html>
