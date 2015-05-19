@@ -1,6 +1,16 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit bd85983d059151c9ef07dbd11a35f1d16463eb94
+Author:     Steven Fackler &lt;sfackler@gmail.com&gt;
+AuthorDate: Sun May 17 13:17:26 2015 -0700
+Commit:     Steven Fackler &lt;sfackler@gmail.com&gt;
+CommitDate: Sun May 17 17:33:29 2015 -0700
+
+    Make debug builders take &amp;mut self, add entries method
+    
+    [breaking-change]
+
 commit c23a9d42ea082830593a73d25821842baf9ccf33
 Merge: 2da9efe 8cc9878
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2339,21 +2349,4 @@ CommitDate: Fri Mar 20 12:43:15 2015 +0530
     As this removes a technically-public function, this is a
     
     [breaking-change]
-
-commit e2d32b74ecedc3f603def4d5130c0c300edce7d1
-Merge: 3e43373 7cbc428
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Fri Mar 20 05:30:28 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Mar 20 12:43:11 2015 +0530
-
-    Rollup merge of #23525 - steveklabnik:test_tasks, r=alexcrichton
-    
-     We don't use 'task' anymore, these are now threads.
-    
-    Because this changes the name of a compiler option, this is
-    
-    [breaking-change]
-    
-    I think this is small enough to not need an RFC, nor a period of accepting both. If we want to take both for a while, I can change the patch.
 </pre></body></html>
