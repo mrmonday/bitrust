@@ -1,6 +1,27 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 32211e1d27c258c62cafb6ba357e67db932367bf
+Author:     Ulrik Sverdrup &lt;root@localhost&gt;
+AuthorDate: Sat May 30 22:03:57 2015 +0200
+Commit:     Ulrik Sverdrup &lt;root@localhost&gt;
+CommitDate: Sat May 30 22:15:40 2015 +0200
+
+    Mark Arc function get_mut and method make_unique unsafe
+    
+    This is a temporary mitigation for issue #24880 which points out that
+    these functions are racy in a particular situation where weak pointers
+    exist.
+    
+    To mitigate this, mark the functions unsafe until this can be fixed or
+    another decision is made.
+    
+    This is a breaking change to unstable API, because the new version
+    requires an `unsafe` block. Review carefully if weak pointers may race
+    for any uses of this API and consider abandoning it.
+    
+    [breaking-change]
+
 commit bd85983d059151c9ef07dbd11a35f1d16463eb94
 Author:     Steven Fackler &lt;sfackler@gmail.com&gt;
 AuthorDate: Sun May 17 13:17:26 2015 -0700
@@ -2333,20 +2354,4 @@ CommitDate: Fri Mar 20 11:25:20 2015 +0100
     strict definition to what was previously undefined behavior; however,
     there might be code that was e.g. assuming that `1_i8 &lt;&lt; 17` yields 0.
     (This happens in certain contexts and at certain optimization levels.)
-
-commit 6107e4c0b88d9e22482ed88c52b98c2ec2034bb1
-Merge: 0711006 71321ff
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Fri Mar 20 05:36:15 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Mar 20 12:43:15 2015 +0530
-
-    Rollup merge of  #23534 - steveklabnik:remove_sched_threads, r=alexcrichton
-    
-    As @alexcrichton says, this was really a libgreen thing, and isn't
-    relevant now.
-    
-    As this removes a technically-public function, this is a
-    
-    [breaking-change]
 </pre></body></html>
