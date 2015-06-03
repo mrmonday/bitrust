@@ -1,6 +1,49 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit b70f49b86fa4d8780f46e869880e84e1c24c2f19
+Merge: 9a2f68e 5235065
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Jun 3 18:21:09 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Jun 3 18:21:09 2015 +0000
+
+    Auto merge of #24910 - steveklabnik:remove_static_assert, r=alexcrichton
+    
+    This was always a weird feature, and isn't being used in the compiler.
+    Static assertions should be done better than this.
+    
+    Fixes #13951
+    Fixes #23008
+    Fixes #6676
+    
+    This is behind a feature gate, but that's still a
+    
+    [breaking-change]
+    
+    (It's not entirely clear to me that this should or shouldn't have an RFC, but if it does, I'm fine blocking on such a thing.)
+
+commit 5235065d740cad78ab55a89299fc1f5d32bf8f46
+Author:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
+AuthorDate: Tue Apr 28 16:45:22 2015 -0400
+Commit:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
+CommitDate: Wed Jun 3 09:38:13 2015 -0400
+
+    Remove #[static_assert]
+    
+    This was always a weird feature, and isn't being used in the compiler.
+    Static assertions should be done better than this.
+    
+    This implements RFC #1096.
+    
+    Fixes #13951
+    Fixes #23008
+    Fixes #6676
+    
+    This is behind a feature gate, but that's still a
+    
+    [breaking-change]
+
 commit 32211e1d27c258c62cafb6ba357e67db932367bf
 Author:     Ulrik Sverdrup &lt;root@localhost&gt;
 AuthorDate: Sat May 30 22:03:57 2015 +0200
@@ -2301,57 +2344,4 @@ CommitDate: Mon Mar 23 04:54:26 2015 +0530
     Closes #23448
     
     r? @Gankro
-
-commit 5fe0bb743a0af0413f8989a70a4f926fa5c63074
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Fri Mar 20 10:22:57 2015 -0700
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Fri Mar 20 10:46:31 2015 -0700
-
-    Future-proof indexing on maps: remove IndexMut
-    
-    This commit removes the `IndexMut` impls on `HashMap` and `BTreeMap`, in
-    order to future-proof the API against the eventual inclusion of an
-    `IndexSet` trait.
-    
-    Ideally, we would eventually be able to support:
-    
-    ```rust
-    map[owned_key] = val;
-    map[borrowed_key].mutating_method(arguments);
-    &amp;mut map[borrowed_key];
-    ```
-    
-    but to keep the design space as unconstrained as possible, we do not
-    currently want to support `IndexMut`, in case some other strategy will
-    eventually be needed.
-    
-    Code currently using mutating index notation can use `get_mut` instead.
-    
-    [breaking-change]
-    
-    Closes #23448
-
-commit 19fef72a8c14100029e5ce39cbc5472ab091dad8
-Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-AuthorDate: Thu Mar 19 19:52:08 2015 +0100
-Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-CommitDate: Fri Mar 20 11:25:20 2015 +0100
-
-    Added panic-on-overflow for rhs of left and right shift expressions.
-    
-    This includes a slight refactoring of the `cast_shift_rhs` and related
-    functions in `trans::base`, so that I can call them from much later in
-    the compiler's control flow (so that we can clearly dilineate where
-    automatic conversions of the RHS occur, versus where we check it).
-    
-    The rhs-checking and fallback-masking is generalized to 8- and 16-bit
-    values, and the fallback-masking is turned on unconditionally.
-    
-    Fix #10183.
-    
-    Is this a [breaking-change]?  I would argue it is not; it only adds a
-    strict definition to what was previously undefined behavior; however,
-    there might be code that was e.g. assuming that `1_i8 &lt;&lt; 17` yields 0.
-    (This happens in certain contexts and at certain optimization levels.)
 </pre></body></html>
