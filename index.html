@@ -1,6 +1,21 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 7648776503040b302fe0589311fb27afe7c1e6cc
+Merge: 400e955 3be18f0
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Jun 12 00:00:27 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Jun 12 00:00:27 2015 +0000
+
+    Auto merge of #26225 - arielb1:raw-self, r=eddyb
+    
+    This can't be made to work with the current setup.
+    
+    Technically a [breaking-change], but a simple bug fix.
+    
+    Fixes #26194.
+
 commit b70f49b86fa4d8780f46e869880e84e1c24c2f19
 Merge: 9a2f68e 5235065
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2311,37 +2326,4 @@ CommitDate: Mon Mar 23 05:30:43 2015 -0400
     match use strict equality but use subtyping on identifier bindings,
     but the comment `(*)` explains why that's not working at the moment.
     As above, I think we can change this as we clean up the code there.
-
-commit a91eece96b1c945bebb01a7e906dabc2d736a131
-Merge: b0aad7d 5fe0bb7
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Sun Mar 22 01:35:39 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Mon Mar 23 04:54:26 2015 +0530
-
-    Rollup merge of #23559 - aturon:future-proof-map-index, r=Gankro
-    
-     This commit removes the `IndexMut` impls on `HashMap` and `BTreeMap`, in
-    order to future-proof the API against the eventual inclusion of an
-    `IndexSet` trait.
-    
-    Ideally, we would eventually be able to support:
-    
-    ```rust
-    map[owned_key] = val;
-    map[borrowed_key].mutating_method(arguments);
-    &amp;mut map[borrowed_key];
-    ```
-    
-    but to keep the design space as unconstrained as possible, we do not
-    currently want to support `IndexMut`, in case some other strategy will
-    eventually be needed.
-    
-    Code currently using mutating index notation can use `get_mut` instead.
-    
-    [breaking-change]
-    
-    Closes #23448
-    
-    r? @Gankro
 </pre></body></html>
