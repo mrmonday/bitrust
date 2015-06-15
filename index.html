@@ -1,6 +1,21 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 73fb19c04ac227fe2aad2c618f76b6eb05dd7ec9
+Merge: a53a098 3ca4d92
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Jun 15 19:52:15 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Jun 15 19:52:15 2015 +0000
+
+    Auto merge of #26275 - arielb1:unconstrained-projection, r=nikomatsakis
+    
+    Fixes #26262
+    
+    Because this rejects code that previously compiled, this is a [breaking-change]
+    
+    r? @nikomatsakis
+
 commit 7517ecf4fc9cfe2adff8a38ecc2ef660692a4b5b
 Merge: a54a809 a7bbd7d
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2266,26 +2281,4 @@ CommitDate: Mon Mar 23 17:05:43 2015 -0400
     This is a [breaking-change] in that it closes a type hole that previously existed.
     
     r? @pnkfelix
-
-commit 6bd3ab0d8140053475a901ad4e2e80e98955bcb0
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Fri Mar 20 00:46:13 2015 -0700
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Mon Mar 23 11:28:54 2015 -0700
-
-    Implement RFC 909: move thread_local into thread
-    
-    This commit implements [RFC
-    909](https://github.com/rust-lang/rfcs/pull/909):
-    
-    The `std::thread_local` module is now deprecated, and its contents are
-    available directly in `std::thread` as `LocalKey`, `LocalKeyState`, and
-    `ScopedKey`.
-    
-    The macros remain exactly as they were, which means little if any code
-    should break. Nevertheless, this is technically a:
-    
-    [breaking-change]
-    
-    Closes #23547
 </pre></body></html>
