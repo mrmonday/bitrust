@@ -1,6 +1,39 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 7517ecf4fc9cfe2adff8a38ecc2ef660692a4b5b
+Merge: a54a809 a7bbd7d
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Jun 15 06:44:42 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Jun 15 06:44:42 2015 +0000
+
+    Auto merge of #26168 - sfackler:stdout-panic, r=alexcrichton
+    
+    Closes #25977
+    
+    The various `stdfoo_raw` methods in std::io now return `io::Result`s,
+    since they may not exist on Windows. They will always return `Ok` on
+    Unix-like platforms.
+    
+    [breaking-change]
+
+commit a7bbd7da4eb98127104fdfd415ad6c746f7e2a12
+Author:     Steven Fackler &lt;sfackler@gmail.com&gt;
+AuthorDate: Tue Jun 9 21:39:36 2015 -0700
+Commit:     Steven Fackler &lt;sfackler@gmail.com&gt;
+CommitDate: Sun Jun 14 20:17:06 2015 -0700
+
+    Implement RFC 1014
+    
+    Closes #25977
+    
+    The various `stdfoo_raw` methods in std::io now return `io::Result`s,
+    since they may not exist on Windows. They will always return `Ok` on
+    Unix-like platforms.
+    
+    [breaking-change]
+
 commit 7648776503040b302fe0589311fb27afe7c1e6cc
 Merge: 400e955 3be18f0
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2255,75 +2288,4 @@ CommitDate: Mon Mar 23 11:28:54 2015 -0700
     [breaking-change]
     
     Closes #23547
-
-commit 9231ceb6dd273d8101e1b3906e6060f802e6423d
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Thu Mar 19 16:37:34 2015 -0700
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Mon Mar 23 11:27:19 2015 -0700
-
-    Stabilize the Error trait
-    
-    This small commit stabilizes the `Error` trait as-is, except that `Send`
-    and `Debug` are added as constraints. The `Send` constraint is because
-    most uses of `Error` will be for trait objects, and by default we would
-    like these objects to be transferrable between threads. The `Debug`
-    constraint is to ensure that e.g. `Box&lt;Error&gt;` is `Debug`, and because
-    types that implement `Display` should certainly implement `Debug` in any case.
-    
-    In the near future we expect to add `Any`-like downcasting features to
-    `Error`, but this is waiting on some additional
-    mechanisms (`Reflect`). It will be added before 1.0 via default methods.
-    
-    [breaking-change]
-
-commit 45fae882568d9bf36ade39f210a2721d05e556dd
-Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-AuthorDate: Fri Mar 6 10:14:12 2015 -0500
-Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-CommitDate: Mon Mar 23 05:30:43 2015 -0400
-
-    When matching against a pattern (either via `match` or `let`) that
-    contains ref-bindings, do not permit any upcasting from the type of
-    the value being matched. Similarly, do not permit coercion in a `let`.
-    
-    This is a [breaking-change] in that it closes a type hole that
-    previously existed, and in that coercion is not performed. You should
-    be able to work around the latter by converting:
-    
-    ```rust
-    let ref mut x: T = expr;
-    ```
-    
-    into
-    
-    ```rust
-    let x: T = expr;
-    let ref mut x = x;
-    ```
-    
-    Restricting coercion not to apply in the case of `let ref` or `let ref mut` is sort
-    of unexciting to me, but seems the best solution:
-    
-    1. Mixing coercion and `let ref` or `let ref mut` is a bit odd, because you are taking
-       the address of a (coerced) temporary, but only sometimes. It's not syntactically evident,
-       in other words, what's going on. When you're doing a coercion, you're kind of
-    
-    2. Put another way, I would like to preserve the relationship that
-       `equality &lt;= subtyping &lt;= coercion &lt;= as-coercion`, where this is
-       an indication of the number of `(T1,T2)` pairs that are accepted by
-       the various relations. Trying to mix `let ref mut` and coercion
-       would create another kind of relation that is like coercion, but
-       acts differently in the case where a precise match is needed.
-    
-    3. In any case, this is strictly more conservative than what we had
-       before and we can undo it in the future if we find a way to make
-       coercion mix with type equality.
-    
-    The change to match I feel ok about but similarly unthrilled. There is
-    some subtle text already concerning whether to use eqtype or subtype
-    for identifier bindings. The best fix I think would be to always have
-    match use strict equality but use subtyping on identifier bindings,
-    but the comment `(*)` explains why that's not working at the moment.
-    As above, I think we can change this as we clean up the code there.
 </pre></body></html>
