@@ -1,6 +1,23 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 713d9176adc5072afdf0934dc95b868995e867c0
+Merge: 8af39ce 957935a
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Jun 17 22:50:17 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Jun 17 22:50:17 2015 +0000
+
+    Auto merge of #26326 - nikomatsakis:optimize-fulfillment-cache-in-tcx, r=pcwalton
+    
+    When we successfully resolve a trait reference with no type/lifetime parameters, like `i32: Foo` or `Box&lt;u32&gt;: Sized`, this is in fact globally true. This patch adds a simple global to the tcx to cache such cases. The main advantage of this is really about caching things like `Box&lt;Vec&lt;Foo&gt;&gt;: Sized`. It also points to the need to revamp our caching infrastructure -- the current caches make selection cost cheaper, but we still wind up paying a high cost in the confirmation process, and in particular unrolling out dependent obligations. Moreover, we should probably do caching more uniformly and with a key that takes the where-clauses into account. But that's for later.
+    
+    For me, this shows up as a reasonably nice win (20%) on Servo's script crate (when built in dev mode). This is not as big as my initial measurements suggested, I think because I was building my rustc with more debugging enabled at the time. I've not yet done follow-up profiling and so forth to see where the new hot spots are. Bootstrap times seem to be largely unaffected.
+    
+    cc @pcwalton
+    
+    This is technically a [breaking-change] in that functions with unsatisfiable where-clauses may now yield errors where before they may have been accepted. Even before, these functions could never have been *called* by actual code. In the future, such functions will probably become illegal altogether, but in this commit they are still accepted, so long as they do not rely on the unsatisfiable where-clauses. As before, the functions still cannot be called in any case.
+
 commit 73fb19c04ac227fe2aad2c618f76b6eb05dd7ec9
 Merge: a53a098 3ca4d92
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2266,19 +2283,4 @@ CommitDate: Mon Mar 23 15:01:45 2015 -0700
     Closes #14433
     
     [breaking-change]
-
-commit f78815979706bca435bff80155b28acc80a19781
-Merge: 4a81e66 45fae88
-Author:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
-AuthorDate: Mon Mar 23 17:05:43 2015 -0400
-Commit:     Steve Klabnik &lt;steve@steveklabnik.com&gt;
-CommitDate: Mon Mar 23 17:05:43 2015 -0400
-
-    Rollup merge of #23119 - nikomatsakis:issue-23116-ref-mut, r=pnkfelix
-    
-    Don't allow upcasting to a supertype in the type of the match discriminant. Fixes #23116.
-    
-    This is a [breaking-change] in that it closes a type hole that previously existed.
-    
-    r? @pnkfelix
 </pre></body></html>
