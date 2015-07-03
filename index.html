@@ -1,6 +1,19 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit f027bdc1c8a133693651f333624b756abe21960f
+Merge: 7b14838 a18d984
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Jul 3 21:31:46 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Jul 3 21:31:46 2015 +0000
+
+    Auto merge of #26378 - arielb1:unused-mut, r=pnkfelix
+    
+    This makes it somewhat more aggressive, so this is kind-of a [breaking-change] for these compiling with `#[deny(unused_mut)]`.
+    
+    r? @pnkfelix
+
 commit 31d9aee68499cba8d1a5332b841eca5c67991001
 Merge: 4a788a2 5133606
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2242,30 +2255,4 @@ CommitDate: Mon Mar 23 15:09:09 2015 -0700
     [breaking-change]
     
     Closes #23547
-
-commit b97e1cc28e0d3fe6a745a02a7c1750564a090f34
-Merge: fd13400 9231ceb
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Mar 23 15:09:08 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Mar 23 15:09:08 2015 -0700
-
-    rollup merge of #23541: aturon/stab-error
-    
-    This small commit stabilizes the `Error` trait as-is, except that `Send`
-    and `Debug` are added as constraints. The `Send` constraint is because
-    most uses of `Error` will be for trait objects, and by default we would
-    like these objects to be transferrable between threads. The `Debug`
-    constraint is to ensure that e.g. `Box&lt;Error&gt;` is `Debug`, and because
-    types that implement `Display` should certainly implement `Debug` in any case.
-    
-    In the near future we expect to add `Any`-like downcasting features to
-    `Error`, but this is waiting on some additional
-    mechanisms (`Reflect`). It will be added before 1.0 via default methods.
-    
-    [breaking-change]
-    
-    r? @alexcrichton
-    
-    Closes #21790
 </pre></body></html>
