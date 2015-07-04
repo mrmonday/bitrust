@@ -1,6 +1,18 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 6b27005f2f8b20834838828588233b877a29d509
+Author:     Ariel Ben-Yehuda &lt;arielb1@mail.tau.ac.il&gt;
+AuthorDate: Tue Jun 30 20:30:47 2015 +0300
+Commit:     Ariel Ben-Yehuda &lt;arielb1@mail.tau.ac.il&gt;
+CommitDate: Sat Jul 4 14:09:26 2015 +0300
+
+    require reimplementations of all items when a defaulted associated type is overriden
+    
+    This is a
+    [breaking-change]
+    but it follows the RFC (not sure whether it will be accepted).
+
 commit f027bdc1c8a133693651f333624b756abe21960f
 Merge: 7b14838 a18d984
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2233,26 +2245,4 @@ CommitDate: Mon Mar 23 15:10:50 2015 -0700
     
     r? @japaric
     cc @aturon @Gankro
-
-commit 2153c581ef66de1537286b58b1b323d24c25d07f
-Merge: b97e1cc 6bd3ab0
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Mar 23 15:09:09 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Mar 23 15:09:09 2015 -0700
-
-    rollup merge of #23557: aturon/rfc-909
-    
-    This commit implements [RFC 909](https://github.com/rust-lang/rfcs/pull/909):
-    
-    The `std::thread_local` module is now deprecated, and its contents are
-    available directly in `std::thread` as `LocalKey`, `LocalKeyState`, and
-    `ScopedKey`.
-    
-    The macros remain exactly as they were, which means little if any code
-    should break. Nevertheless, this is technically a:
-    
-    [breaking-change]
-    
-    Closes #23547
 </pre></body></html>
