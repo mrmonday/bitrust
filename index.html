@@ -1,6 +1,38 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit e05ac3938bcbdd616930bb010a3bbfa35f22850e
+Merge: d4432b3 de6b3c2
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Jul 17 18:35:50 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Jul 17 18:35:50 2015 +0000
+
+    Auto merge of #27045 - nikomatsakis:better-object-defaults-error, r=pnkfelix
+    
+    Transition to the new object lifetime defaults, replacing the old defaults completely.
+    
+    r? @pnkfelix
+    
+    This is a [breaking-change] as specified by [RFC 1156][1156] (though all cases that would break should have been receiving warnings starting in Rust 1.2). Types like `&amp;'a Box&lt;Trait&gt;` (or `&amp;'a Rc&lt;Trait&gt;`, etc) will change from being interpreted as `&amp;'a Box&lt;Trait+'a&gt;` to `&amp;'a Box&lt;Trait+'static&gt;`. To restore the old behavior, write the `+'a` explicitly. For example, the function:
+    
+    
+    ```rust
+    trait Trait { }
+    fn foo(x: &amp;Box&lt;Trait&gt;) { ... }
+    ```
+    
+    would be rewritten as:
+    
+    ```rust
+    trait Trait { }
+    fn foo(x: &amp;'a Box&lt;Trait+'a&gt;) { ... }
+    ```
+    
+    if one wanted to preserve the current typing.
+    
+    [1156]: https://github.com/rust-lang/rfcs/blob/master/text/1156-adjust-default-object-bounds.md
+
 commit 6b27005f2f8b20834838828588233b877a29d509
 Author:     Ariel Ben-Yehuda &lt;arielb1@mail.tau.ac.il&gt;
 AuthorDate: Tue Jun 30 20:30:47 2015 +0300
@@ -2231,18 +2263,4 @@ CommitDate: Mon Mar 23 19:57:30 2015 -0400
     impls. This is a [breaking-change] (for gated code) in that when you
     implement `Fn` (`FnMut`) you must also implement `FnOnce`. This commit
     demonstrates how to fix it.
-
-commit 753efb5042563dd34a4a524197fa14a129ddf449
-Merge: 388e5ae 57cf2de
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Mar 23 15:10:50 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Mar 23 15:10:50 2015 -0700
-
-    rollup merge of #23601: nikomatsakis/by-value-index
-    
-    This is a [breaking-change]. When indexing a generic map (hashmap, etc) using the `[]` operator, it is now necessary to borrow explicitly, so change `map[key]` to `map[&amp;key]` (consistent with the `get` routine). However, indexing of string-valued maps with constant strings can now be written `map["abc"]`.
-    
-    r? @japaric
-    cc @aturon @Gankro
 </pre></body></html>
