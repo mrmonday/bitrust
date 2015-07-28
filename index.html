@@ -1,6 +1,19 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 55ede7ed8e4f3752c371f7d04da4695ba9aa1c26
+Merge: ba9224f 00a5e66
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Jul 28 21:14:28 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Jul 28 21:14:28 2015 +0000
+
+    Auto merge of #27234 - oli-obk:move_get_name_get_ident_to_impl, r=eddyb
+    
+    this has quite some fallout. but also made lots of stuff more readable imo
+    
+    [breaking-change] for plugin authors
+
 commit 661a5ad38e79f336976b529aa717871d177ab7ed
 Merge: ec49d01 b4dd765
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2173,23 +2186,6 @@ CommitDate: Thu Mar 26 16:40:36 2015 -0700
     
     This commit is a breaking change due to the addition of `Raw` in from of the
     type aliases in each of the platform-specific modules.
-    
-    [breaking-change]
-
-commit 9754b06cd80cfcc523573535090519bec935fec3
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Thu Mar 26 13:25:06 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Mar 26 13:25:33 2015 -0700
-
-    rustc: Remove support for old_impl_check
-    
-    This commit removes compiler support for the `old_impl_check` attribute which
-    should in theory be entirely removed now. The last remaining use of it in the
-    standard library has been updated by moving the type parameter on the
-    `old_io::Acceptor` trait into an associated type. As a result, this is a
-    breaking change for all current users of the deprecated `old_io::Acceptor`
-    trait. Code can be migrated by using the `Connection` associated type instead.
     
     [breaking-change]
 </pre></body></html>
