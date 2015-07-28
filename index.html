@@ -1,6 +1,29 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 661a5ad38e79f336976b529aa717871d177ab7ed
+Merge: ec49d01 b4dd765
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Jul 28 15:15:00 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Jul 28 15:15:00 2015 +0000
+
+    Auto merge of #26173 - pnkfelix:fsk-trans-nzmove-take3, r=nikomatsakis
+    
+    Add dropflag hints (stack-local booleans) for unfragmented paths in trans.  Part of #5016.
+    
+    Added code to maintain these hints at runtime, and to conditionalize drop-filling and calls to destructors.
+    
+    In this early stage of my incremental implementation strategy, we are using hints, so we are always free to leave out a flag for a path -- then we just pass `None` as the dropflag hint in the corresponding schedule cleanup call. But, once a path has a hint, we must at least maintain it: i.e. if the hint exists, we must ensure it is never set to "moved" if the data in question might actually have been initialized. It remains sound to conservatively set the hint to "initialized" as long as the true drop-flag embedded in the value itself is up-to-date.
+    
+    I hope the commit series has been broken up to be readable; most of the commits in the series should build (though I did not always check this).
+    
+    ----
+    
+    Oh, I think this technically qualifies as a:
+    [breaking-change]
+    because it removes drop-filling in some cases where one could previously observe it. That should only affect `unsafe` code; no safe code should be able to inspect whether the drop-fill was present or not. For an example of code that needed to change to account for this, see commit a81c24ae0216ab47df59acd724f8a33124fb6d97 (a unit test of the `move_val_init` intrinsic).  I have not encountered actual code that needed to be updated to account for the change, since this should only be skipping the drop-filling on *moved* values, not on dropped one, and so even types that use `unsafe_no_drop_flag` should be unchanged by this particular PR. (Their time will come later.)
+
 commit 18557500cb91596f3614d4cf65439f8c5f47b2e0
 Merge: 39d4faf 0ca8e49
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2169,46 +2192,4 @@ CommitDate: Thu Mar 26 13:25:33 2015 -0700
     trait. Code can be migrated by using the `Connection` associated type instead.
     
     [breaking-change]
-
-commit 3b13b9c2b4e72d08cb1c68024ccc4f50001f4878
-Merge: 91b633a 1955e05
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Mar 24 15:27:14 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Mar 24 15:27:14 2015 -0700
-
-    rollup merge of #23638: pnkfelix/fsk-reject-specialized-drops
-    
-    Reject specialized Drop impls.
-    
-    See Issue #8142 for discussion.
-    
-    This makes it illegal for a Drop impl to be more specialized than the original item.
-    
-    So for example, all of the following are now rejected (when they would have been blindly accepted before):
-    
-    ```rust
-    struct S&lt;A&gt; { ... };
-    impl Drop for S&lt;i8&gt; { ... } // error: specialized to concrete type
-    
-    struct T&lt;'a&gt; { ... };
-    impl Drop for T&lt;'static&gt; { ... } // error: specialized to concrete region
-    
-    struct U&lt;A&gt; { ... };
-    impl&lt;A:Clone&gt; Drop for U&lt;A&gt; { ... } // error: added extra type requirement
-    
-    struct V&lt;'a,'b&gt;;
-    impl&lt;'a,'b:a&gt; Drop for V&lt;'a,'b&gt; { ... } // error: added extra region requirement
-    ```
-    
-    Due to examples like the above, this is a [breaking-change].
-    
-    (The fix is to either remove the specialization from the `Drop` impl, or to transcribe the requirements into the struct/enum definition; examples of both are shown in the PR's fixed to `libstd`.)
-    
-    ----
-    
-    This is likely to be the last thing blocking the removal of the `#[unsafe_destructor]` attribute.
-    
-    Fix #8142
-    Fix #23584
 </pre></body></html>
