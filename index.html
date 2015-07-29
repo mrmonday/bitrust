@@ -1,6 +1,19 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit d576ef3d7be3efe28f902bbb3b2197f4553db412
+Merge: 4b4119d e99b53e
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Jul 29 06:47:55 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Jul 29 06:47:55 2015 +0000
+
+    Auto merge of #27261 - arielb1:drop-sanity-check, r=pnkfelix
+    
+    This fixes multiple bugs, and as several of these are soundness issue, is a [breaking-change].
+    
+    r? @pnkfelix
+
 commit 55ede7ed8e4f3752c371f7d04da4695ba9aa1c26
 Merge: ba9224f 00a5e66
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -36,6 +49,27 @@ CommitDate: Tue Jul 28 15:15:00 2015 +0000
     Oh, I think this technically qualifies as a:
     [breaking-change]
     because it removes drop-filling in some cases where one could previously observe it. That should only affect `unsafe` code; no safe code should be able to inspect whether the drop-fill was present or not. For an example of code that needed to change to account for this, see commit a81c24ae0216ab47df59acd724f8a33124fb6d97 (a unit test of the `move_val_init` intrinsic).  I have not encountered actual code that needed to be updated to account for the change, since this should only be skipping the drop-filling on *moved* values, not on dropped one, and so even types that use `unsafe_no_drop_flag` should be unchanged by this particular PR. (Their time will come later.)
+
+commit bfbc7bc45d66ba7be8ab2ba60316cb1e303f4544
+Author:     Ariel Ben-Yehuda &lt;arielb1@mail.tau.ac.il&gt;
+AuthorDate: Fri Jul 24 01:38:42 2015 +0300
+Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+CommitDate: Fri Jul 24 23:46:17 2015 +0300
+
+    handle all type variants correctly in dropck
+    
+    This fixes a few soundness bugs in dropck, so to anyone who relied on them,
+    this is a
+    [breaking-change]
+    
+    Fixes #24086.
+    Fixes #25389.
+    Fixes #25598.
+    Fixes #25750.
+    Fixes #26641.
+    Fixes #26657.
+    Fixes #27240.
+    Fixes #27241.
 
 commit 18557500cb91596f3614d4cf65439f8c5f47b2e0
 Merge: 39d4faf 0ca8e49
@@ -2125,67 +2159,4 @@ CommitDate: Fri Mar 27 10:07:41 2015 -0700
       http://internals.rust-lang.org/t/attention-hackers-filling-drop/1715/11
     
     [breaking-change] especially for structs / enums using `#[unsafe_no_drop_flag]`.
-
-commit c9f600bceeb5086ea292c3872ee3094ce770f9b0
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Thu Mar 26 17:47:13 2015 -0700
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Thu Mar 26 17:47:13 2015 -0700
-
-    Stabilize some stragglers in `std::option`
-    
-    Marks as `#[stable}`:
-    
-    * `ok_or`
-    * `ok_or_else`
-    * `iter_mut`
-    * `cloned`
-    
-    Similarly to `IteratorExt::cloned`, the `cloned` method is pared down to
-    work only on `Option&lt;&amp;T&gt;`. Thus, this is a:
-    
-    [breaking-change]
-
-commit 6370f2978e485fd46bcb64f51a1c003395acfedc
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Thu Mar 26 16:18:29 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Mar 26 16:40:36 2015 -0700
-
-    std: Stabilize parts of std::os::platform::io
-    
-    This commit stabilizes the platform-specific `io` modules, specifically around
-    the traits having to do with the raw representation of each object on each
-    platform.
-    
-    Specifically, the following material was stabilized:
-    
-    * `AsRaw{Fd,Socket,Handle}`
-    * `RawFd` (renamed from `Fd`)
-    * `RawHandle` (renamed from `Handle`)
-    * `RawSocket` (renamed from `Socket`)
-    * `AsRaw{Fd,Socket,Handle}` implementations
-    * `std::os::{unix, windows}::io`
-    
-    The following material was added as `#[unstable]`:
-    
-    * `FromRaw{Fd,Socket,Handle}`
-    * Implementations for various primitives
-    
-    There are a number of future improvements that are possible to make to this
-    module, but this should cover a good bit of functionality desired from these
-    modules for now. Some specific future additions may include:
-    
-    * `IntoRawXXX` traits to consume the raw representation and cancel the
-      auto-destructor.
-    * `Fd`, `Socket`, and `Handle` abstractions that behave like Rust objects and
-      have nice methods for various syscalls.
-    
-    At this time though, these are considered backwards-compatible extensions and
-    will not be stabilized at this time.
-    
-    This commit is a breaking change due to the addition of `Raw` in from of the
-    type aliases in each of the platform-specific modules.
-    
-    [breaking-change]
 </pre></body></html>
