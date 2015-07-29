@@ -27,6 +27,20 @@ CommitDate: Tue Jul 28 21:14:28 2015 +0000
     
     [breaking-change] for plugin authors
 
+commit 757b0c176fa185fda59283efaf0d8079b702ca69
+Author:     Ariel Ben-Yehuda &lt;arielb1@mail.tau.ac.il&gt;
+AuthorDate: Tue Jul 28 16:52:54 2015 +0300
+Commit:     Ariel Ben-Yehuda &lt;arielb1@mail.tau.ac.il&gt;
+CommitDate: Tue Jul 28 19:51:08 2015 +0300
+
+    prohibit the lhs of an @-pattern being a constant
+    
+    as this breaks code that worked under some conditions, this is a
+    [breaking-change]
+    
+    Fixes #27033
+    Fixes #27077
+
 commit 661a5ad38e79f336976b529aa717871d177ab7ed
 Merge: ec49d01 b4dd765
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2139,24 +2153,4 @@ CommitDate: Fri Mar 27 10:07:52 2015 -0700
     [breaking-change]
     
     r? @alexcrichton
-
-commit e42521aa58be928dd62b5450c443368d29ab6a65
-Merge: 0e5052c b68ca84
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Mar 27 10:07:41 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Mar 27 10:07:41 2015 -0700
-
-    rollup merge of #23535: pnkfelix/fsk-filling-drop
-    
-    Replace zeroing-on-drop with filling-on-drop.
-    
-    This is meant to set the stage for removing *all* zeroing and filling (on drop) in the future.
-    
-    Note that the code is meant to be entirely abstract with respect to the particular values used for the drop flags: the final commit demonstrates how to go from zeroing-on-drop to filling-on-drop by changing the value of three constants (in two files).
-    
-    See further discussion on the internals thread:
-      http://internals.rust-lang.org/t/attention-hackers-filling-drop/1715/11
-    
-    [breaking-change] especially for structs / enums using `#[unsafe_no_drop_flag]`.
 </pre></body></html>
