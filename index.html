@@ -1,6 +1,37 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 87055a68c3194db212456f99ece080728a5fc2f8
+Merge: f97a82f 3e954a8
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Jul 30 10:25:23 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Jul 30 10:25:23 2015 +0000
+
+    Auto merge of #27371 - Gankro:str-clone, r=alexcrichton
+    
+    This is a minor [breaking-change], as it changes what
+    `boxed_str.to_owned()` does (previously it would deref to `&amp;str` and
+    call `to_owned` on that to get a `String`). However `Box&lt;str&gt;` is such an
+    exceptionally rare type that this is not expected to be a serious
+    concern. Also a `Box&lt;str&gt;` can be freely converted to a `String` to
+    obtain the previous result anyway.
+
+commit 3e954a8cb2fd094d79713059d83d37b2daa7b396
+Author:     Alexis Beingessner &lt;a.beingessner@gmail.com&gt;
+AuthorDate: Mon Jul 27 09:06:00 2015 -0700
+Commit:     Alexis Beingessner &lt;a.beingessner@gmail.com&gt;
+CommitDate: Wed Jul 29 18:43:01 2015 -0700
+
+    implement Clone for Box&lt;str&gt;, closes #27323
+    
+    This is a minor [breaking-change], as it changes what
+    `boxed_str.to_owned()` does (previously it would deref to `&amp;str` and
+    call `to_owned` on that to get a `String`). However `Box&lt;str&gt;` is such an
+    exceptionally rare type that this is not expected to be a serious
+    concern. Also a `Box&lt;str&gt;` can be freely converted to a `String` to
+    obtain the previous behaviour anyway.
+
 commit d576ef3d7be3efe28f902bbb3b2197f4553db412
 Merge: 4b4119d e99b53e
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2102,55 +2133,4 @@ CommitDate: Fri Mar 27 12:50:49 2015 -0700
     these need to be unstable.
     
     [breaking-change]
-
-commit b24a3b82011c3b78573ace4ade3f99d7c4701a11
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Thu Mar 26 17:35:13 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Mar 27 10:19:59 2015 -0700
-
-    rustc: Remove support for hyphens in crate names
-    
-    This commit removes parser support for `extern crate "foo" as bar` as the
-    renamed crate is now required to be an identifier. Additionally this commit
-    enables hard errors on crate names that contain hyphens in them, they must now
-    solely contain alphanumeric characters or underscores.
-    
-    If the crate name is inferred from the file name, however, the file name
-    `foo-bar.rs` will have the crate name inferred as `foo_bar`. If a binary is
-    being emitted it will have the name `foo-bar` and a library will have the name
-    `libfoo_bar.rlib`.
-    
-    This commit is a breaking change for a number of reasons:
-    
-    * Old syntax is being removed. This was previously only issuing warnings.
-    * The output for the compiler when input is received on stdin is now `rust_out`
-      instead of `rust-out`.
-    * The crate name for a crate in the file `foo-bar.rs` is now `foo_bar` which can
-      affect infrastructure such as logging.
-    
-    [breaking-change]
-
-commit 45f1324037b098d6e92da7b34cc0aba274fdae97
-Merge: a491d21 c9f600b
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Mar 27 10:07:52 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Mar 27 10:07:52 2015 -0700
-
-    rollup merge of #23771: aturon/stab-straggle-1
-    
-    Marks as `#[stable}`:
-    
-    * `ok_or`
-    * `ok_or_else`
-    * `iter_mut`
-    * `cloned`
-    
-    Similarly to `IteratorExt::cloned`, the `cloned` method is pared down to
-    work only on `Option&lt;&amp;T&gt;`. Thus, this is a:
-    
-    [breaking-change]
-    
-    r? @alexcrichton
 </pre></body></html>
