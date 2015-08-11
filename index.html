@@ -1,6 +1,41 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 50141d7e1e5b1b539d45240dff709fa68e7472c2
+Merge: 8b37055 b51e009
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Aug 11 03:47:16 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Aug 11 03:47:16 2015 +0000
+
+    Auto merge of #26818 - sfackler:duration-stabilization, r=aturon
+    
+    This commit stabilizes the `std::time` module and the `Duration` type.
+    `Duration::span` remains unstable, and the `Display` implementation for
+    `Duration` has been removed as it is still being reworked and all trait
+    implementations for stable types are de facto stable.
+    
+    This is a [breaking-change] to those using `Duration`'s `Display`
+    implementation.
+    
+    I'm opening this PR as a platform for discussion - there may be some method renaming to do as part of the stabilization process.
+
+commit 999bdeca88a06938ac1e1c608091d3afe4d7e173
+Author:     Steven Fackler &lt;sfackler@gmail.com&gt;
+AuthorDate: Sun Jul 5 23:20:00 2015 -0700
+Commit:     Steven Fackler &lt;sfackler@gmail.com&gt;
+CommitDate: Mon Aug 10 20:04:18 2015 -0400
+
+    Stabilize the Duration API
+    
+    This commit stabilizes the `std::time` module and the `Duration` type.
+    `Duration::span` remains unstable, and the `Display` implementation for
+    `Duration` has been removed as it is still being reworked and all trait
+    implementations for stable types are de facto stable.
+    
+    This is a [breaking-change] to those using `Duration`'s `Display`
+    implementation.
+
 commit 87055a68c3194db212456f99ece080728a5fc2f8
 Merge: f97a82f 3e954a8
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2100,37 +2135,4 @@ CommitDate: Sat Mar 28 09:09:50 2015 +0000
     Fixes #23774
     
     r? @aturon
-
-commit 3feeea59dbfe397cccc6760b68f7bfb8291540b7
-Author:     Jonathan Reem &lt;jonathan.reem@gmail.com&gt;
-AuthorDate: Fri Mar 27 16:35:16 2015 -0700
-Commit:     Jonathan Reem &lt;jonathan.reem@gmail.com&gt;
-CommitDate: Fri Mar 27 16:35:16 2015 -0700
-
-    Make `std::error::Error` not inherit from Send
-    
-    The Send bound is an unnecessary restriction, and though provided as a
-    convenience, can't be removed by downstream code.
-    
-    The removal of this bound is a [breaking-change] since it
-    removes an implicit Send bound on all `E: Error` and all
-    `Error` trait objects.
-    
-    To migrate, consider if your code actually requires the Send
-    bound and, if so, add it explicitly.
-    
-    Fixes #23774
-
-commit 1639e51f6e4d036478705f4581de3a7417ccec0f
-Author:     Brian Anderson &lt;banderson@mozilla.com&gt;
-AuthorDate: Thu Mar 26 18:34:27 2015 -0700
-Commit:     Brian Anderson &lt;banderson@mozilla.com&gt;
-CommitDate: Fri Mar 27 12:50:49 2015 -0700
-
-    Feature gate *all* slice patterns. #23121
-    
-    Until some backwards-compatibility hazards are fixed in #23121,
-    these need to be unstable.
-    
-    [breaking-change]
 </pre></body></html>
