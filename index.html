@@ -1,6 +1,19 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit c66554cab3518a9f5c36eafd622ca4c8a3fda631
+Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+AuthorDate: Mon Jul 13 11:57:46 2015 -0700
+Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
+CommitDate: Mon Aug 17 14:41:37 2015 -0700
+
+    switch core::simd to repr(simd) and deprecate it.
+    
+    This functionality will be available out of tree in the `simd` crate on
+    crates.io.
+    
+    [breaking-change]
+
 commit bb954cfa75ec63b2cf28229ecc4aee7024381d0b
 Merge: e9205a2 15518a9
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2177,17 +2190,4 @@ CommitDate: Sat Mar 28 22:11:49 2015 +0000
     
     This is blocked on ICEs: https://gist.github.com/sfackler/5aff7c57cf8d896e2c6f
     Seem to be similar to #23281.
-
-commit d502f4221fd5472c4a7905cdc3c59533e9612822
-Author:     Steven Fackler &lt;sfackler@gmail.com&gt;
-AuthorDate: Wed Mar 11 22:41:24 2015 -0700
-Commit:     Steven Fackler &lt;sfackler@gmail.com&gt;
-CommitDate: Sat Mar 28 13:53:45 2015 -0700
-
-    Remove IteratorExt
-    
-    All methods are inlined into Iterator with `Self: Sized` bounds to make
-    sure Iterator is still object safe.
-    
-    [breaking-change]
 </pre></body></html>
