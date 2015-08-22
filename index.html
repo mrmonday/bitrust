@@ -1,6 +1,37 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 983d2b3d1a97846c90ea8f689774be8353b340be
+Merge: a03ec1a 12216b7
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Aug 22 06:30:53 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Aug 22 06:30:53 2015 +0000
+
+    Auto merge of #27826 - sfackler:wait-timeout-enum, r=alexcrichton
+    
+    Returning a primitive bool results in a somewhat confusing API - does
+    `true` indicate success - i.e. no timeout, or that a timeout has
+    occurred? An explicitly named enum makes it clearer.
+    
+    [breaking-change]
+    
+    r? @alexcrichton
+
+commit 42a386fcf89a40e6c3a8806ccf381514c2a77c10
+Author:     Steven Fackler &lt;sfackler@gmail.com&gt;
+AuthorDate: Thu Aug 13 21:58:20 2015 -0700
+Commit:     Steven Fackler &lt;sfackler@gmail.com&gt;
+CommitDate: Wed Aug 19 17:00:15 2015 -0700
+
+    Make Condvar::wait_timeout return an enum instead of a bool
+    
+    Returning a primitive bool results in a somewhat confusing API - does
+    `true` indicate success - i.e. no timeout, or that a timeout has
+    occurred? An explicitly named enum makes it clearer.
+    
+    [breaking-change]
+
 commit c66554cab3518a9f5c36eafd622ca4c8a3fda631
 Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
 AuthorDate: Mon Jul 13 11:57:46 2015 -0700
@@ -2156,38 +2187,4 @@ CommitDate: Sun Mar 29 06:15:51 2015 -0400
     
     Closes #23772
     Closes #21297
-
-commit 227b46bdede794d5c8476b810bb1c30926bd9c04
-Merge: 27af78c 3c0c8fc
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sun Mar 29 05:21:29 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sun Mar 29 05:21:29 2015 +0000
-
-    Auto merge of #23810 - sfackler:debug-collections, r=alexcrichton
-    
-    The collections debug helpers no longer prefix output with the
-    collection name, in line with the current conventions for Debug
-    implementations. Implementations that want to preserve the current
-    behavior can simply add a `try!(write!(fmt, "TypeName "));` at the
-    beginning of the `fmt` method.
-    
-    [breaking-change]
-
-commit c89de2c56baeb61e7cc434924dcc8bedd32b26b8
-Merge: 01f2c67 d502f42
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sat Mar 28 22:11:49 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sat Mar 28 22:11:49 2015 +0000
-
-    Auto merge of #23300 - sfackler:rm-iterator-ext, r=alexcrichton
-    
-    All methods are inlined into Iterator with `Self: Sized` bounds to make
-    sure Iterator is still object safe.
-    
-    [breaking-change]
-    
-    This is blocked on ICEs: https://gist.github.com/sfackler/5aff7c57cf8d896e2c6f
-    Seem to be similar to #23281.
 </pre></body></html>
