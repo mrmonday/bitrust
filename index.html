@@ -1,6 +1,23 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit db67cbe43dfce043c664c53d709b91252d5afc9e
+Merge: 63ba780 1994875
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Aug 24 10:03:48 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Aug 24 10:03:48 2015 +0000
+
+    Auto merge of #27856 - nikomatsakis:move-def-id-to-rustc, r=eddyb
+    
+    It doesn't really make sense for DefId to be in libsyntax -- it is concerned with a single crate only. It is the compiler that understands the idea of many crates. (At some point, there might be a useful intermediate point here.) This is a refactoring in support of incr. compilation, which will be adjusting the notion of a DefId to make it more durable across compilations.
+    
+    This will probably be a [breaking-change] for every plugin ever. You need to adjust things as follows:
+    
+        use rustc::middle::def_id::{DefId, LOCAL_CRATE}; // two most common definitions
+        ast_util::is_local(def_id) =&gt; def_id.is_local()
+        ast_util::local_def(node_id) =&gt; DefId::local(node_id)
+
 commit 983d2b3d1a97846c90ea8f689774be8353b340be
 Merge: a03ec1a 12216b7
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2167,24 +2184,4 @@ CommitDate: Mon Mar 30 05:02:20 2015 -0400
     right-hand-side type from the left-hand-side, in the case that the LHS
     type was a scalar like `i32`. The fix is to add a type annotation like
     `x + rng.gen::&lt;i32&gt;()`.
-
-commit e64b677ca66d742e7c06738bacf3a160cba827a7
-Author:     Corey Richardson &lt;corey@octayn.net&gt;
-AuthorDate: Fri Mar 27 23:01:19 2015 -0400
-Commit:     Corey Richardson &lt;corey@octayn.net&gt;
-CommitDate: Sun Mar 29 06:15:51 2015 -0400
-
-    mk: don't build docs for internal or behind-the-facade crates in beta/stable
-    
-    This saves a bunch of a time and will make distributions smaller, as well as
-    avoiding filling the implementors page with internal garbage. Turn it back on
-    with `--enable-compiler-docs` if you want compiler docs during development.
-    
-    Crates behind the facade are only documented on nightly/dev builds (where they
-    can be used).
-    
-    [breaking-change]
-    
-    Closes #23772
-    Closes #21297
 </pre></body></html>
