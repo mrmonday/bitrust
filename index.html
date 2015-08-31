@@ -1,6 +1,25 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 1f81ef4d0f2547cacc316b01ad03603ad772e38e
+Author:     Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
+AuthorDate: Mon Aug 24 13:57:11 2015 +0200
+Commit:     Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
+CommitDate: Sun Aug 30 10:24:05 2015 +0200
+
+    Atomically set CLOEXEC on duplicated sockets
+    
+    For Bitrig, NetBSD and OpenBSD the constant was incorrectly in posix01, when
+    it's actually posix08, so we move it. This is a [breaking-change], but we
+    already had one in #27930.
+    
+    Fix NetBSD's F_DUPFD_CLOEXEC constant.
+    
+    For a similar feature detection, see this musl thread:
+    http://comments.gmane.org/gmane.linux.lib.musl.general/2963
+    
+    This assumes that an int literal has type `c_int` for varidic functions.
+
 commit db67cbe43dfce043c664c53d709b91252d5afc9e
 Merge: 63ba780 1994875
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2170,18 +2189,4 @@ CommitDate: Mon Mar 30 11:35:52 2015 +0000
     (Crates behind the facade are not documented at all)
     
     [breaking-change]
-
-commit c92bdcb232da3973a8a548e6b2044b610e286210
-Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-AuthorDate: Tue Mar 24 15:45:11 2015 -0400
-Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-CommitDate: Mon Mar 30 05:02:20 2015 -0400
-
-    Fallout where types must be specified.
-    
-    This is due to a [breaking-change] to operators. The primary affected
-    code is uses of the `Rng` trait where we used to (incorrectly) infer the
-    right-hand-side type from the left-hand-side, in the case that the LHS
-    type was a scalar like `i32`. The fix is to add a type annotation like
-    `x + rng.gen::&lt;i32&gt;()`.
 </pre></body></html>
