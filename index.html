@@ -1,6 +1,27 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit ae75ef9e62b7df8c46865cfb907c56cab1f29f81
+Merge: 4ad128b 20e1ea2
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Sep 1 09:12:52 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Sep 1 09:12:52 2015 +0000
+
+    Auto merge of #28137 - nrc:remove-non-multi, r=huonw
+    
+    This is a [breaking-change] for syntax extension authors. The fix is to use MultiModifier or MultiDecorator, which have the same functionality but are more flexible. Users of syntax extensions are unaffected.
+
+commit 20e1ea2dd84d5b29414059a4e07ce7327d1bef19
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Tue Sep 1 13:16:03 2015 +1200
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Tue Sep 1 13:16:03 2015 +1200
+
+    Remove the Modifier and Decorator kinds of syntax extensions.
+    
+    This is a [breaking-change] for syntax extension authors. The fix is to use MultiModifier or MultiDecorator, which have the same functionality but are more flexible. Users of syntax extensions are unaffected.
+
 commit 1f81ef4d0f2547cacc316b01ad03603ad772e38e
 Author:     Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
 AuthorDate: Mon Aug 24 13:57:11 2015 +0200
@@ -2147,46 +2168,6 @@ CommitDate: Mon Mar 30 16:44:11 2015 -0700
     
     This is a breaking change due to the removal of the `BoxAny` trait, but
     consumers can simply remove imports to fix crates.
-    
-    [breaking-change]
-
-commit acd48a2b3e7fcc0372f7718a2fac1cf80e03db95
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Mar 27 11:12:28 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Mar 30 14:08:40 2015 -0700
-
-    std: Standardize (input, output) param orderings
-    
-    This functions swaps the order of arguments to a few functions that previously
-    took (output, input) parameters, but now take (input, output) parameters (in
-    that order).
-    
-    The affected functions are:
-    
-    * ptr::copy
-    * ptr::copy_nonoverlapping
-    * slice::bytes::copy_memory
-    * intrinsics::copy
-    * intrinsics::copy_nonoverlapping
-    
-    Closes #22890
-    [breaking-change]
-
-commit 14192d6df5cc714e5c9a3ca70b08f2514d977be2
-Merge: f002640 e64b677
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Mon Mar 30 11:35:52 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Mon Mar 30 11:35:52 2015 +0000
-
-    Auto merge of #23848 - cmr:no-compiler-docs, r=huonw
-    
-    This saves a bunch of a time and will make distributions smaller, as well as
-    avoiding filling the implementors page with internal garbage. Turn it back on
-    with `--enable-compiler-docs` if you want them.
-    
-    (Crates behind the facade are not documented at all)
     
     [breaking-change]
 </pre></body></html>
