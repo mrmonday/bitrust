@@ -1,6 +1,35 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 4d6dc7f9ba9fe61e38d737b29bfe490e835f6921
+Merge: 009f2cf 5d44555
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Sep 14 06:51:18 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Sep 14 06:51:18 2015 +0000
+
+    Auto merge of #28396 - arielb1:misplaced-binding, r=eddyb
+    
+    Technically a [breaking-change], but the broken code is useless,
+    like `i32&lt;Param=()&gt;`.
+    
+    Fixes #24682
+    
+    r? @eddyb
+
+commit 5d4455510afe3b7f74e04d3125ef8536a63d9e60
+Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+AuthorDate: Sun Sep 13 23:05:04 2015 +0300
+Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+CommitDate: Sun Sep 13 23:47:41 2015 +0300
+
+    ensure projections are prohibited when type parameters are
+    
+    Technically a [breaking-change], but the broken code is useless,
+    like `i32&lt;Param=()&gt;`.
+    
+    Fixes #24682
+
 commit ae75ef9e62b7df8c46865cfb907c56cab1f29f81
 Merge: 4ad128b 20e1ea2
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2132,42 +2161,4 @@ CommitDate: Tue Mar 31 12:16:42 2015 +1100
     The fix is to separate the tokens, e.g. `0b12` -&gt; `0b1 2`.
     
     cc https://github.com/rust-lang/rfcs/pull/879
-
-commit e17f4fc1d4545f5c17b21805c5145b05495484ee
-Author:     Sean McArthur &lt;sean.monstar@gmail.com&gt;
-AuthorDate: Mon Mar 30 17:56:48 2015 -0700
-Commit:     Sean McArthur &lt;sean.monstar@gmail.com&gt;
-CommitDate: Mon Mar 30 18:08:58 2015 -0700
-
-    convert: remove FromError, use From&lt;E&gt; instead
-    
-    This removes the FromError trait, since it can now be expressed using
-    the new convert::Into trait. All implementations of FromError&lt;E&gt; where
-    changed to From&lt;E&gt;, and `try!` was changed to use From::from instead.
-    
-    Because this removes FromError, it is a breaking change, but fixing it
-    simply requires changing the words `FromError` to `From`, and
-    `from_error` to `from`.
-    
-    [breaking-change]
-
-commit f19e763e0824a73118ed715f526cb7bdd584d4c4
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Mon Mar 30 16:43:04 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Mon Mar 30 16:44:11 2015 -0700
-
-    std: Stabilize the rest of Any/BoxAny
-    
-    This commit stabilizes the following APIs:
-    
-    * `TypeId::of` - now that it has an `Any` bound it's ready to be stable.
-    * `Box&lt;Any&gt;::downcast` - now that an inherent impl on `Box&lt;Any&gt;` as well as
-      `Box&lt;Any+Send&gt;` is allowed the `BoxAny` trait is removed in favor of these
-      inherent methods.
-    
-    This is a breaking change due to the removal of the `BoxAny` trait, but
-    consumers can simply remove imports to fix crates.
-    
-    [breaking-change]
 </pre></body></html>
