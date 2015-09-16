@@ -1,6 +1,27 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit fc4d566b432d48933e27dd65a973c936b564d6e9
+Merge: 9bc1fae e9f1b06
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Sep 16 00:35:24 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Sep 16 00:35:24 2015 +0000
+
+    Auto merge of #28399 - nrc:attrs, r=nikomatsakis
+    
+    This could be a [breaking-change] if your lint or syntax extension (is that even possible?) uses HIR attributes or literals.
+
+commit e9f1b063295c48c97e239ce479b08f192a3eece4
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Mon Sep 14 21:58:20 2015 +1200
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Wed Sep 16 10:57:06 2015 +1200
+
+    Use ast attributes every where (remove HIR attributes).
+    
+    This could be a [breaking-change] if your lint or syntax extension (is that even possible?) uses HIR attributes or literals.
+
 commit 4d6dc7f9ba9fe61e38d737b29bfe490e835f6921
 Merge: 009f2cf 5d44555
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2115,50 +2136,4 @@ CommitDate: Tue Mar 31 07:50:25 2015 -0700
     Closes #21069
     
     [breaking-change]
-
-commit 57938041c18ee1c1bef362e60f24f5b2d3a46213
-Merge: 464c18c acd48a2
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Tue Mar 31 09:04:38 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Tue Mar 31 09:04:38 2015 +0530
-
-    Rollup merge of #23866 - alexcrichton:switch-some-orders, r=aturon
-    
-    This functions swaps the order of arguments to a few functions that previously
-    took (output, input) parameters, but now take (input, output) parameters (in
-    that order).
-    
-    The affected functions are:
-    
-    * ptr::copy
-    * ptr::copy_nonoverlapping
-    * slice::bytes::copy_memory
-    * intrinsics::copy
-    * intrinsics::copy_nonoverlapping
-    
-    Closes #22890
-    [breaking-change]
-
-commit 606f50c46dd9a3852d36456d2015e1ccf832642e
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Tue Mar 31 00:27:13 2015 +1100
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Tue Mar 31 12:16:42 2015 +1100
-
-    Lex binary and octal literals more eagerly.
-    
-    Previously 0b12 was considered two tokens, 0b1 and 2, as 2 isn't a valid
-    base 2 digit. This patch changes that to collapse them into one (and
-    makes `0b12` etc. an error: 2 isn't a valid base 2 digit).
-    
-    This may break some macro invocations of macros with `tt` (or syntax
-    extensions) that rely on adjacent digits being separate tokens and hence
-    is a
-    
-    [breaking-change]
-    
-    The fix is to separate the tokens, e.g. `0b12` -&gt; `0b1 2`.
-    
-    cc https://github.com/rust-lang/rfcs/pull/879
 </pre></body></html>
