@@ -1,6 +1,28 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit a642d853aa29f8ec8486e736be551cf77f34e219
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Tue Sep 15 11:35:25 2015 +1200
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Thu Sep 17 12:16:46 2015 +1200
+
+    Change to a multi-trait approach
+    
+    [breaking-change] for lint authors
+    
+    You must now implement LateLintPass or EarlyLintPass as well as LintPass and use either register_late_lint_pass or register_early_lint_pass, rather than register_lint_pass.
+
+commit 76856e19ff3c7c699931d0acee8e61bc0dfec512
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Thu Sep 10 16:40:59 2015 +1200
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Thu Sep 17 12:16:46 2015 +1200
+
+    Add an early lint pass for lints that operate on the AST
+    
+    There is a minor [breaking-change] for lint authors - some functions which were previously defined on `lint::Context` have moved to a trait - `LintContext`, you may need to import that trait to avoid name resolution errors.
+
 commit fc4d566b432d48933e27dd65a973c936b564d6e9
 Merge: 9bc1fae e9f1b06
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2057,83 +2079,4 @@ CommitDate: Tue Mar 31 10:15:26 2015 -0700
     [breaking-change]
     
     r? @alexcrichton
-
-commit 80bf31dd514055177b22c3dc66836d39eb5b1648
-Merge: b3317d6 232424d
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Mar 31 14:50:46 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Mar 31 14:50:46 2015 +0000
-
-    Auto merge of #23549 - aturon:stab-num, r=alexcrichton
-    
-    This commit stabilizes the `std::num` module:
-    
-    * The `Int` and `Float` traits are deprecated in favor of (1) the
-      newly-added inherent methods and (2) the generic traits available in
-      rust-lang/num.
-    
-    * The `Zero` and `One` traits are reintroduced in `std::num`, which
-      together with various other traits allow you to recover the most
-      common forms of generic programming.
-    
-    * The `FromStrRadix` trait, and associated free function, is deprecated
-      in favor of inherent implementations.
-    
-    * A wide range of methods and constants for both integers and floating
-      point numbers are now `#[stable]`, having been adjusted for integer
-      guidelines.
-    
-    * `is_positive` and `is_negative` are renamed to `is_sign_positive` and
-      `is_sign_negative`, in order to address #22985
-    
-    * The `Wrapping` type is moved to `std::num` and stabilized;
-      `WrappingOps` is deprecated in favor of inherent methods on the
-      integer types, and direct implementation of operations on
-      `Wrapping&lt;X&gt;` for each concrete integer type `X`.
-    
-    Closes #22985
-    Closes #21069
-    
-    [breaking-change]
-    
-    r? @alexcrichton
-
-commit 232424d9952700682373ccf2d578109f401ff023
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Thu Mar 19 23:42:18 2015 -0700
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Tue Mar 31 07:50:25 2015 -0700
-
-    Stabilize std::num
-    
-    This commit stabilizes the `std::num` module:
-    
-    * The `Int` and `Float` traits are deprecated in favor of (1) the
-      newly-added inherent methods and (2) the generic traits available in
-      rust-lang/num.
-    
-    * The `Zero` and `One` traits are reintroduced in `std::num`, which
-      together with various other traits allow you to recover the most
-      common forms of generic programming.
-    
-    * The `FromStrRadix` trait, and associated free function, is deprecated
-      in favor of inherent implementations.
-    
-    * A wide range of methods and constants for both integers and floating
-      point numbers are now `#[stable]`, having been adjusted for integer
-      guidelines.
-    
-    * `is_positive` and `is_negative` are renamed to `is_sign_positive` and
-      `is_sign_negative`, in order to address #22985
-    
-    * The `Wrapping` type is moved to `std::num` and stabilized;
-      `WrappingOps` is deprecated in favor of inherent methods on the
-      integer types, and direct implementation of operations on
-      `Wrapping&lt;X&gt;` for each concrete integer type `X`.
-    
-    Closes #22985
-    Closes #21069
-    
-    [breaking-change]
 </pre></body></html>
