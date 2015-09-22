@@ -1,6 +1,23 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 920f32becd5d54864a966900963a376d74d09922
+Author:     Sebastian Wicki &lt;gandro@gmx.net&gt;
+AuthorDate: Mon Sep 21 19:02:46 2015 +0200
+Commit:     Sebastian Wicki &lt;gandro@gmx.net&gt;
+CommitDate: Tue Sep 22 00:33:40 2015 +0200
+
+    Add `no_default_libraries` target linker option
+    
+    If set to false, `-nodefaultlibs` is not passed to the linker. This
+    was the default behavior on Windows, but it should be configurable
+    per target.
+    
+    This is a [breaking-change] for target specifications that have
+    the `is_like_windows` option set to true. Such targets need to
+    set `no_default_libraries` to false in order to restore the old
+    behavior.
+
 commit a642d853aa29f8ec8486e736be551cf77f34e219
 Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
 AuthorDate: Tue Sep 15 11:35:25 2015 +1200
@@ -2038,45 +2055,4 @@ CommitDate: Tue Mar 31 11:24:38 2015 -0700
       to_cstring}` for ergonomic FFI usage.
     
     [breaking-change]
-
-commit 5d0beb7d85e8e711334c7fb6f2c5da270e5200cb
-Merge: b3317d6 232424d
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Mar 31 10:15:26 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Mar 31 10:15:26 2015 -0700
-
-    rollup merge of #23549: aturon/stab-num
-    
-    This commit stabilizes the `std::num` module:
-    
-    * The `Int` and `Float` traits are deprecated in favor of (1) the
-      newly-added inherent methods and (2) the generic traits available in
-      rust-lang/num.
-    
-    * The `Zero` and `One` traits are reintroduced in `std::num`, which
-      together with various other traits allow you to recover the most
-      common forms of generic programming.
-    
-    * The `FromStrRadix` trait, and associated free function, is deprecated
-      in favor of inherent implementations.
-    
-    * A wide range of methods and constants for both integers and floating
-      point numbers are now `#[stable]`, having been adjusted for integer
-      guidelines.
-    
-    * `is_positive` and `is_negative` are renamed to `is_sign_positive` and
-      `is_sign_negative`, in order to address #22985
-    
-    * The `Wrapping` type is moved to `std::num` and stabilized;
-      `WrappingOps` is deprecated in favor of inherent methods on the
-      integer types, and direct implementation of operations on
-      `Wrapping&lt;X&gt;` for each concrete integer type `X`.
-    
-    Closes #22985
-    Closes #21069
-    
-    [breaking-change]
-    
-    r? @alexcrichton
 </pre></body></html>
