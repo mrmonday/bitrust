@@ -1,6 +1,43 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 6a2187414a8c25f485dc788088b4466f595a7dd9
+Merge: e980129 b30d896
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Sep 24 18:55:00 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Sep 24 18:55:00 2015 +0000
+
+    Auto merge of #28538 - alevy:make_fixedsizearray_unsafe, r=alexcrichton
+    
+    [breaking-change]
+    
+    `FixedSizeArray` is meant to be implemented for arrays of fixed size only, but can be implemented for anything at the moment. Marking the trait unsafe would make it more reasonable to write unsafe code which operates on fixed size arrays of any size.
+    
+    For example, using `uninitialized` to create a fixed size array and immediately filling it with a fixed value is externally safe:
+    
+    ```
+    pub fn init_with_nones&lt;T, A: FixedSizeArray&lt;Option&lt;T&gt;&gt;&gt;() -&gt; A {
+        let mut res = unsafe { mem::uninitialized() };
+        for elm in res.as_mut_slice().iter_mut() {
+            *elm = None;
+        }
+        res
+    }
+    ```
+    
+    But the same code is not safe if `FixedSizeArray` is implemented for other types:
+    
+    ```
+    struct Foo { foo: usize }
+    impl FixedSizeArray&lt;Option&lt;usize&gt;&gt; for Foo {
+        fn as_slice(&amp;self) -&gt; &amp;[usize] { &amp;[] }
+        fn as_mut_slice(&amp;self) -&gt; &amp;mut [usize] { &amp;mut [] }
+    }
+    ```
+    
+    now `init_with_nones() : Foo` returns a `Foo` with an undefined value for the field `foo`.
+
 commit 920f32becd5d54864a966900963a376d74d09922
 Author:     Sebastian Wicki &lt;gandro@gmx.net&gt;
 AuthorDate: Mon Sep 21 19:02:46 2015 +0200
@@ -2033,26 +2070,5 @@ CommitDate: Tue Mar 31 13:39:14 2015 -0700
     likely throughout the community as well).
     
     cc #19470
-    [breaking-change]
-
-commit 9fc51efe3344a32d9e522f08383f052277b6ab63
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Mon Mar 30 15:15:27 2015 -0700
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Tue Mar 31 11:24:38 2015 -0700
-
-    Stabilize `std::convert` and related code
-    
-    * Marks `#[stable]` the contents of the `std::convert` module.
-    
-    * Added methods `PathBuf::as_path`, `OsString::as_os_str`,
-      `String::as_str`, `Vec::{as_slice, as_mut_slice}`.
-    
-    * Deprecates `OsStr::from_str` in favor of a new, stable, and more
-      general `OsStr::new`.
-    
-    * Adds unstable methods `OsString::from_bytes` and `OsStr::{to_bytes,
-      to_cstring}` for ergonomic FFI usage.
-    
     [breaking-change]
 </pre></body></html>
