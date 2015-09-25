@@ -1,6 +1,18 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 5ca60d94316bd56f412ef4c13292237e206babf1
+Merge: 6a21874 f293ea2
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Sep 24 20:42:56 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Sep 24 20:42:56 2015 +0000
+
+    Auto merge of #28608 - eddyb:no-place-for-an-old-box, r=pnkfelix
+    
+    While this is technically a [breaking-change], there is no excuse for touching `HEAP`.
+    r? @pnkfelix
+
 commit 6a2187414a8c25f485dc788088b4466f595a7dd9
 Merge: e980129 b30d896
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2048,27 +2060,5 @@ CommitDate: Tue Mar 31 15:49:10 2015 -0700
     This commit is a breaking change due to the addition of `Raw` in from of the
     type aliases in each of the platform-specific modules.
     
-    [breaking-change]
-
-commit 5cf126ae2f6af1cdac901f6995e3c2bab35e587f
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Mar 10 17:59:23 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Mar 31 13:39:14 2015 -0700
-
-    std: Remove #[old_orphan_check] from PartialEq
-    
-    This is a deprecated attribute that is slated for removal, and it also affects
-    all implementors of the trait. This commit removes the attribute and fixes up
-    implementors accordingly. The primary implementation which was lost was the
-    ability to compare `&amp;[T]` and `Vec&lt;T&gt;` (in that order).
-    
-    This change also modifies the `assert_eq!` macro to not consider both directions
-    of equality, only the one given in the left/right forms to the macro. This
-    modification is motivated due to the fact that `&amp;[T] == Vec&lt;T&gt;` no longer
-    compiles, causing hundreds of errors in unit tests in the standard library (and
-    likely throughout the community as well).
-    
-    cc #19470
     [breaking-change]
 </pre></body></html>
