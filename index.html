@@ -1,6 +1,24 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 587be42d0bd318d6c2f41fe4716e040366dc8951
+Merge: 031dd9c 9502df5
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Oct 1 04:29:04 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Oct 1 04:29:04 2015 +0000
+
+    Auto merge of #28605 - alexcrichton:link-native-first, r=brson
+    
+    This commit swaps the order of linking local native libraries and upstream
+    native libraries on the linker command line. Detail of bugs this can cause can
+    be found in #28595, and this change also invalidates the test case that was
+    added for #12446 which is now considered a bug because the downstream dependency
+    would need to declare that it depends on the native library somehow.
+    
+    Closes #28595
+    [breaking-change]
+
 commit 5ca60d94316bd56f412ef4c13292237e206babf1
 Merge: 6a21874 f293ea2
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2015,50 +2033,6 @@ CommitDate: Tue Mar 31 15:49:11 2015 -0700
     
     This is a breaking change due to the removal of the `BoxAny` trait, but
     consumers can simply remove imports to fix crates.
-    
-    [breaking-change]
-
-commit 890f0ab10a81720606805db36628f61f29d0e816
-Merge: 1829974 6370f29
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Mar 31 10:15:29 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Mar 31 15:49:10 2015 -0700
-
-    rollup merge of #23766: alexcrichton/stabilize-raw-fd
-    
-    This commit stabilizes the platform-specific `io` modules, specifically around
-    the traits having to do with the raw representation of each object on each
-    platform.
-    
-    Specifically, the following material was stabilized:
-    
-    * `AsRaw{Fd,Socket,Handle}`
-    * `RawFd` (renamed from `Fd`)
-    * `RawHandle` (renamed from `Handle`)
-    * `RawSocket` (renamed from `Socket`)
-    * `AsRaw{Fd,Socket,Handle}` implementations
-    * `std::os::{unix, windows}::io`
-    
-    The following material was added as `#[unstable]`:
-    
-    * `FromRaw{Fd,Socket,Handle}`
-    * Implementations for various primitives
-    
-    There are a number of future improvements that are possible to make to this
-    module, but this should cover a good bit of functionality desired from these
-    modules for now. Some specific future additions may include:
-    
-    * `IntoRawXXX` traits to consume the raw representation and cancel the
-      auto-destructor.
-    * `Fd`, `Socket`, and `Handle` abstractions that behave like Rust objects and
-      have nice methods for various syscalls.
-    
-    At this time though, these are considered backwards-compatible extensions and
-    will not be stabilized at this time.
-    
-    This commit is a breaking change due to the addition of `Raw` in from of the
-    type aliases in each of the platform-specific modules.
     
     [breaking-change]
 </pre></body></html>
