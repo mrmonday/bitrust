@@ -1,6 +1,30 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit e82faeb65594302897223b2ca4ee6927fb54625f
+Merge: 24202c6 f0dc7bd
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Oct 1 16:26:28 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Oct 1 16:26:28 2015 +0000
+
+    Auto merge of #28742 - nikomatsakis:def-id-encapsulate, r=eddyb
+    
+    As described in https://github.com/rust-lang/rfcs/pull/1298, the idea here is to make DefIds independent of changes to the content of other items. They are also *mostly* independent from ordering, so e.g. reordering two functions will change the defids, but it will not change the paths that they expand into (but this is not the case for some things, such as impls).
+    
+    This is a major refactoring, so I did it in slices. The final commit is in some sense The Big One where most of the work is done. The earlier commits just pave the way by gradually refactoring accesses to the `node` field.
+    
+    This is a [breaking-change] for plugin authors. The things you need to do to migrate your code are as follows:
+    
+    1. For local def-ids, rather than do `def_id.node`, call `tcx.map.as_local_node_id(def_id)`.
+    2. To construct a local def-id, call `tcx.map.local_def_id(node_id)`.
+    3. Note that you cannot make def-ids for any node, but only for "definitions" -- which include all items, as well as a number of other things, but not e.g. arbitrary expressions.
+    4. You can get the path to a def-id by calling `tcx.def_path(def_id)`.
+    
+    One thing that is NOT part of this PR, but which I plan do in a follow-up, is converting uses of the existing `with_path` API to use `def_path`, which is basically the same.
+    
+    r? @eddyb (or @nrc)
+
 commit 587be42d0bd318d6c2f41fe4716e040366dc8951
 Merge: 031dd9c 9502df5
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2014,25 +2038,4 @@ CommitDate: Tue Mar 31 15:53:26 2015 -0700
     [breaking-change]
     
     r? @alexcrichton
-
-commit d03120afd36f9e3f4c1305e9e5ca0d24a3b4a32f
-Merge: 890f0ab f19e763
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Mar 31 10:15:32 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Mar 31 15:49:11 2015 -0700
-
-    rollup merge of #23876: alexcrichton/stabilize-any
-    
-    This commit stabilizes the following APIs:
-    
-    * `TypeId::of` - now that it has an `Any` bound it's ready to be stable.
-    * `Box&lt;Any&gt;::downcast` - now that an inherent impl on `Box&lt;Any&gt;` as well as
-      `Box&lt;Any+Send&gt;` is allowed the `BoxAny` trait is removed in favor of these
-      inherent methods.
-    
-    This is a breaking change due to the removal of the `BoxAny` trait, but
-    consumers can simply remove imports to fix crates.
-    
-    [breaking-change]
 </pre></body></html>
