@@ -1,6 +1,20 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit ef07d7dd40e33d7af95c7b00717503730ce69c11
+Merge: e650491 61f5b2b
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Oct 2 19:16:39 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Oct 2 19:16:39 2015 +0000
+
+    Auto merge of #28650 - sanxiyn:attr-usage, r=nrc
+    
+    This is technically a [breaking-change].
+    
+    Fix #2809.
+    Fix #22746.
+
 commit e82faeb65594302897223b2ca4ee6927fb54625f
 Merge: 24202c6 f0dc7bd
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2014,28 +2028,4 @@ CommitDate: Tue Mar 31 15:59:35 2015 -0700
     
     Closes #19470
     [breaking-change]
-
-commit da04788efca6ec1e421139fb4916a5aacd49a2e2
-Merge: 94137a3 9fc51ef
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Mar 31 11:26:10 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Mar 31 15:53:26 2015 -0700
-
-    rollup merge of #23875: aturon/revise-convert-2
-    
-    * Marks `#[stable]` the contents of the `std::convert` module.
-    
-    * Added methods `PathBuf::as_path`, `OsString::as_os_str`,
-      `String::as_str`, `Vec::{as_slice, as_mut_slice}`.
-    
-    * Deprecates `OsStr::from_str` in favor of a new, stable, and more
-      general `OsStr::new`.
-    
-    * Adds unstable methods `OsString::from_bytes` and `OsStr::{to_bytes,
-      to_cstring}` for ergonomic FFI usage.
-    
-    [breaking-change]
-    
-    r? @alexcrichton
 </pre></body></html>
