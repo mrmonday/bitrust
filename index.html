@@ -1,6 +1,45 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 130851e03046db41d555a401a08c87f187fd911a
+Merge: 6d11a81 2f23e17
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Oct 3 22:07:37 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Oct 3 22:07:37 2015 +0000
+
+    Auto merge of #28669 - arielb1:well-formed-methods, r=nikomatsakis
+    
+    By RFC1214:
+    &gt;    Before calling a fn, we check that its argument and return types are WF.
+    
+    The previous code only checked the trait-ref, which was not enough
+    in several cases.
+    
+    As this is a soundness fix, it is a [breaking-change]. Some new annotations are needed, which I think are because of #18653 and the imperfection of `projection_must_outlive` (that can probably be worked around by moving the wf obligation later).
+    
+    Fixes #28609
+    
+    r? @nikomatsakis
+
+commit 603a75c8eaa8ee168e4333e4fba5eb782ed7192b
+Author:     Ariel Ben-Yehuda &lt;arielb1@mail.tau.ac.il&gt;
+AuthorDate: Sat Sep 26 01:27:39 2015 +0300
+Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+CommitDate: Fri Oct 2 23:40:10 2015 +0300
+
+    ensure that the types of methods are well-formed
+    
+    By RFC1214:
+    Before calling a fn, we check that its argument and return types are WF. This check takes place after all higher-ranked lifetimes have been instantiated. Checking the argument types ensures that the implied bounds due to argument types are correct. Checking the return type ensures that the resulting type of the call is WF.
+    
+    The previous code only checked the trait-ref, which was not enough
+    in several cases.
+    
+    As this is a soundness fix, it is a [breaking-change].
+    
+    Fixes #28609
+
 commit ef07d7dd40e33d7af95c7b00717503730ce69c11
 Merge: e650491 61f5b2b
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1977,55 +2016,4 @@ CommitDate: Wed Apr 1 19:48:49 2015 +1300
     [breaking-change]
     
     Closes #23768
-
-commit ac77392f8ab1c201b0c927f6a2d30b632b95acda
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Mar 31 16:01:03 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Mar 31 16:12:48 2015 -0700
-
-    std: Stabilize last bits of io::Error
-    
-    This commit stabilizes a few remaining bits of the `io::Error` type:
-    
-    * The `Error::new` method is now stable. The last `detail` parameter was removed
-      and the second `desc` parameter was generalized to `E: Into&lt;Box&lt;Error&gt;&gt;` to
-      allow creating an I/O error from any form of error. Currently there is no form
-      of downcasting, but this will be added in time.
-    
-    * An implementation of `From&lt;&amp;str&gt; for Box&lt;Error&gt;` was added to liballoc to
-      allow construction of errors from raw strings.
-    
-    * The `Error::raw_os_error` method was stabilized as-is.
-    
-    * Trait impls for `Clone`, `Eq`, and `PartialEq` were removed from `Error` as it
-      is not possible to use them with trait objects.
-    
-    This is a breaking change due to the modification of the `new` method as well as
-    the removal of the trait implementations for the `Error` type.
-    
-    [breaking-change]
-
-commit 3422be3666cba57f1a6fb6ab3deb1a6df66b7695
-Merge: 30283d4 608fff8
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Mar 31 15:59:35 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Mar 31 15:59:35 2015 -0700
-
-    rollup merge of #23288: alexcrichton/issue-19470
-    
-    This is a deprecated attribute that is slated for removal, and it also affects
-    all implementors of the trait. This commit removes the attribute and fixes up
-    implementors accordingly. The primary implementation which was lost was the
-    ability to compare `&amp;[T]` and `Vec&lt;T&gt;` (in that order).
-    
-    This change also modifies the `assert_eq!` macro to not consider both directions
-    of equality, only the one given in the left/right forms to the macro. This
-    modification is motivated due to the fact that `&amp;[T] == Vec&lt;T&gt;` no longer
-    compiles, causing hundreds of errors in unit tests in the standard library (and
-    likely throughout the community as well).
-    
-    Closes #19470
-    [breaking-change]
 </pre></body></html>
