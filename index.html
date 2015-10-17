@@ -1,6 +1,25 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit d6bd8d8491e89277edbfc9a4e0f8953847abbdd6
+Author:     Andrew Paseltiner &lt;apaseltiner@gmail.com&gt;
+AuthorDate: Fri Oct 16 11:54:05 2015 -0400
+Commit:     Andrew Paseltiner &lt;apaseltiner@gmail.com&gt;
+CommitDate: Fri Oct 16 18:35:31 2015 -0400
+
+    Add `Shared` pointer and have `{Arc, Rc}` use it
+    
+    This change has two consequences:
+    
+    1. It makes `Arc&lt;T&gt;` and `Rc&lt;T&gt;` covariant in `T`.
+    
+    2. It causes the compiler to reject code that was unsound with respect
+    to dropck. See compile-fail/issue-29106.rs for an example of code that
+    no longer compiles. Because of this, this is a [breaking-change].
+    
+    Fixes #29037.
+    Fixes #29106.
+
 commit 130851e03046db41d555a401a08c87f187fd911a
 Merge: 6d11a81 2f23e17
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -2001,19 +2020,4 @@ CommitDate: Wed Apr 1 14:41:21 2015 -0400
     which is usually pretty straight-forward. Code using thunk mostly works
     if you change `Thunk::new =&gt; Box::new` and `foo.invoke(arg)` to
     `foo(arg)`.
-
-commit 7c3efcc5bb260234fc163340c9fd7aad3d8d780e
-Author:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
-AuthorDate: Wed Apr 1 19:48:49 2015 +1300
-Commit:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
-CommitDate: Wed Apr 1 19:48:49 2015 +1300
-
-    Don't reborrow the target of a `write!()`
-    
-    This means passing in e.g. a `Vec&lt;u8&gt;` or `String` will work as
-    intended, rather than deref-ing to `&amp;mut [u8]` or `&amp;mut str`.
-    
-    [breaking-change]
-    
-    Closes #23768
 </pre></body></html>
