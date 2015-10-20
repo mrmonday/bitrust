@@ -1,6 +1,19 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 97ba52ec379e17cc0984224b756282b68bc3a53b
+Merge: 5e9f305 025cf75
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Oct 20 19:02:27 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Oct 20 19:02:27 2015 +0000
+
+    Auto merge of #29148 - petrochenkov:noshow, r=alexcrichton
+    
+    Closes https://github.com/rust-lang/rust/issues/29145
+    
+    [breaking-change], needs a crater run.
+
 commit d6bd8d8491e89277edbfc9a4e0f8953847abbdd6
 Author:     Andrew Paseltiner &lt;apaseltiner@gmail.com&gt;
 AuthorDate: Fri Oct 16 11:54:05 2015 -0400
@@ -2005,19 +2018,4 @@ CommitDate: Wed Apr 1 13:29:42 2015 -0700
     
     Closes #23911
     [breaking-change]
-
-commit cade32acf6f5ff209ee082d70350d9bc0362985a
-Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-AuthorDate: Wed Apr 1 11:12:30 2015 -0400
-Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
-CommitDate: Wed Apr 1 14:41:21 2015 -0400
-
-    Remove `Thunk` struct and `Invoke` trait; change `Thunk` to be an alias
-    for `Box&lt;FnBox()&gt;`. I found the alias was still handy because it is
-    shorter than the fully written type.
-    
-    This is a [breaking-change]: convert code using `Invoke` to use `FnBox`,
-    which is usually pretty straight-forward. Code using thunk mostly works
-    if you change `Thunk::new =&gt; Box::new` and `foo.invoke(arg)` to
-    `foo(arg)`.
 </pre></body></html>
