@@ -1,6 +1,37 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 04e497c0056aed899cd6edbc98e7a68a9b391c5c
+Merge: 43869e9 5d6d26c
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Oct 24 12:21:12 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Oct 24 12:21:12 2015 +0000
+
+    Auto merge of #29259 - arielb1:supertrait-self-2, r=eddyb
+    
+    …being it
+    
+    This is a [breaking-change]:lang, but the broken code does not make
+    much sense.
+    
+    Fixes #26056
+    
+    r? @eddyb
+
+commit 5d6d26c241b785daef873a0c6b9a0553c3a9451d
+Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+AuthorDate: Sat Oct 24 00:01:11 2015 +0300
+Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+CommitDate: Sat Oct 24 00:22:29 2015 +0300
+
+    object_safety: check whether a supertrait contains Self even without being it
+    
+    This is a [breaking-change]:lang, but the broken code does not make
+    much sense.
+    
+    Fixes #26056
+
 commit 97ba52ec379e17cc0984224b756282b68bc3a53b
 Merge: 5e9f305 025cf75
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1980,42 +2011,5 @@ CommitDate: Wed Apr 1 13:43:45 2015 -0700
     `Duration` is available, but there is little cost to having these named
     variants around, and it's crucial functionality for 1.0.
     
-    [breaking-change]
-
-commit e9bacbaa2c9c88aaecf07ee30f02d08a1999e5c6
-Merge: fb4029f e98dce3
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Apr 1 13:30:08 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Apr 1 13:30:08 2015 -0700
-
-    rollup merge of #23951: alexcrichton/splitn
-    
-    This commit is an implementation of [RFC 979][rfc] which changes the meaning of
-    the count parameter to the `splitn` function on strings and slices. The
-    parameter now means the number of items that are returned from the iterator, not
-    the number of splits that are made.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/pull/979
-    
-    Closes #23911
-    [breaking-change]
-
-commit e98dce3e00a7b6bfd264418ef993bbf9cdb1f0b6
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Apr 1 11:28:34 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Apr 1 13:29:42 2015 -0700
-
-    std: Changing the meaning of the count to splitn
-    
-    This commit is an implementation of [RFC 979][rfc] which changes the meaning of
-    the count parameter to the `splitn` function on strings and slices. The
-    parameter now means the number of items that are returned from the iterator, not
-    the number of splits that are made.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/pull/979
-    
-    Closes #23911
     [breaking-change]
 </pre></body></html>
