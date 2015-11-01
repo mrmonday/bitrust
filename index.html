@@ -1,6 +1,24 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 6d43fef3aaf64b2e7df14ca676a3a39b723ed7f3
+Merge: a5fbb3a 306b0ef
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Nov 1 13:36:49 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Nov 1 13:36:49 2015 +0000
+
+    Auto merge of #29486 - petrochenkov:multiwild, r=Manishearth
+    
+    Motivation:
+    - It is not actually a pattern
+    - It is not actually needed, except for...
+    
+    Drawback:
+    - Slice patterns like `[a, _.., b]` are pretty-printed as `[a, .., b]`. Great loss :(
+    
+    plugin-[breaking-change], as always
+
 commit c44316d4a1ad0fe01ae366e163993aa3980c755f
 Merge: 72ed590 e8ddbba
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1978,32 +1996,4 @@ CommitDate: Fri Apr 3 04:29:52 2015 +0000
     This is a minor [breaking-change] to an unstable interface.
     
     r? @aturon
-
-commit 655634e6ab00707ef98034dcfb32000cbfa7a01c
-Merge: bb252a8 371277f
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Apr 1 13:56:20 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Apr 1 13:56:20 2015 -0700
-
-    rollup merge of #23949: aturon/stab-timeout
-    
-    This commit renames and stabilizes:
-    
-    * `Condvar::wait_timeout_ms` (renamed from `wait_timeout`)
-    * `thread::park_timeout_ms` (renamed from `park_timeout`)
-    * `thread::sleep_ms` (renamed from `sleep`)
-    
-    In each case, the timeout is taken as a `u32` number of milliseconds,
-    rather than a `Duration`.
-    
-    These functions are likely to be deprecated once a stable form of
-    `Duration` is available, but there is little cost to having these named
-    variants around, and it's crucial functionality for 1.0.
-    
-    [breaking-change]
-    
-    r? @alexcrichton
-    
-    cc @sfackler @carllerche
 </pre></body></html>
