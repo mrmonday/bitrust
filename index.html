@@ -1,6 +1,21 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 749625ad6d15d0254b90e3d16f79d1cb1e260969
+Merge: e2bb53c 8cf50bc
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Nov 3 01:23:10 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Nov 3 01:23:10 2015 +0000
+
+    Auto merge of #29500 - vadimcn:rustlib, r=alexcrichton
+    
+    According to a recent [discussion on IRC](https://botbot.me/mozilla/rust-tools/2015-10-27/?msg=52887517&amp;page=2), there's no good reason for Windows builds to store target libraries under `bin`, when on every other platform they are under `lib`.
+    
+    This might be a [breaking-change] for some users.  I am pretty sure VisualRust has that path hard-coded somewhere.
+    
+    r? @brson
+
 commit 6d43fef3aaf64b2e7df14ca676a3a39b723ed7f3
 Merge: a5fbb3a 306b0ef
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1981,19 +1996,4 @@ CommitDate: Fri Apr 3 07:13:51 2015 +0000
     [breaking-change]
     
     Closes #23768
-
-commit fc98b19cf72ea45851ebb7b28af160be92b19128
-Merge: 5e30f05 883adc6
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri Apr 3 04:29:52 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri Apr 3 04:29:52 2015 +0000
-
-    Auto merge of #23832 - petrochenkov:usize, r=aturon
-    
-    These constants are small and can fit even in `u8`, but semantically they have type `usize` because they denote sizes and are almost always used in `usize` context. The change of their type to `u32` during the integer audit led only to the large amount of `as usize` noise (see the second commit, which removes this noise).
-    
-    This is a minor [breaking-change] to an unstable interface.
-    
-    r? @aturon
 </pre></body></html>
