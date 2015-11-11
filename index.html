@@ -1,6 +1,23 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit ad3bd1b46d52ccb339a09558064b9bf687c47a75
+Merge: 5f64201 41ccd44
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Nov 11 00:25:08 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Nov 11 00:25:08 2015 +0000
+
+    Auto merge of #29726 - petrochenkov:privsan, r=alexcrichton
+    
+    - Check privacy sanity in all blocks, not only function bodies
+    - Check all fields, not only named
+    - Check all impl items, not only methods
+    - Check default impls
+    - Move the sanity check in the beginning of privacy checking, so others could rely on it
+    
+    Technically it's a [breaking-change], but I expect no breakage because, well, it's *sane* privacy visitor, if code is broken it must be insane by definition!
+
 commit 749625ad6d15d0254b90e3d16f79d1cb1e260969
 Merge: e2bb53c 8cf50bc
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1980,20 +1997,4 @@ CommitDate: Fri Apr 3 15:48:07 2015 +0300
     
     This is possibly a [breaking-change] because it makes dumbly written code
     properly invalid.
-
-commit 82dcec7ee4a8a71fdfb8e8771ae6785261ec1d5b
-Merge: fc98b19 7c3efcc
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri Apr 3 07:13:51 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri Apr 3 07:13:51 2015 +0000
-
-    Auto merge of #23934 - lfairy:write-no-deref, r=alexcrichton
-    
-    This means passing in e.g. a `Vec&lt;u8&gt;` or `String` will work as
-    intended, rather than deref-ing to `&amp;mut [u8]` or `&amp;mut str`.
-    
-    [breaking-change]
-    
-    Closes #23768
 </pre></body></html>
