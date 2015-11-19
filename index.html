@@ -1,6 +1,29 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 767ee79c4c38e7909c7fefef1b33be4612112336
+Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+AuthorDate: Tue Nov 17 17:32:12 2015 -0500
+Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+CommitDate: Wed Nov 18 19:22:18 2015 -0500
+
+    Refactor the HIR so that items are stored in a map in the `Crate`,
+    rather being stored inline. Refactor (and rename) the visitor so that
+    (by default) it only visits the interior content of an item not nested
+    items.
+    
+    This is a [breaking-change] for anyone who uses the HIR visitor. Besides
+    changing `visit::` to `intravisit::`, you need to refactor your visitor
+    in one of two ways, depending on what it requires:
+    
+    1. If you just want to visit all items (most common), you should call
+       `krate.visit_all_items(&amp;mut visitor)`.
+    
+    2. If you need to visit nested items in the middle of the parent items,
+       you should override `visit_nested_item` with something like:
+       `self.visit_item(self.tcx.map.expect_item(item.id))`, presuming you
+       have access to a tcx (or at least a HIR map).
+
 commit ad3bd1b46d52ccb339a09558064b9bf687c47a75
 Merge: 5f64201 41ccd44
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1971,30 +1994,4 @@ CommitDate: Mon Apr 6 17:20:23 2015 -0700
     [breaking-change]
     
     Fixes #24049.
-
-commit f1dabed82bfed643fbbfc93203473e384c58d20a
-Author:     Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
-AuthorDate: Wed Mar 4 01:08:06 2015 +0200
-Commit:     Simonas Kazlauskas &lt;git@kazlauskas.me&gt;
-CommitDate: Fri Apr 3 15:48:07 2015 +0300
-
-    Introduce trans::declare
-    
-    We provide tools to tell what exact symbols to emit for any fn or static, but
-    don’t quite check if that won’t cause any issues later on. Some of the issues
-    include LLVM mangling our names again and our names pointing to wrong locations,
-    us generating dumb foreign call wrappers, linker errors, extern functions
-    resolving to different symbols altogether (extern {fn fail();} fail(); in some
-    cases calling fail1()), etc.
-    
-    Before the commit we had a function called note_unique_llvm_symbol, so it is
-    clear somebody was aware of the issue at some point, but the function was barely
-    used, mostly in irrelevant locations.
-    
-    Along with working on it I took liberty to start refactoring trans/base into
-    a few smaller modules. The refactoring is incomplete and I hope I will find some
-    motivation to carry on with it.
-    
-    This is possibly a [breaking-change] because it makes dumbly written code
-    properly invalid.
 </pre></body></html>
