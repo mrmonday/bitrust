@@ -1,6 +1,18 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 3c0d55cc76c524c12160bfb45663d9aca73e6556
+Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+AuthorDate: Thu Nov 19 00:43:31 2015 +0200
+Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+CommitDate: Thu Nov 19 20:53:59 2015 +0200
+
+    constrained_type_params: make projections depend on their trait-ref
+    
+    As this is a soundness fix, it is a [breaking-change].
+    
+    Fixes #29861.
+
 commit 767ee79c4c38e7909c7fefef1b33be4612112336
 Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
 AuthorDate: Tue Nov 17 17:32:12 2015 -0500
@@ -1977,21 +1989,4 @@ CommitDate: Wed Apr 8 00:26:35 2015 +0200
     is a breaking change.
     
     [breaking-change]
-
-commit 986852911464df87088007e64780165cc538f9b9
-Author:     Kevin Ballard &lt;kevin@sb.org&gt;
-AuthorDate: Mon Apr 6 16:30:18 2015 -0700
-Commit:     Kevin Ballard &lt;kevin@sb.org&gt;
-CommitDate: Mon Apr 6 17:20:23 2015 -0700
-
-    Add `Sync` to the bounds in `io::Error`
-    
-    This allows `io::Error` values to be stored in `Arc` properly.
-    
-    Because this requires `Sync` of any value passed to `io::Error::new()`
-    and modifies the relevant `convert::From` impls, this is a
-    
-    [breaking-change]
-    
-    Fixes #24049.
 </pre></body></html>
