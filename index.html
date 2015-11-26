@@ -1,6 +1,35 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 6ef02eff89e3d2a29eab3346bff393821df6e033
+Merge: 6f3becb 43a6deb
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Nov 26 18:20:58 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Nov 26 18:20:58 2015 +0000
+
+    Auto merge of #30043 - arielb1:split-metadata, r=nikomatsakis
+    
+    This improves bootstrap times because of better parallelism - though I need to measure how much - and allows metadata to be modified without triggering a full recompile. This also ensures that metadata handling and the rest of rustc remain decoupled, which is a first step for switching to a new metadata format.
+    
+    This is a [breaking-change] to all plugin authors because of the following renames:
+     * `rustc::plugin` is now `rustc_plugin`
+     * `rustc::metadata` is now `rustc_metadata`
+     * Most data types from `rustc::metadata`, along with `LOCAL_CRATE`, are now in `rustc::middle::cstore`.
+     * The CStore methods were split between the `rustc::middle::CrateStore` trait (and trait object) and the `rustc_metadata::cstore::CStore`, with an `Rc&lt;CrateStore&gt;` stored in the `Session`. The inner `CStore` can be accessed via the inner `Any` bound, but this is deprecated.
+    
+    r? @nikomatsakis
+
+commit 1430a3500076ad504a0b30be77fd2ad4468ea769
+Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+AuthorDate: Sun Nov 22 22:14:09 2015 +0200
+Commit:     Ariel Ben-Yehuda &lt;arielb1@mail.tau.ac.il&gt;
+CommitDate: Thu Nov 26 18:22:39 2015 +0200
+
+    move librustc/plugin to librustc_plugin
+    
+    this is a [breaking-change] to all plugin authors - sorry
+
 commit 3c0d55cc76c524c12160bfb45663d9aca73e6556
 Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
 AuthorDate: Thu Nov 19 00:43:31 2015 +0200
@@ -1958,35 +1987,4 @@ CommitDate: Wed Apr 8 15:48:46 2015 -0700
     
     [breaking-change]
     cc #24208
-
-commit f3f99fb44eea1d7037f94259aef6cbc39837ebee
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Apr 8 09:50:50 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Apr 8 10:33:39 2015 -0700
-
-    std: Fix fs::read_link behavior on Windows
-    
-    The current implementation of using GetFinalPathNameByHandle actually reads all
-    intermediate links instead of just looking at the current link. This commit
-    alters the behavior of the function to use a different API which correctly reads
-    only one level of the soft link.
-    
-    [breaking-change]
-
-commit 97f24a85965c3c51a2c18be029091ae52bbd7920
-Author:     Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
-AuthorDate: Mon Apr 6 17:43:50 2015 +0200
-Commit:     Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
-CommitDate: Wed Apr 8 00:26:35 2015 +0200
-
-    Make `sum` and `product` inherent methods on `Iterator`
-    
-    In addition to being nicer, this also allows you to use `sum` and `product` for
-    iterators yielding custom types aside from the standard integers.
-    
-    Due to removing the `AdditiveIterator` and `MultiplicativeIterator` trait, this
-    is a breaking change.
-    
-    [breaking-change]
 </pre></body></html>
