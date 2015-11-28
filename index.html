@@ -1,6 +1,23 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit e9ac44026d2d4ac11728263726505ea4cea3c1ff
+Merge: bac2b13 af96402
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Nov 28 00:45:34 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Nov 28 00:45:34 2015 +0000
+
+    Auto merge of #29383 - petrochenkov:empstr, r=pnkfelix
+    
+    Fixes https://github.com/rust-lang/rust/issues/28692
+    Fixes https://github.com/rust-lang/rust/issues/28992
+    Fixes some other similar issues (see the tests)
+    
+    [breaking-change], needs crater run (cc @brson or @alexcrichton )
+    
+    The pattern with parens `UnitVariant(..)` for unit variants seems to be popular in rustc (see the second commit), but mostly used by one person (@nikomatsakis), according to git blame. If it causes breakage on crates.io I'll add an exceptional case for it.
+
 commit 6ef02eff89e3d2a29eab3346bff393821df6e033
 Merge: 6f3becb 43a6deb
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1967,24 +1984,4 @@ CommitDate: Thu Apr 9 08:54:09 2015 -0700
     [breaking-change]
     
     but no code should break in practice.
-
-commit 65e3f0325a64d8f1affa146b3575a4b7c90458d7
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Wed Apr 8 15:48:46 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Wed Apr 8 15:48:46 2015 -0700
-
-    std: Destabilize the internals of panic!
-    
-    Now that we have a `#[allow_internal_unstable]` attribute for macros there's no
-    need for these two `begin_unwind` functions to be stable. Right now the `panic!`
-    interface is the only one we wish to stabilize, so remove the stability markers
-    from these functions.
-    
-    While this is a breaking change, it is highly unlikely to break any actual code.
-    It is recommended to use the `panic!` macro instead if it breaks explicit calls
-    into `std::rt`.
-    
-    [breaking-change]
-    cc #24208
 </pre></body></html>
