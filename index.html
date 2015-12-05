@@ -1,6 +1,17 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit e22a64e8d8d4da46c74f878ce1c23ad1c88982e8
+Merge: 55a4e05 6dff9d0
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Dec 4 22:52:02 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Dec 4 22:52:02 2015 +0000
+
+    Auto merge of #30130 - tbu-:pr_array_clone, r=alexcrichton
+    
+    [breaking-change]
+
 commit e9ac44026d2d4ac11728263726505ea4cea3c1ff
 Merge: bac2b13 af96402
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1958,30 +1969,4 @@ CommitDate: Fri Apr 10 00:24:43 2015 +0530
     
     [breaking-change]
     cc #24208
-
-commit e3f324cd9d7b27eda6133c407a4751a8b0217631
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Wed Apr 8 17:01:03 2015 -0700
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Thu Apr 9 08:54:09 2015 -0700
-
-    Improve bounds in Iterator API
-    
-    This commit changes `Iterator`'s API by:
-    
-    * Generalizing bounds from `Iterator` to `IntoIterator` whenever
-      possible, matching the semantics and ergonomics of `for` loops.
-    
-    * Tightens up a few method-level bounds so that you get an error
-      earlier. For example, `rev` did not require `DoubleEndedIterator` even
-      though the result is only an `Iterator` when the original iterator was
-      double-ended.
-    
-    Closes #23587
-    
-    The bound-tightening is technically a:
-    
-    [breaking-change]
-    
-    but no code should break in practice.
 </pre></body></html>
