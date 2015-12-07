@@ -1,6 +1,32 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit e819d8aa3cd2319fa57e7336e167069ef7002d6a
+Merge: 64c21f9 0ca2a9e
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Dec 7 02:16:13 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Dec 7 02:16:13 2015 +0000
+
+    Auto merge of #30247 - bluss:revert-array-clone, r=alexcrichton
+    
+    Revert "PR #30130 Implement `Clone` for more arrays"
+    
+    This reverts commit e22a64e8d8d4da46c74f878ce1c23ad1c88982e8.
+    
+    This caused a regression such that types like `[[u8; 256]; 4]`
+    no longer implemented Clone. This previously worked due to Clone
+    for `[T; N]` (N in 0 to 32) being implemented for T: Copy.
+    
+    Due to fixed size arrays not implementing Clone for sizes above 32,
+    the new implementation requiring T: Clone would not allow
+    `[[u8; 256]; 4]` to be Clone.
+    
+    Fixes #30244
+    
+    Due to changing back, this is technically a [breaking-change],
+    albeit for a behavior that existed for a very short time.
+
 commit e22a64e8d8d4da46c74f878ce1c23ad1c88982e8
 Merge: 55a4e05 6dff9d0
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1948,25 +1974,4 @@ CommitDate: Thu Apr 9 16:12:33 2015 -0700
     
     [breaking-change]
     Closes rust-lang/rfcs#1043
-
-commit 5daee19eca622030c598042d9615df17d4ad035f
-Merge: 4e466e7 ec7c800
-Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-AuthorDate: Thu Apr 9 15:54:28 2015 +0530
-Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
-CommitDate: Fri Apr 10 00:24:43 2015 +0530
-
-    Rollup merge of #24212 - alexcrichton:destabilize-begin-unwind, r=huonw
-    
-     Now that we have a `#[allow_internal_unstable]` attribute for macros there's no
-    need for these two `begin_unwind` functions to be stable. Right now the `panic!`
-    interface is the only one we wish to stabilize, so remove the stability markers
-    from these functions.
-    
-    While this is a breaking change, it is highly unlikely to break any actual code.
-    It is recommended to use the `panic!` macro instead if it breaks explicit calls
-    into `std::rt`.
-    
-    [breaking-change]
-    cc #24208
 </pre></body></html>
