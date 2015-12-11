@@ -1,6 +1,29 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 672a3d93e34ad52529f3bdedfd26d52d67824ccd
+Merge: ae5d095 ada87fa
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Dec 11 04:27:53 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Dec 11 04:27:53 2015 +0000
+
+    Auto merge of #30294 - jseyfried:fix_shadowed_use_visibility, r=nrc
+    
+    This fixes a bug in which the visibility of a use declaration defining a name in one namespace (e.g. the value namespace) is overridden by a later use declaration defining the same name in the other namespace (e.g. the type namespace). For example,
+    ```rust
+    fn f() {}
+    pub mod bar {}
+    
+    mod foo {
+        use f; // This import should not be visible outside `foo`,
+        pub use bar as f; // but it visible outside of `foo` because of this import.
+    }
+    
+    fn main() { foo::f(); }
+    ```
+    As the example demonstrates, this is a [breaking-change], but it looks unlikely to cause breakage in practice, and any breakage can be fixed by correcting visibility modifiers.
+
 commit e819d8aa3cd2319fa57e7336e167069ef7002d6a
 Merge: 64c21f9 0ca2a9e
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1953,25 +1976,4 @@ CommitDate: Thu Apr 9 17:07:02 2015 -0700
     descriptors created by the standard library will no longer be inherited.
     
     [breaking-change]
-
-commit 2705051e2067e8f467b4cb9bc75e801a5cd4f0e7
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Thu Apr 9 15:43:27 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Apr 9 16:12:33 2015 -0700
-
-    std: Make FromRawFd::from_raw_fd an unsafe method
-    
-    As pointed out in [RFC issue 1043][rfc] it is quite useful to have the standard
-    I/O types to provide the contract that they are the sole owner of the underlying
-    object they represent. This guarantee enables writing safe interfaces like the
-    `MemoryMap` API sketched out in that issue.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/issues/1043
-    
-    As constructing objects from these raw handles may end up violating these
-    ownership gurantees, the functions for construction are now marked unsafe.
-    
-    [breaking-change]
-    Closes rust-lang/rfcs#1043
 </pre></body></html>
