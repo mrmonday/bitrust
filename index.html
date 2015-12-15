@@ -1,6 +1,14 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit ec8ea22c7f59fd898670060bceb6810cef68ca0a
+Author:     faineance &lt;faineance@users.noreply.github.com&gt;
+AuthorDate: Sat Nov 28 19:02:07 2015 +0000
+Commit:     faineance &lt;faineance@users.noreply.github.com&gt;
+CommitDate: Mon Dec 14 21:15:01 2015 +0000
+
+    [breaking-change] move ast_util functions to methods
+
 commit 672a3d93e34ad52529f3bdedfd26d52d67824ccd
 Merge: ae5d095 ada87fa
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1944,36 +1952,4 @@ CommitDate: Fri Apr 10 23:49:24 2015 +0000
     Under the old deriving, `A &lt; B` held, because `A` came before `B` in the order of declaration.  But now we use the ordering according to the provided values, and thus `A &gt; B`.  (However, this change is very unlikely to break much, if any, code, since the orderings themselves should all remain well-defined, total, etc.)
     
     Fix #15523
-
-commit d6c72306c8fc2ec0fd9d6e499c32f2bf52f0b8ba
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Apr 3 15:30:10 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Apr 9 17:07:02 2015 -0700
-
-    std: Set CLOEXEC for all fds opened on unix
-    
-    This commit starts to set the CLOEXEC flag for all files and sockets opened by
-    the standard library by default on all unix platforms. There are a few points of
-    note in this commit:
-    
-    * The implementation is not 100% satisfactory in the face of threads. File
-      descriptors only have the `F_CLOEXEC` flag set *after* they are opened,
-      allowing for a fork/exec to happen in the middle and leak the descriptor.
-      Some platforms do support atomically opening a descriptor while setting the
-      `CLOEXEC` flag, and it is left as a future extension to bind these apis as it
-      is unclear how to do so nicely at this time.
-    
-    * The implementation does not offer a method of opting into the old behavior of
-      not setting `CLOEXEC`. This will possibly be added in the future through
-      extensions on `OpenOptions`, for example.
-    
-    * This change does not yet audit any Windows APIs to see if the handles are
-      inherited by default by accident.
-    
-    This is a breaking change for users who call `fork` or `exec` outside of the
-    standard library itself and expect file descriptors to be inherted. All file
-    descriptors created by the standard library will no longer be inherited.
-    
-    [breaking-change]
 </pre></body></html>
