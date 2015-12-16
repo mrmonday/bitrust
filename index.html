@@ -1,6 +1,19 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit ce7bc51933e2facb4eca029ac17b398f372f5b41
+Merge: ac2c5ff 0883f10
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Dec 16 10:09:36 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Dec 16 10:09:36 2015 +0000
+
+    Auto merge of #30300 - sanxiyn:syntax-ext, r=nikomatsakis
+    
+    This reduces iteration time (`make rustc-stage1`) for moved syntax extensions from 11 minutes to 3 minutes on my machine.
+    
+    Because of the signature change, this is a [breaking-change] for people directly calling `expand_crate`. I think it is rare: from GitHub search, only case I found is [glassful](https://github.com/kmcallister/glassful).
+
 commit ec8ea22c7f59fd898670060bceb6810cef68ca0a
 Author:     faineance &lt;faineance@users.noreply.github.com&gt;
 AuthorDate: Sat Nov 28 19:02:07 2015 +0000
@@ -1929,27 +1942,4 @@ CommitDate: Sun Apr 12 01:26:53 2015 +0000
     cc @alexcrichton @huonw @nrc because you commented on the original RFC issue.
     
     EDIT: wow, this became much bigger than I initially intended.
-
-commit 93f7fe32d30b67baa6abf09c073c5862a978dc57
-Merge: c897ac0 05aaad1
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri Apr 10 23:49:24 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri Apr 10 23:49:24 2015 +0000
-
-    Auto merge of #24270 - pnkfelix:use-disr-val-for-derive-ord, r=brson
-    
-    Use `discriminant_value` intrinsic for `derive(PartialOrd)`
-    
-    [breaking-change]
-    
-    This is a [breaking-change] because it can change the result of comparison operators when enum discriminants have been explicitly assigned.  Notably in a case like:
-    ```rust
-    #[derive(PartialOrd)]
-    enum E { A = 2, B = 1}
-    ```
-    
-    Under the old deriving, `A &lt; B` held, because `A` came before `B` in the order of declaration.  But now we use the ordering according to the provided values, and thus `A &gt; B`.  (However, this change is very unlikely to break much, if any, code, since the orderings themselves should all remain well-defined, total, etc.)
-    
-    Fix #15523
 </pre></body></html>
