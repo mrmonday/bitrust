@@ -1,6 +1,40 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit ef91cdb140d7dffa4b04f42ab0bc02dc257940e3
+Merge: 29ea4ee 785cbe0
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Dec 18 18:54:52 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Dec 18 18:54:52 2015 +0000
+
+    Auto merge of #29973 - petrochenkov:privinpub, r=nikomatsakis
+    
+    Some notes:
+    This patch enforces the rules from [RFC 136](https://github.com/rust-lang/rfcs/blob/master/text/0136-no-privates-in-public.md) and makes "private in public" a module-level concept and not crate-level. Only `pub` annotations are used by the new algorithm, crate-level exported node set produced by `EmbargoVisitor` is not used. The error messages are tweaked accordingly and don't use the word "exported" to avoid confusing people (https://github.com/rust-lang/rust/issues/29668).
+    
+    The old algorithm tried to be extra smart with impls, but it mostly led to unpredictable behavior and bugs like https://github.com/rust-lang/rust/issues/28325.
+    The new algorithm tries to be as simple as possible - an impl is considered public iff its type is public and its trait is public (if presents).
+    A type or trait is considered public if all its components are public, [complications](https://internals.rust-lang.org/t/limits-of-type-inference-smartness/2919) with private types leaking to other crates/modules through trait impls and type inference are deliberately ignored so far.
+    
+    The new algorithm is not recursive and uses the nice new facility `Crate::visit_all_items`!
+    
+    Obsolete pre-1.0 feature `visible_private_types` is removed.
+    
+    This is a [breaking-change].
+    The two main vectors of breakage are type aliases (https://github.com/rust-lang/rust/issues/28450) and impls (https://github.com/rust-lang/rust/issues/28325).
+    I need some statistics from a crater run (cc @alexcrichton) to decide on the breakage mitigation strategy.
+    UPDATE: All the new errors are reported as warnings controlled by a lint `private_in_public` and lint group `future_incompatible`, but the intent is to make them hard errors eventually.
+    
+    Closes https://github.com/rust-lang/rust/issues/28325
+    Closes https://github.com/rust-lang/rust/issues/28450
+    Closes https://github.com/rust-lang/rust/issues/29524
+    Closes https://github.com/rust-lang/rust/issues/29627
+    Closes https://github.com/rust-lang/rust/issues/29668
+    Closes https://github.com/rust-lang/rust/issues/30055
+    
+    r? @nikomatsakis
+
 commit ce7bc51933e2facb4eca029ac17b398f372f5b41
 Merge: ac2c5ff 0883f10
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1907,39 +1941,4 @@ CommitDate: Mon Apr 13 10:30:10 2015 +1200
     don't need them here.
     
     [breaking-change]
-
-commit 5afa2704a6fdee62b267a5df9ca0934350dfc3d1
-Merge: 6790b0e 000db38
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sun Apr 12 01:26:53 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sun Apr 12 01:26:53 2015 +0000
-
-    Auto merge of #23011 - nagisa:the-war-of-symbol-and-symbol, r=pnkfelix
-    
-    We provide tools to tell what exact symbols to emit for any fn or static, but
-    don’t quite check if that won’t cause any issues later on. Some of the issues
-    include LLVM mangling our names again and our names pointing to wrong locations,
-    us generating dumb foreign call wrappers, linker errors, extern functions
-    resolving to different symbols altogether (`extern {fn fail();} fail();` in some
-    cases calling `fail1()`), etc.
-    
-    Before the commit we had a function called `note_unique_llvm_symbol`, so it is
-    clear somebody was aware of the issue at some point, but the function was barely
-    used, mostly in irrelevant locations.
-    
-    Along with working on it I took liberty to start refactoring trans/base into
-    a few smaller modules. The refactoring is incomplete and I hope I will find some
-    motivation to carry on with it.
-    
-    This is possibly a [breaking-change] because it makes dumbly written code
-    properly invalid.
-    
-    This fixes all those issues about incorrect use of #[no_mangle] being not reported/misreported/ICEd by the compiler.
-    
-    NB. This PR does not attempt to tackle the parallel codegen issue that was mentioned in https://github.com/rust-lang/rust/pull/22811, but I believe it should be very straightforward in a follow up PR by modifying `trans::declare::get_defined_value` to look at all the contexts.
-    
-    cc @alexcrichton @huonw @nrc because you commented on the original RFC issue.
-    
-    EDIT: wow, this became much bigger than I initially intended.
 </pre></body></html>
