@@ -1,6 +1,27 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 5e8cb3819bf62527947634ad4d5e44b4b69daecd
+Merge: b622891 402259d
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Jan 4 18:37:21 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Jan 4 18:37:21 2016 +0000
+
+    Auto merge of #30523 - ubsan:wrapping_op_assign, r=eddyb
+    
+    Add OpAssign to Wrapping&lt;T&gt;, plus fix some problems in core::num::wrapping
+    
+    including, but not limited to:
+    
+    * Testing Wrapping&lt;T&gt;
+    * Pull out a lot of broken code that doesn't need to be there with the new stage0 compiler
+    * Adding Rem and RemAssign to Wrapping&lt;T&gt;
+    * Removed 3 (assumed accidental) re-exports, which is a minor [breaking-change].
+    * Change shl and shr to take all integer types, instead of a usize; this is a more major [breaking-change], because of values that were inferred before, but brings us in line with the integer shifts.
+    
+    Fixes #30524 and #30523
+
 commit ef91cdb140d7dffa4b04f42ab0bc02dc257940e3
 Merge: 29ea4ee 785cbe0
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1923,19 +1944,6 @@ Commit:     bors &lt;bors@rust-lang.org&gt;
 CommitDate: Mon Apr 13 08:08:23 2015 +0000
 
     Auto merge of #24339 - lfairy:remove-regex-data, r=alexcrichton
-    
-    The regex crate keeps its own tables now (rust-lang/regex#41) so we
-    don't need them here.
-    
-    [breaking-change]
-
-commit 5308ac939a330b74540bea5920b0086a2d954648
-Author:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
-AuthorDate: Sun Apr 12 13:24:19 2015 +1200
-Commit:     Chris Wong &lt;lambda.fairy@gmail.com&gt;
-CommitDate: Mon Apr 13 10:30:10 2015 +1200
-
-    Remove regex module from libunicode
     
     The regex crate keeps its own tables now (rust-lang/regex#41) so we
     don't need them here.
