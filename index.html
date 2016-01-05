@@ -1,6 +1,22 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit d5e229057c93222afd4943a49d382c4c5d6e8c26
+Merge: 41611ba 33f3c52
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Jan 4 23:57:46 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Jan 4 23:57:46 2016 +0000
+
+    Auto merge of #30681 - Toby-S:master, r=bluss
+    
+    Make `".".parse::&lt;f32&gt;()` and `".".parse::&lt;f64&gt;()` return Err
+    
+    This fixes #30344.
+    
+    This is a [breaking-change], which the libs team have classified as a
+    bug fix.
+
 commit 5e8cb3819bf62527947634ad4d5e44b4b69daecd
 Merge: b622891 402259d
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -21,6 +37,22 @@ CommitDate: Mon Jan 4 18:37:21 2016 +0000
     * Change shl and shr to take all integer types, instead of a usize; this is a more major [breaking-change], because of values that were inferred before, but brings us in line with the integer shifts.
     
     Fixes #30524 and #30523
+
+commit 33f3c52d32e6f91494bc305fd25f9d5ae5a11702
+Author:     Toby Scrace &lt;toby.scrace@gmail.com&gt;
+AuthorDate: Sun Jan 3 20:08:53 2016 +0000
+Commit:     Toby Scrace &lt;toby.scrace@gmail.com&gt;
+CommitDate: Mon Jan 4 18:23:33 2016 +0000
+
+    Make float parsing "." return Err
+    
+    This makes both of the following return Err:
+    
+        ".".parse::&lt;f32&gt;()
+        ".".parse::&lt;f64&gt;()
+    
+    This is a [breaking-change], which the libs team have classified as a
+    bug fix.
 
 commit ef91cdb140d7dffa4b04f42ab0bc02dc257940e3
 Merge: 29ea4ee 785cbe0
@@ -1917,36 +1949,6 @@ CommitDate: Mon Apr 13 12:15:28 2015 -0700
     fundamental problem with the `scoped` idea, but rather an indication
     that Rust doesn't currently provide a good way to ensure that
     destructors are run within a particular stack frame.)
-    
-    [breaking-change]
-
-commit f55e66aaed42589dcda0221a4545dbaaec68e577
-Merge: 588d37c f3f99fb
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Mon Apr 13 17:39:14 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Mon Apr 13 17:39:14 2015 +0000
-
-    Auto merge of #24198 - alexcrichton:windows-readlink, r=aturon
-    
-    The current implementation of using GetFinalPathNameByHandle actually reads all
-    intermediate links instead of just looking at the current link. This commit
-    alters the behavior of the function to use a different API which correctly reads
-    only one level of the soft link.
-    
-    [breaking-change]
-
-commit 524547551cd6c9b33a9677e1a58e9a9d1e19c0fc
-Merge: 49798c5 5308ac9
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Mon Apr 13 08:08:23 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Mon Apr 13 08:08:23 2015 +0000
-
-    Auto merge of #24339 - lfairy:remove-regex-data, r=alexcrichton
-    
-    The regex crate keeps its own tables now (rust-lang/regex#41) so we
-    don't need them here.
     
     [breaking-change]
 </pre></body></html>
