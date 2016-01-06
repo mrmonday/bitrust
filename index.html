@@ -1,6 +1,19 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 5daa75373d870f255923aed37d99db73a661bd51
+Merge: e8c337b 9023c65
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Jan 6 20:30:55 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Jan 6 20:30:55 2016 +0000
+
+    Auto merge of #30654 - nrc:panictry, r=brson
+    
+    The motivation (other than removing boilerplate) is that this is a baby step towards a parser with error recovery.
+    
+    [breaking-change] if you use any of the changed functions, you'll need to remove a try! or panictry!
+
 commit e8c337b5ca883285e6215f1f669d5556842d1520
 Merge: 21b025f 93996b1
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -110,6 +123,16 @@ CommitDate: Mon Jan 4 18:23:33 2016 +0000
     
     This is a [breaking-change], which the libs team have classified as a
     bug fix.
+
+commit 9023c659af8a43dd5e284d7b311e5f19721c9bd8
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Thu Dec 31 12:11:53 2015 +1300
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Thu Dec 31 14:29:02 2015 +1300
+
+    Cut out a bunch of Result and panictry! boilerplate from libsyntax.
+    
+    [breaking-change] if you use any of the changed functions, you'll need to remove a try! or panictry!
 
 commit ef91cdb140d7dffa4b04f42ab0bc02dc257940e3
 Merge: 29ea4ee 785cbe0
@@ -1910,37 +1933,4 @@ CommitDate: Thu Apr 16 01:17:04 2015 +0000
     It was an oversight that this was not done in the great int upheaval.
     
     [breaking-change]
-
-commit 5a3a599428f5af024857d19b5d360b148e885fa2
-Author:     Brian Anderson &lt;banderson@mozilla.com&gt;
-AuthorDate: Wed Apr 15 16:11:56 2015 -0700
-Commit:     Brian Anderson &lt;banderson@mozilla.com&gt;
-CommitDate: Wed Apr 15 16:13:26 2015 -0700
-
-    Forbid is/us suffixes. Fixes #22496
-    
-    It was an oversight that this was not done in the great int upheaval.
-    
-    [breaking-change]
-
-commit 07f807d01f191ced1d7f4857c73fc57fbe31f421
-Merge: ce27d02 77bf827
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Wed Apr 15 21:05:16 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Wed Apr 15 21:05:16 2015 +0000
-
-    Auto merge of #24330 - pnkfelix:issue-24267, r=nikomatsakis
-    
-    Extend rustc::middle::dataflow to allow filtering kills from flow-exits.
-    
-    Fix borrowck analysis so that it will not treat a break that pops through an assignment
-    ```rust
-    x = { ... break; ... }
-    ```
-    as a kill of the "moved-out" bit for `x`.
-    
-    Fix #24267.
-    
-    [breaking-change], but really, its only breaking code that was already buggy.
 </pre></body></html>
