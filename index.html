@@ -1,6 +1,31 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 21b025f55fa7f68982f9faf58522da11b3d91815
+Merge: d5ac1a1 14e1e2a
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Jan 6 15:00:17 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Jan 6 15:00:17 2016 +0000
+
+    Auto merge of #30733 - ubsan:wrapping_op_assign, r=eddyb
+    
+    Fix a breaking change in #30523
+    
+    While this does fix a breaking change, it is also, technically, a
+    [breaking-change] to go back to our original way
+
+commit 14e1e2aee812978c81d4edf23359e7dca444d678
+Author:     Nicholas Mazzuca &lt;npmazzuca@gmail.com&gt;
+AuthorDate: Tue Jan 5 22:16:03 2016 -0800
+Commit:     Nicholas Mazzuca &lt;npmazzuca@gmail.com&gt;
+CommitDate: Tue Jan 5 22:16:03 2016 -0800
+
+    Fix a breaking change in #30523
+    
+    While this does fix a breaking change, it is also, technically, a
+    [breaking-change] to go back to our original way
+
 commit d5e229057c93222afd4943a49d382c4c5d6e8c26
 Merge: 41611ba 33f3c52
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1908,47 +1933,4 @@ CommitDate: Tue Apr 14 00:07:50 2015 +0000
     
     [breaking-change]
     Closes rust-lang/rfcs#1043
-
-commit 6e0fb70ff6effe7b7be2c5fe951e9161613e6707
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Mon Apr 13 14:48:17 2015 -0700
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Mon Apr 13 14:48:17 2015 -0700
-
-    Generalize `spawn` beyond unit closures
-    
-    `thread::spawn` was previously restricted to closures that return `()`,
-    which limited the utility of joining on a spawned thread. However, there
-    is no reason for this restriction, and this commit allows arbitrary
-    return types.
-    
-    Since it introduces a type parameter to `JoinHandle`, it's technically
-    a:
-    
-    [breaking-change]
-    
-    However, no code is actually expected to break.
-
-commit 6399bb425b3a82111cd554737f194c95b8f6bad5
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Mon Apr 13 12:08:20 2015 -0700
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Mon Apr 13 12:15:28 2015 -0700
-
-    De-stabilize `thread::scoped` and friends
-    
-    Issue #24292 demonstrates that the `scoped` API as currently offered can
-    be memory-unsafe: the `JoinGuard` can be moved into a context that will
-    fail to execute destructors prior to the stack frame being popped (for
-    example, by creating an `Rc` cycle).
-    
-    This commit reverts the APIs to `unstable` status while a long-term
-    solution is worked out.
-    
-    (There are several possible ways to address this issue; it's not a
-    fundamental problem with the `scoped` idea, but rather an indication
-    that Rust doesn't currently provide a good way to ensure that
-    destructors are run within a particular stack frame.)
-    
-    [breaking-change]
 </pre></body></html>
