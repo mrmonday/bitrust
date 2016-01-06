@@ -1,6 +1,38 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit e8c337b5ca883285e6215f1f669d5556842d1520
+Merge: 21b025f 93996b1
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Jan 6 18:37:57 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Jan 6 18:37:57 2016 +0000
+
+    Auto merge of #30532 - nikomatsakis:cross-item-dependencies, r=mw
+    
+    This is roughly the same as my previous PR that created a dependency graph, but that:
+    
+    1. The dependency graph is only optionally constructed, though this doesn't seem to make much of a difference in terms of overhead (see measurements below).
+    2. The dependency graph is simpler (I combined a lot of nodes).
+    3. The dependency graph debugging facilities are much better: you can now use `RUST_DEP_GRAPH_FILTER` to filter the dep graph to just the nodes you are interested in, which is super help.
+    4. The tests are somewhat more elaborate, including a few known bugs I need to fix in a second pass.
+    
+    This is potentially a `[breaking-change]` for plugin authors. If you are poking about in tcx state or something like that, you probably want to add `let _ignore = tcx.dep_graph.in_ignore();`, which will cause your reads/writes to be ignored and not affect the dep-graph.
+    
+    After this, or perhaps as an add-on to this PR in some cases, what I would like to do is the following:
+    
+    - [x] Write-up a little guide to how to use this system, the debugging options available, and what the possible failure modes are.
+    - [ ] Introduce read-only and perhaps the `Meta` node
+    - [x] Replace "memoization tasks" with node from the map itself
+    - [ ] Fix the shortcomings, obviously! Notably, the HIR map needs to register reads, and there is some state that is not yet tracked. (Maybe as a separate PR.)
+    - [x] Refactor the dep-graph code so that the actual maintenance of the dep-graph occurs in a parallel thread, and the main thread simply throws things into a shared channel (probably a fixed-size channel). There is no reason for dep-graph construction to be on the main thread. (Maybe as a separate PR.)
+    
+    Regarding performance: adding this tracking does add some overhead, approximately 2% in my measurements (I was comparing the build times for rustdoc). Interestingly, enabling or disabling tracking doesn't seem to do very much. I want to poke at this some more and gather a bit more data -- in some tests I've seen that 2% go away, but on others it comes back. It's not entirely clear to me if that 2% is truly due to constructing the dep-graph at all.
+    
+    The next big step after this is write some code to dump the dep-graph to disk and reload it.
+    
+    r? @michaelwoerister
+
 commit 21b025f55fa7f68982f9faf58522da11b3d91815
 Merge: d5ac1a1 14e1e2a
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1911,26 +1943,4 @@ CommitDate: Wed Apr 15 21:05:16 2015 +0000
     Fix #24267.
     
     [breaking-change], but really, its only breaking code that was already buggy.
-
-commit e6a812402828f0f11b0de7a7e0c08c1d85a437f1
-Merge: f55e66a 2705051
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Apr 14 00:07:50 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Apr 14 00:07:50 2015 +0000
-
-    Auto merge of #24251 - alexcrichton:unsafe-from-raw-fd, r=aturon
-    
-    As pointed out in [RFC issue 1043][rfc] it is quite useful to have the standard
-    I/O types to provide the contract that they are the sole owner of the underlying
-    object they represent. This guarantee enables writing safe interfaces like the
-    `MemoryMap` API sketched out in that issue.
-    
-    [rfc]: https://github.com/rust-lang/rfcs/issues/1043
-    
-    As constructing objects from these raw handles may end up violating these
-    ownership gurantees, the functions for construction are now marked unsafe.
-    
-    [breaking-change]
-    Closes rust-lang/rfcs#1043
 </pre></body></html>
