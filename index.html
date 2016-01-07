@@ -1,6 +1,24 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 91b27ec9beb8455426da3efd26dfc9155058f5bd
+Merge: 4406717 6dd3f61
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Jan 7 06:32:56 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Jan 7 06:32:56 2016 +0000
+
+    Auto merge of #30724 - nikomatsakis:feature-gate-defaulted-type-parameters, r=pnkfelix
+    
+    It was recently realized that we accept defaulted type parameters everywhere, without feature gate, even though the only place that we really *intended* to accept them were on types. This PR adds a lint warning unless the "type-parameter-defaults" feature is enabled. This should eventually become a hard error.
+    
+    This is a [breaking-change] in that new feature gates are required (or simply removing the defaults, which is probably a better choice as they have little effect at this time). Results of a [crater run][crater] suggest that approximately 5-15 crates are affected. I didn't do the measurement quite right so that run cannot distinguish "true" regressions from "non-root" regressions, but even the upper bound of 15 affected crates seems relatively minimal.
+    
+    [crater]: https://gist.github.com/nikomatsakis/760c6a67698bd24253bf
+    
+    cc @rust-lang/lang
+    r? @pnkfelix
+
 commit 5daa75373d870f255923aed37d99db73a661bd51
 Merge: e8c337b 9023c65
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1920,17 +1938,4 @@ CommitDate: Fri Apr 17 16:37:30 2015 -0700
     
     [breaking-change]
     Closes #24538
-
-commit e40449e0d545561c73a9b9b324b5971b533a87b7
-Merge: abf0548 5a3a599
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Thu Apr 16 01:17:04 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Thu Apr 16 01:17:04 2015 +0000
-
-    Auto merge of #24485 - brson:is, r=alexcrichton
-    
-    It was an oversight that this was not done in the great int upheaval.
-    
-    [breaking-change]
 </pre></body></html>
