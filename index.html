@@ -1,6 +1,24 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 69e1f57dfbd32a1a342d696a3e79624da97ebe1b
+Merge: d70ab2b 834fb17
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Jan 11 06:40:58 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Jan 11 06:40:58 2016 +0000
+
+    Auto merge of #30295 - jseyfried:fix_extern_crate_duplicate, r=nrc
+    
+    Fix a bug allowing an item and an external crate to collide so long as the external crate is declared after the item. For example,
+    ```rust
+    mod core { pub fn f() {} } // This would be an error if it followed the `extern crate`
+    extern crate core; // This declaration is shadowed by the preceding module
+    
+    fn main() { core::f(); }
+    ```
+    This is a [breaking-change], but it looks unlikely to cause breakage in practice, and any breakage can be fixed by removing colliding `extern crate` declarations, which are shadowed and hence unused.
+
 commit 91b27ec9beb8455426da3efd26dfc9155058f5bd
 Merge: 4406717 6dd3f61
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1917,25 +1935,4 @@ CommitDate: Sat Apr 18 02:53:53 2015 +0000
     [breaking-change]
     
     Fixes #24049.
-
-commit 8f5b5f94dcdb9884737dfbc8efd893d1d70f0b14
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Apr 17 14:31:30 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Fri Apr 17 16:37:30 2015 -0700
-
-    std: Add Default/IntoIterator/ToOwned to the prelude
-    
-    This is an implementation of [RFC 1030][rfc] which adds these traits to the
-    prelude and additionally removes all inherent `into_iter` methods on collections
-    in favor of the trait implementation (which is now accessible by default).
-    
-    [rfc]: https://github.com/rust-lang/rfcs/pull/1030
-    
-    This is technically a breaking change due to the prelude additions and removal
-    of inherent methods, but it is expected that essentially no code breaks in
-    practice.
-    
-    [breaking-change]
-    Closes #24538
 </pre></body></html>
