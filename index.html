@@ -1,6 +1,14 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit bac3eec67c367718c05585b72974c58a66f6abd0
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Jan 11 12:31:46 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Mon Jan 11 12:31:46 2016 +0100
+
+    [breaking-change] remove negate_unsigned feature gate
+
 commit 69e1f57dfbd32a1a342d696a3e79624da97ebe1b
 Merge: d70ab2b 834fb17
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1917,22 +1925,4 @@ CommitDate: Tue Apr 21 11:37:43 2015 -0700
     alternative crates are listed above.
     
     [breaking-change]
-
-commit efa6a46a8eceb4ab792d5ec8e28cf3baaaa96491
-Merge: 1284be4 9868529
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sat Apr 18 02:53:53 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sat Apr 18 02:53:53 2015 +0000
-
-    Auto merge of #24133 - kballard:add-sync-to-io-error, r=alexcrichton
-    
-    This allows `io::Error` values to be stored in `Arc` properly.
-    
-    Because this requires `Sync` of any value passed to `io::Error::new()`
-    and modifies the relevant `convert::From` impls, this is a
-    
-    [breaking-change]
-    
-    Fixes #24049.
 </pre></body></html>
