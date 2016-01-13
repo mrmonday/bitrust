@@ -1,6 +1,24 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 8796e012cbfa0bf63522e409edc10cbac5afaacd
+Merge: f1bcfdd 34fe201
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Jan 13 08:15:45 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Jan 13 08:15:45 2016 +0000
+
+    Auto merge of #29498 - wthrowe:replace-pattern, r=alexcrichton
+    
+    It appears this was left out of RFC rust-lang/rfcs#528 because it might be useful to
+    also generalize the second argument in some way.  That doesn't seem to
+    prevent generalizing the first argument now, however.
+    
+    This is a [breaking-change] because it could cause type-inference to
+    fail where it previously succeeded.
+    
+    Also update docs for a few other methods that still referred to `&amp;str` instead of patterns.
+
 commit bac3eec67c367718c05585b72974c58a66f6abd0
 Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
 AuthorDate: Mon Jan 11 12:31:46 2016 +0100
@@ -255,6 +273,21 @@ CommitDate: Fri Dec 11 04:27:53 2015 +0000
     fn main() { foo::f(); }
     ```
     As the example demonstrates, this is a [breaking-change], but it looks unlikely to cause breakage in practice, and any breakage can be fixed by correcting visibility modifiers.
+
+commit e7f3d6eddd28a917c9a0f7cd73a489048ca7f4cd
+Author:     William Throwe &lt;wtt6@cornell.edu&gt;
+AuthorDate: Sun Nov 1 00:21:47 2015 -0400
+Commit:     William Throwe &lt;wtt6@cornell.edu&gt;
+CommitDate: Mon Dec 7 22:08:33 2015 -0500
+
+    Let str::replace take a pattern
+    
+    It appears this was left out of RFC #528 because it might be useful to
+    also generalize the second argument in some way.  That doesn't seem to
+    prevent generalizing the first argument now, however.
+    
+    This is a [breaking-change] because it could cause type-inference to
+    fail where it previously succeeded.
 
 commit e819d8aa3cd2319fa57e7336e167069ef7002d6a
 Merge: 64c21f9 0ca2a9e
@@ -1882,47 +1915,4 @@ CommitDate: Sat Apr 25 21:44:50 2015 +0000
     
     Closes #20616
     It breaks code such as &lt;https://github.com/rust-lang/rust/blob/c64feb63418fd05bd6e5adc6f9ad763aa6a594b1/src/librustc_typeck/check/method/suggest.rs#L367&gt;, so this is a [breaking-change], you have to add missing comma after the last lifetime arguement now.
-
-commit 98e9765d973d46faa5c80fb37a48040ca9e87b28
-Merge: 44338cb 8f5b5f9
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Tue Apr 21 15:28:06 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Apr 21 15:28:06 2015 -0700
-
-    rollup merge of #24541: alexcrichton/issue-24538
-    
-    This is an implementation of [RFC 1030][rfc] which adds these traits to the
-    prelude and additionally removes all inherent `into_iter` methods on collections
-    in favor of the trait implementation (which is now accessible by default).
-    
-    [rfc]: https://github.com/rust-lang/rfcs/pull/1030
-    
-    This is technically a breaking change due to the prelude additions and removal
-    of inherent methods, but it is expected that essentially no code breaks in
-    practice.
-    
-    [breaking-change]
-    Closes #24538
-
-commit eeb94886adccb3f13003f92f117115d17846ce1f
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Fri Apr 17 15:32:42 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Tue Apr 21 11:37:43 2015 -0700
-
-    std: Remove deprecated/unstable num functionality
-    
-    This commit removes all the old casting/generic traits from `std::num` that are
-    no longer in use by the standard library. This additionally removes the old
-    `strconv` module which has not seen much use in quite a long time. All generic
-    functionality has been supplanted with traits in the `num` crate and the
-    `strconv` module is supplanted with the [rust-strconv crate][rust-strconv].
-    
-    [rust-strconv]: https://github.com/lifthrasiir/rust-strconv
-    
-    This is a breaking change due to the removal of these deprecated crates, and the
-    alternative crates are listed above.
-    
-    [breaking-change]
 </pre></body></html>
