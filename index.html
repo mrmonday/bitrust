@@ -1,6 +1,32 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 82f8e5ce84c83b02fbfa720c6841f12db1a55603
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Thu Jan 7 09:23:01 2016 +1300
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Fri Jan 15 14:49:25 2016 +1300
+
+    Address reviewer comments
+    
+    [breaking-change]
+    
+    `OptLevel` variants are no longer `pub use`ed by rust::session::config. If you are using these variants, you must change your code to prefix the variant name with `OptLevel`.
+
+commit b976d9e6660c16f4a1d5a28b11afa7ccb4f75da6
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Thu Dec 31 18:47:14 2015 +1300
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Fri Jan 15 10:24:12 2016 +1300
+
+    Implement JSON error emission
+    
+    [breaking-change]
+    
+    syntax::errors::Handler::new has been renamed to with_tty_emitter
+    
+    Many functions which used to take a syntax::errors::ColorConfig, now take a rustc::session::config::ErrorOutputType. If you previously used ColorConfig::Auto as a default, you should now use ErrorOutputType::default().
+
 commit 8796e012cbfa0bf63522e409edc10cbac5afaacd
 Merge: f1bcfdd 34fe201
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1868,51 +1894,4 @@ CommitDate: Sun Apr 26 09:52:28 2015 +0000
     Fixes #15962.
     Fixes #17397.
     Fixes #16617.
-
-commit 2d9831dea598d8a45c69e8c799503e8a397aacc0
-Author:     Geoffry Song &lt;goffrie@gmail.com&gt;
-AuthorDate: Thu Mar 5 15:06:49 2015 -0500
-Commit:     Geoffry Song &lt;goffrie@gmail.com&gt;
-CommitDate: Sat Apr 25 21:42:10 2015 -0400
-
-    Interpolate AST nodes in quasiquote.
-    
-    This changes the `ToTokens` implementations for expressions, statements,
-    etc. with almost-trivial ones that produce `Interpolated(*Nt(...))`
-    pseudo-tokens. In this way, quasiquote now works the same way as macros
-    do: already-parsed AST fragments are used as-is, not reparsed.
-    
-    The `ToSource` trait is removed. Quasiquote no longer involves
-    pretty-printing at all, which removes the need for the
-    `encode_with_hygiene` hack. All associated machinery is removed.
-    
-    A new `Nonterminal` is added, NtArm, which the parser now interpolates.
-    This is just for quasiquote, not macros (although it could be in the
-    future).
-    
-    `ToTokens` is no longer implemented for `Arg` (although this could be
-    added again) and `Generics` (which I don't think makes sense).
-    
-    This breaks any compiler extensions that relied on the ability of
-    `ToTokens` to turn AST fragments back into inspectable token trees. For
-    this reason, this closes #16987.
-    
-    As such, this is a [breaking-change].
-    
-    Fixes #16472.
-    Fixes #15962.
-    Fixes #17397.
-    Fixes #16617.
-
-commit 00c48d3779fb4c372d2dfe7a8654c6cd1e065511
-Merge: 0d8309e 0ad48e4
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sat Apr 25 21:44:50 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sat Apr 25 21:44:50 2015 +0000
-
-    Auto merge of #24547 - bombless:comma, r=pnkfelix
-    
-    Closes #20616
-    It breaks code such as &lt;https://github.com/rust-lang/rust/blob/c64feb63418fd05bd6e5adc6f9ad763aa6a594b1/src/librustc_typeck/check/method/suggest.rs#L367&gt;, so this is a [breaking-change], you have to add missing comma after the last lifetime arguement now.
 </pre></body></html>
