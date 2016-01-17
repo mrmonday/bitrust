@@ -1,6 +1,27 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 88463364bfb675fdecd2bf9b70c589cc5e7cb2fb
+Merge: 077f4ee be4128d
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Jan 17 06:47:55 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Jan 17 06:47:55 2016 +0000
+
+    Auto merge of #30426 - gereeter:btree-rewrite, r=Gankro
+    
+    Despite being over 700 lines shorter, this implementation should use less memory than the previous one and is faster on at least insertions and iteration, the latter improving approximately 5x.
+    
+    Technically a [breaking-change] due to removal of deprecated functions.
+    
+    cc @apasel422 @Gankro @goyox86
+    
+    Fixes #27865.
+    
+    &lt;!-- Reviewable:start --&gt;
+    [&lt;img src="https://reviewable.io/review_button.png" height=40 alt="Review on Reviewable"/&gt;](https://reviewable.io/reviews/rust-lang/rust/30426)
+    &lt;!-- Reviewable:end --&gt;
+
 commit 82f8e5ce84c83b02fbfa720c6841f12db1a55603
 Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
 AuthorDate: Thu Jan 7 09:23:01 2016 +1300
@@ -1868,30 +1889,4 @@ CommitDate: Mon Apr 27 20:46:48 2015 +0000
     [breaking-change]
     
     (To see an example of what sort of user-visible change this causes, see the comments in the regression test.)
-
-commit 6365080c5cd27b74ec87420c351a3e7bdcff988e
-Merge: b0043db 24ef905
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sun Apr 26 09:52:28 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sun Apr 26 09:52:28 2015 +0000
-
-    Auto merge of #23085 - goffrie:interpolating-quote, r=huonw
-    
-    This changes the `ToTokens` implementations for expressions, statements, etc. with almost-trivial ones that produce `Interpolated(*Nt(...))` pseudo-tokens. In this way, quasiquote now works the same way as macros do: already-parsed AST fragments are used as-is, not reparsed.
-    
-    The `ToSource` trait is removed. Quasiquote no longer involves pretty-printing at all, which removes the need for the `encode_with_hygiene` hack. All associated machinery is removed.
-    
-    New `Nonterminal`s are added: NtArm, NtImplItem, and NtTraitItem. These are just for quasiquote, not macros.
-    
-    `ToTokens` is no longer implemented for `Arg` (although this could be added again) and `Generics` (which I don't think makes sense).
-    
-    This breaks any compiler extensions that relied on the ability of `ToTokens` to turn AST fragments back into inspectable token trees. For this reason, this closes #16987.
-    
-    As such, this is a [breaking-change].
-    
-    Fixes #16472.
-    Fixes #15962.
-    Fixes #17397.
-    Fixes #16617.
 </pre></body></html>
