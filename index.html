@@ -1,6 +1,22 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 54475e950cf3db909c4dec4a30c72f7636ab4e07
+Merge: 46dcffd ff6b0aa
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Jan 21 22:41:37 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Jan 21 22:41:37 2016 +0000
+
+    Auto merge of #30882 - petrochenkov:varnamesp, r=nrc
+    
+    Tuple and unit variants from other crates weren't put into type namespace.
+    Now variant namespacing is aligned with struct namespacing and is not affected by the variant's crate of origin (struct -&gt; type, tuple/unit -&gt; type/value).
+    Additionally, struct variants from other crates are put into value namespace (struct variants from local crate were already in it). This is not a necessity, but a future proofing measure.
+    
+    This fix can result in some new shadowing errors in cross-crate scenarios, crater reports [three regressions](https://github.com/rust-lang/rust/pull/30882#issuecomment-172369883).
+    [breaking-change]
+
 commit 88463364bfb675fdecd2bf9b70c589cc5e7cb2fb
 Merge: 077f4ee be4128d
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1859,18 +1875,4 @@ CommitDate: Tue Apr 28 17:47:16 2015 +0200
         foo();
     }
     ```
-
-commit b475fc7d6aa1cafa91790c273908fddfb669a82e
-Author:     Ulrik Sverdrup &lt;root@localhost&gt;
-AuthorDate: Mon Apr 27 19:37:13 2015 +0200
-Commit:     Ulrik Sverdrup &lt;root@localhost&gt;
-CommitDate: Tue Apr 28 11:38:33 2015 +0200
-
-    collections: Implement vec::drain(range) according to RFC 574
-    
-    Old `.drain()` on vec is performed using `.drain(..)` now.
-    
-    `.drain(range)` is unstable and under feature(collections_drain)
-    
-    [breaking-change]
 </pre></body></html>
