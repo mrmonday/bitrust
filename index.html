@@ -1,6 +1,52 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 43c1a173a874f5513db58b2f5321489a00087484
+Merge: 1972c50 faf0852
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Jan 26 11:24:18 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Jan 26 11:24:18 2016 +0000
+
+    Auto merge of #31105 - jseyfried:fix_lexical_scoping, r=nrc
+    
+    This fixes #23880, a scoping bug in which items in a block are shadowed by local variables and type parameters that are in scope.
+    
+    After this PR, an item in a block will shadow any local variables or type parameters above the item in the scope hierarchy. Items in a block will continue to be shadowed by local variables in the same block (even if the item is defined after the local variable).
+    
+    This is a [breaking-change]. For example, the following code breaks:
+    ```rust
+    fn foo() {
+        let mut f = 1;
+        {
+            fn f() {}
+            f += 1; // This will resolve to the function instead of the local variable
+        }
+    }
+
+commit faf0852fc1d01aef18fe8098a0f2f601dbfebd9b
+Author:     Jeffrey Seyfried &lt;jeffrey.seyfried@gmail.com&gt;
+AuthorDate: Fri Jan 22 09:55:29 2016 +0000
+Commit:     Jeffrey Seyfried &lt;jeffrey.seyfried@gmail.com&gt;
+CommitDate: Tue Jan 26 04:16:58 2016 +0000
+
+    Resolve: fix #23880, a scoping bug
+    
+    This fixes a bug in which items in a block are shadowed by local variables and type parameters that are in scope.
+    It is a [breaking-change]. For example, the following code breaks:
+    
+    ```rust
+    fn foo() {
+        let mut f = 1;
+        {
+            fn f() {}
+            f += 1; // This will now resolve to the function instead of the local variable
+        }
+    }
+    ```
+    
+    Any breakage can be fixed by renaming the item that is no longer shadowed.
+
 commit 54475e950cf3db909c4dec4a30c72f7636ab4e07
 Merge: 46dcffd ff6b0aa
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1796,83 +1842,4 @@ CommitDate: Thu Apr 30 16:02:58 2015 -0700
     [c-sharp]: https://msdn.microsoft.com/en-us/library/system.io.bufferedstream%28v=vs.110%29.aspx
     
     [breaking-change]
-
-commit 441b3f0c26c2e30ddb012be968141da7ce7d9d62
-Merge: d8b64c7 1f79348
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Apr 28 17:12:36 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Apr 28 17:12:36 2015 +0000
-
-    Auto merge of #24906 - pnkfelix:fsk-fix-24895, r=alexcrichton
-    
-    dropck: Remove `Copy` from special-cased traits
-    
-    Fix #24895.
-    
-    [breaking-change]
-    
-    What does this break?  Basically, code that implements `Drop` and is
-    using `T:Copy` for one of its type parameters and is relying on the
-    Drop Check rule not applying to it.
-    
-    Here is an example:
-    
-    ```rust
-    #![allow(dead_code,unused_variables,unused_assignments)]
-    struct D&lt;T:Copy&gt;(T);
-    impl&lt;T:Copy&gt; Drop for D&lt;T&gt; { fn drop(&amp;mut self) { } }
-    
-    trait UserT { fn c(&amp;self) { } }
-    impl&lt;T:Copy&gt; UserT for T { }
-    struct E&lt;T:UserT&gt;(T);
-    impl&lt;T:UserT&gt; Drop for E&lt;T&gt; { fn drop(&amp;mut self) { } }
-    
-    // This one will start breaking.
-    fn foo() { let (d2, d1); d1 = D(34); d2 = D(&amp;d1); }
-    
-    #[cfg(this_one_does_and_should_always_break)]
-    fn bar() { let (e2, e1); e1 = E(34); e2 = E(&amp;e1); }
-    
-    fn main() {
-        foo();
-    }
-    ```
-
-commit b892264ea4f048feb5f380d3e659d82ba463f5b7
-Author:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-AuthorDate: Tue Apr 28 17:47:16 2015 +0200
-Commit:     Felix S. Klock II &lt;pnkfelix@pnkfx.org&gt;
-CommitDate: Tue Apr 28 17:47:16 2015 +0200
-
-    Fix #24895.
-    
-    [breaking-change]
-    
-    What does this break?  Basically, code that implements `Drop` and is
-    using `T:Copy` for one of its type parameters and is relying on the
-    Drop Check rule not applying to it.
-    
-    Here is an example:
-    
-    ```rust
-    #![allow(dead_code,unused_variables,unused_assignments)]
-    struct D&lt;T:Copy&gt;(T);
-    impl&lt;T:Copy&gt; Drop for D&lt;T&gt; { fn drop(&amp;mut self) { } }
-    
-    trait UserT { fn c(&amp;self) { } }
-    impl&lt;T:Copy&gt; UserT for T { }
-    struct E&lt;T:UserT&gt;(T);
-    impl&lt;T:UserT&gt; Drop for E&lt;T&gt; { fn drop(&amp;mut self) { } }
-    
-    // This one will start breaking.
-    fn foo() { let (d2, d1); d1 = D(34); d2 = D(&amp;d1); }
-    
-    #[cfg(this_one_does_and_should_always_break)]
-    fn bar() { let (e2, e1); e1 = E(34); e2 = E(&amp;e1); }
-    
-    fn main() {
-        foo();
-    }
-    ```
 </pre></body></html>
