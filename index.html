@@ -1,6 +1,33 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 654f68dd50b72d1d812b0760f1b71d7c366f6f55
+Merge: 094c5b0 7a69ee0
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Feb 1 04:52:12 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Feb 1 04:52:12 2016 +0000
+
+    Auto merge of #30866 - jseyfried:fix_shadowed_use_visibility, r=nrc
+    
+    This reverts PR #30324, fixing bug #30159 in which a public a glob import makes public any preceding imports that share a name with an item in the module being glob imported from.
+    
+    For example,
+    ```rust
+    pub fn f() {}
+    pub mod foo {
+        fn f() {}
+    }
+    
+    mod bar {
+        use f;
+        use f as g;
+        pub use foo::*; // This makes the first import public but does not affect the second import.
+    }
+    ```
+    
+    This is a [breaking-change].
+
 commit 43c1a173a874f5513db58b2f5321489a00087484
 Merge: 1972c50 faf0852
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1822,24 +1849,6 @@ CommitDate: Thu Apr 30 18:20:22 2015 -0700
     that this imposes a `'static` constraint, but that only
     constrains *when* `Error` is implemented -- it does not actually
     constrain the types that can implement `Error`.
-    
-    [breaking-change]
-
-commit db477eef72924c7b34e9617627eaae37c71bdc1c
-Author:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-AuthorDate: Thu Apr 30 15:45:48 2015 -0700
-Commit:     Alex Crichton &lt;alex@alexcrichton.com&gt;
-CommitDate: Thu Apr 30 16:02:58 2015 -0700
-
-    std: Destabilize io::BufStream
-    
-    As pointed out in #17136 the semantics of a `BufStream` aren't always what one
-    expects, and it looks like other [languages like C#][c-sharp] implement a
-    buffered stream with only one underlying buffer. For now this commit
-    destabilizes the primitive in the `std::io` module to give us some more time in
-    figuring out what to do with it.
-    
-    [c-sharp]: https://msdn.microsoft.com/en-us/library/system.io.bufferedstream%28v=vs.110%29.aspx
     
     [breaking-change]
 </pre></body></html>
