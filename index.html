@@ -1,6 +1,73 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 35635aebab321ff2a4708aeb172351356ad63cf7
+Merge: 5147c1f ee79bfa
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Feb 6 09:24:04 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Feb 6 09:24:04 2016 +0000
+
+    Auto merge of #31333 - lambda:31273-abort-on-stack-overflow, r=brson
+    
+    Abort on stack overflow instead of re-raising SIGSEGV
+    
+    We use guard pages that cause the process to abort to protect against
+    undefined behavior in the event of stack overflow.  We have a handler
+    that catches segfaults, prints out an error message if the segfault was
+    due to a stack overflow, then unregisters itself and returns to allow
+    the signal to be re-raised and kill the process.
+    
+    This caused some confusion, as it was unexpected that safe code would be
+    able to cause a segfault, while it's easy to overflow the stack in safe
+    code.  To avoid this confusion, when we detect a segfault in the guard
+    page, abort instead of the previous behavior of re-raising SIGSEGV.
+    
+    To test this, we need to adapt the tests for segfault to actually check
+    the exit status.  Doing so revealed that the existing test for segfault
+    behavior was actually invalid; LLVM optimizes the explicit null pointer
+    reference down to an illegal instruction, so the program aborts with
+    SIGILL instead of SIGSEGV and the test didn't actually trigger the
+    signal handler at all.  Use a C helper function to get a null pointer
+    that LLVM can't optimize away, so we get our segfault instead.
+    
+    This is a [breaking-change] if anyone is relying on the exact signal
+    raised to kill a process on stack overflow.
+    
+    Closes #31273
+
+commit ee79bfa18affe95959a5f9a036c17bbd77979e21
+Author:     Brian Campbell &lt;lambda@continuation.org&gt;
+AuthorDate: Sun Jan 31 18:30:32 2016 -0500
+Commit:     Brian Campbell &lt;lambda@continuation.org&gt;
+CommitDate: Fri Feb 5 20:41:18 2016 -0500
+
+    Abort on stack overflow instead of re-raising SIGSEGV
+    
+    We use guard pages that cause the process to abort to protect against
+    undefined behavior in the event of stack overflow.  We have a handler
+    that catches segfaults, prints out an error message if the segfault was
+    due to a stack overflow, then unregisters itself and returns to allow
+    the signal to be re-raised and kill the process.
+    
+    This caused some confusion, as it was unexpected that safe code would be
+    able to cause a segfault, while it's easy to overflow the stack in safe
+    code.  To avoid this confusion, when we detect a segfault in the guard
+    page, abort instead of the previous behavior of re-raising the SIGSEGV.
+    
+    To test this, we need to adapt the tests for segfault to actually check
+    the exit status.  Doing so revealed that the existing test for segfault
+    behavior was actually invalid; LLVM optimizes the explicit null pointer
+    reference down to an illegal instruction, so the program aborts with
+    SIGILL instead of SIGSEGV and the test didn't actually trigger the
+    signal handler at all.  Use a C helper function to get a null pointer
+    that LLVM can't optimize away, so we get our segfault instead.
+    
+    This is a [breaking-change] if anyone is relying on the exact signal
+    raised to kill a process on stack overflow.
+    
+    Closes #31273
+
 commit 654f68dd50b72d1d812b0760f1b71d7c366f6f55
 Merge: 094c5b0 7a69ee0
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1764,91 +1831,6 @@ CommitDate: Fri May 1 22:54:09 2015 +0000
     clones all elements of the vector provided.
     
     Closes #24791
-    
-    [breaking-change]
-
-commit 5c710b593b429d39ea01375172a9ce968f43ab26
-Merge: c634ec2 a576262
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri May 1 04:22:53 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri May 1 04:22:53 2015 +0000
-
-    Auto merge of #24793 - aturon:io-error-any, r=alexcrichton
-    
-    This commit brings the `Error` trait in line with the [Error interoperation
-    RFC](https://github.com/rust-lang/rfcs/pull/201) by adding downcasting,
-    which has long been intended. This change means that for any `Error`
-    trait objects that are `'static`, you can downcast to concrete error
-    types.
-    
-    To make this work, it is necessary for `Error` to inherit from
-    `Reflect` (which is currently used to mark concrete types as "permitted
-    for reflection, aka downcasting"). This is a breaking change: it means
-    that impls like
-    
-    ```rust
-    impl&lt;T&gt; Error for MyErrorType&lt;T&gt; { ... }
-    ```
-    
-    must change to
-    
-    ```rust
-    impl&lt;T: Reflect&gt; Error for MyErrorType&lt;T&gt; { ... }
-    ```
-    
-    This commit furthermore marks `Reflect` as stable, since we are already
-    essentially committed to it via `Any`. Note that in the future, if we
-    determine that the parametricity aspects of `Reflect` are not needed, we
-    can deprecate the trait and provide a blanket implementation for it
-    for *all* types (rather than by using OIBIT), which would allow all
-    mentions of `Reflect` to be dropped over time. So there is not a strong
-    commitment here.
-    
-    [breaking-change]
-    
-    r? @alexcrichton
-
-commit a5762625a168f195afbc5b74d674a93f8c692a8e
-Author:     Aaron Turon &lt;aturon@mozilla.com&gt;
-AuthorDate: Fri Apr 24 14:34:57 2015 -0700
-Commit:     Aaron Turon &lt;aturon@mozilla.com&gt;
-CommitDate: Thu Apr 30 18:20:22 2015 -0700
-
-    Add downcasting to std::error::Error
-    
-    This commit brings the `Error` trait in line with the [Error interoperation
-    RFC](https://github.com/rust-lang/rfcs/pull/201) by adding downcasting,
-    which has long been intended. This change means that for any `Error`
-    trait objects that are `'static`, you can downcast to concrete error
-    types.
-    
-    To make this work, it is necessary for `Error` to inherit from
-    `Reflect` (which is currently used to mark concrete types as "permitted
-    for reflection, aka downcasting"). This is a breaking change: it means
-    that impls like
-    
-    ```rust
-    impl&lt;T&gt; Error for MyErrorType&lt;T&gt; { ... }
-    ```
-    
-    must change to something like
-    
-    ```rust
-    impl&lt;T: Reflect&gt; Error for MyErrorType&lt;T&gt; { ... }
-    ```
-    
-    except that `Reflect` is currently unstable (and should remain so for
-    the time being). For now, code can instead bound by `Any`:
-    
-    ```rust
-    impl&lt;T: Any&gt; Error for MyErrorType&lt;T&gt; { ... }
-    ```
-    
-    which *is* stable and has `Reflect` as a super trait. The downside is
-    that this imposes a `'static` constraint, but that only
-    constrains *when* `Error` is implemented -- it does not actually
-    constrain the types that can implement `Error`.
     
     [breaking-change]
 </pre></body></html>
