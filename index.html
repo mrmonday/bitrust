@@ -1,6 +1,39 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 1de70d33f7baf12978cfb3de861e61b2a5d6fca7
+Merge: 106070b 3df40c0
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Feb 11 04:27:13 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Feb 11 04:27:13 2016 +0000
+
+    Auto merge of #31461 - jseyfried:remove_import_resolutions, r=nrc
+    
+    This PR adds to `NameBinding` so it can more fully represent bindings from imports as well from items, refactors away `Target`, generalizes `ImportResolution` to a simpler type `NameResolution`, and uses a single `NameResolution`-valued map in place the existing maps `children` and `import_resolutions` (of `NameBinding`s and `ImportResolution`s, respectively), simplifying duplicate checking and name resolution.
+    
+    It also unifies the `resolve_name_in_module` in `lib.rs` with its namesake in `resolve_imports.rs`, clarifying and improving the core logic (fixes #31403 and fixes #31404) while maintaining clear future-comparability with shadowable globs (i.e., never reporting that a resolution is a `Success` or is `Failing` unless this would also be knowable with shadowable globs).
+    
+    Since it fixes #31403, this is technically a [breaking-change], but it is exceedingly unlikely to cause breakage in practice. The following is an example of code that would break:
+    ```rust
+    mod foo {
+        pub mod bar {} // This defines bar in the type namespace
+        pub use alpha::bar; // This defines bar in the value namespace
+    
+        // This should define baz in both namespaces, but it only defines baz in the type namespace.
+        pub use self::bar as baz;
+        pub fn baz() {} // This should collide with baz, but now it does not.
+    }
+    
+    pub fn f() {}
+    mod alpha {
+        pub use self::f as bar; // Changing this to `pub fn bar() {}` causes the collision right now.
+        pub use super::*;
+    }
+    ```
+    
+    r? @nrc
+
 commit 35635aebab321ff2a4708aeb172351356ad63cf7
 Merge: 5147c1f ee79bfa
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1808,29 +1841,6 @@ CommitDate: Tue May 5 18:18:27 2015 +0000
     figuring out what to do with it.
     
     [c-sharp]: https://msdn.microsoft.com/en-us/library/system.io.bufferedstream%28v=vs.110%29.aspx
-    
-    [breaking-change]
-
-commit f6574c5b0404f55c4dd4056be47d37eff33684b5
-Merge: f3345cb b1976f1
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri May 1 22:54:09 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri May 1 22:54:09 2015 +0000
-
-    Auto merge of #25006 - alexcrichton:unstable-indexing, r=aturon
-    
-    These implementations were intended to be unstable, but currently the stability
-    attributes cannot handle a stable trait with an unstable `impl` block. This
-    commit also audits the rest of the standard library for explicitly-`#[unstable]`
-    impl blocks. No others were removed but some annotations were changed to
-    `#[stable]` as they're defacto stable anyway.
-    
-    One particularly interesting `impl` marked `#[stable]` as part of this commit
-    is the `Add&lt;&amp;[T]&gt;` impl for `Vec&lt;T&gt;`, which uses `push_all` and implicitly
-    clones all elements of the vector provided.
-    
-    Closes #24791
     
     [breaking-change]
 </pre></body></html>
