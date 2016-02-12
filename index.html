@@ -1,6 +1,22 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit c7640aa2aaad857bbc9f9a1002f8e1aaf520752e
+Merge: 9257e89 77cc576
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Feb 12 14:56:20 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Feb 12 14:56:20 2016 +0000
+
+    Auto merge of #31583 - petrochenkov:indi_ast, r=Manishearth
+    
+    cc #31487
+    plugin-[breaking-change]
+    
+    The AST part of https://github.com/rust-lang/rust/pull/30087
+    
+    r? @Manishearth
+
 commit 2b816b0d6a9bc8210ca314a020a247f8632b4f38
 Author:     Oliver 'ker' Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
 AuthorDate: Tue Feb 9 18:09:18 2016 +0100
@@ -1521,18 +1537,4 @@ CommitDate: Tue Jul 28 21:14:28 2015 +0000
     this has quite some fallout. but also made lots of stuff more readable imo
     
     [breaking-change] for plugin authors
-
-commit 757b0c176fa185fda59283efaf0d8079b702ca69
-Author:     Ariel Ben-Yehuda &lt;arielb1@mail.tau.ac.il&gt;
-AuthorDate: Tue Jul 28 16:52:54 2015 +0300
-Commit:     Ariel Ben-Yehuda &lt;arielb1@mail.tau.ac.il&gt;
-CommitDate: Tue Jul 28 19:51:08 2015 +0300
-
-    prohibit the lhs of an @-pattern being a constant
-    
-    as this breaks code that worked under some conditions, this is a
-    [breaking-change]
-    
-    Fixes #27033
-    Fixes #27077
 </pre></body></html>
