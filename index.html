@@ -1,6 +1,28 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 9d98390765bbe61ce2a39b40c99ae1a68bb6d1cc
+Merge: 09395bb 9f414a4
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Feb 14 06:18:10 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Feb 14 06:18:10 2016 +0000
+
+    Auto merge of #31581 - petrochenkov:patrefact, r=Manishearth
+    
+    cc https://github.com/rust-lang/rust/pull/31487#issuecomment-182945101
+    plugin-[breaking-change]
+    
+    The first commit renames `ast::Pat_` to `ast::PatKind` and uses its variants in enum qualified form. I've also taken the opportunity and renamed `PatKind::Region` into `PatKind::Ref`.
+    
+    The second commit splits `PatKind::Enum` into `PatKind::TupleStruct` and `PatKind::UnitStruct`.
+    So, pattern kinds now correspond to their struct/variant kinds - `Struct`, `TupleStruct` and `UnitStruct`.
+    @nikomatsakis @nrc @arielb1 Are you okay with this naming scheme?
+    An alternative possible naming scheme is `PatKind::StructVariant`, `PatKind::TupleVariant`, `PatKind::UnitVariant` (it's probably closer to the common use, but I like it less).
+    
+    I intend to apply these changes to HIR later, they should not necessarily go in the same nightly with https://github.com/rust-lang/rust/pull/31487
+    r? @Manishearth
+
 commit c7640aa2aaad857bbc9f9a1002f8e1aaf520752e
 Merge: 9257e89 77cc576
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1524,17 +1546,4 @@ CommitDate: Wed Jul 29 06:47:55 2015 +0000
     This fixes multiple bugs, and as several of these are soundness issue, is a [breaking-change].
     
     r? @pnkfelix
-
-commit 55ede7ed8e4f3752c371f7d04da4695ba9aa1c26
-Merge: ba9224f 00a5e66
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Jul 28 21:14:28 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Jul 28 21:14:28 2015 +0000
-
-    Auto merge of #27234 - oli-obk:move_get_name_get_ident_to_impl, r=eddyb
-    
-    this has quite some fallout. but also made lots of stuff more readable imo
-    
-    [breaking-change] for plugin authors
 </pre></body></html>
