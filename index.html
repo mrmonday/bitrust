@@ -1,6 +1,19 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 9658645407c784105bb361297d5316cadc9ff2bd
+Merge: 18f8143 d21e908
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Feb 16 19:34:57 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Feb 16 19:34:57 2016 +0000
+
+    Auto merge of #31534 - jseyfried:restrict_noninline_mod, r=nikomatsakis
+    
+    This PR disallows non-inline modules without path annotations that are either in a block or in an inline module whose containing file is not a directory owner (fixes #29765).
+    This is a [breaking-change].
+    r? @nikomatsakis
+
 commit 9d98390765bbe61ce2a39b40c99ae1a68bb6d1cc
 Merge: 09395bb 9f414a4
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1533,17 +1546,4 @@ CommitDate: Wed Jul 29 18:43:01 2015 -0700
     exceptionally rare type that this is not expected to be a serious
     concern. Also a `Box&lt;str&gt;` can be freely converted to a `String` to
     obtain the previous behaviour anyway.
-
-commit d576ef3d7be3efe28f902bbb3b2197f4553db412
-Merge: 4b4119d e99b53e
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Wed Jul 29 06:47:55 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Wed Jul 29 06:47:55 2015 +0000
-
-    Auto merge of #27261 - arielb1:drop-sanity-check, r=pnkfelix
-    
-    This fixes multiple bugs, and as several of these are soundness issue, is a [breaking-change].
-    
-    r? @pnkfelix
 </pre></body></html>
