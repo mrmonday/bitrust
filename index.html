@@ -1,6 +1,30 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 9c6a0088fbdae5a6554c39f8db9207c1b878eb05
+Merge: 15e9a95 2942cf7
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Feb 26 04:38:28 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Feb 26 04:38:28 2016 +0000
+
+    Auto merge of #31857 - jseyfried:fix_scoping, r=nikomatsakis
+    
+    This fixes a bug (#31845) introduced in #31105 in which lexical scopes contain items from all anonymous module ancestors, even if the path to the anonymous module includes a normal module:
+    ```rust
+    fn f() {
+        fn g() {}
+        mod foo {
+            fn h() {
+               g(); // This erroneously resolves on nightly
+            }
+        }
+    }
+    ```
+    
+    This is a [breaking-change] on nightly but not on stable or beta.
+    r? @nikomatsakis
+
 commit 9658645407c784105bb361297d5316cadc9ff2bd
 Merge: 18f8143 d21e908
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1531,19 +1555,4 @@ CommitDate: Thu Jul 30 10:25:23 2015 +0000
     exceptionally rare type that this is not expected to be a serious
     concern. Also a `Box&lt;str&gt;` can be freely converted to a `String` to
     obtain the previous result anyway.
-
-commit 3e954a8cb2fd094d79713059d83d37b2daa7b396
-Author:     Alexis Beingessner &lt;a.beingessner@gmail.com&gt;
-AuthorDate: Mon Jul 27 09:06:00 2015 -0700
-Commit:     Alexis Beingessner &lt;a.beingessner@gmail.com&gt;
-CommitDate: Wed Jul 29 18:43:01 2015 -0700
-
-    implement Clone for Box&lt;str&gt;, closes #27323
-    
-    This is a minor [breaking-change], as it changes what
-    `boxed_str.to_owned()` does (previously it would deref to `&amp;str` and
-    call `to_owned` on that to get a `String`). However `Box&lt;str&gt;` is such an
-    exceptionally rare type that this is not expected to be a serious
-    concern. Also a `Box&lt;str&gt;` can be freely converted to a `String` to
-    obtain the previous behaviour anyway.
 </pre></body></html>
