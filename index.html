@@ -1,6 +1,39 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 7cee8b9ffb6a2dac7e2f729988c2324e2f8ac10f
+Merge: 7b0b80a e67590b
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Mar 3 02:21:28 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Mar 3 02:21:28 2016 +0000
+
+    Auto merge of #31824 - jseyfried:privacy_in_resolve, r=nikomatsakis
+    
+    This PR privacy checks paths as they are resolved instead of in `librustc_privacy` (fixes #12334 and fixes #31779). This removes the need for the `LastPrivate` system introduced in PR #9735, the limitations of which cause #31779.
+    
+    This PR also reports privacy violations in paths to intra- and inter-crate items the same way -- it always reports the first inaccessible segment of the path.
+    
+    Since it fixes #31779, this is a [breaking-change]. For example, the following code would break:
+    ```rust
+    mod foo {
+        pub use foo::bar::S;
+        mod bar { // `bar` should be private to `foo`
+            pub struct S;
+        }
+    }
+    
+    impl foo::S {
+        fn f() {}
+    }
+    
+    fn main() {
+        foo::bar::S::f(); // This is now a privacy error
+    }
+    ```
+    
+    r? @alexcrichton
+
 commit acea6fc1cb5edf5211ade6ad4a79b119879eab82
 Merge: 263e722 6cfafad
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -1548,20 +1581,4 @@ CommitDate: Tue Aug 11 03:47:16 2015 +0000
     implementation.
     
     I'm opening this PR as a platform for discussion - there may be some method renaming to do as part of the stabilization process.
-
-commit 999bdeca88a06938ac1e1c608091d3afe4d7e173
-Author:     Steven Fackler &lt;sfackler@gmail.com&gt;
-AuthorDate: Sun Jul 5 23:20:00 2015 -0700
-Commit:     Steven Fackler &lt;sfackler@gmail.com&gt;
-CommitDate: Mon Aug 10 20:04:18 2015 -0400
-
-    Stabilize the Duration API
-    
-    This commit stabilizes the `std::time` module and the `Duration` type.
-    `Duration::span` remains unstable, and the `Display` implementation for
-    `Duration` has been removed as it is still being reworked and all trait
-    implementations for stable types are de facto stable.
-    
-    This is a [breaking-change] to those using `Duration`'s `Display`
-    implementation.
 </pre></body></html>
