@@ -1,6 +1,38 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 5b5e52186917502258a9feadc8bf77a89183386b
+Merge: 8e261d1 e2aa90e
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Mar 4 06:55:11 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Mar 4 06:55:11 2016 +0000
+
+    Auto merge of #32006 - jseyfried:fix_expanded_mod_path, r=nikomatsakis
+    
+    This PR changes the search paths for macro-expanded non-inline modules so that they match ordinary non-inline modules (fixes #31624). This is a [breaking-change].
+    
+    Right now, the search paths for a macro-expanded non-inline module are computed as if the module were declared in the top level of the file in which the macro was defined.
+    For example, consider `./foo/mod.rs`:
+    ```rust
+    mod inconsequential { // moving the macro outside this module wouldn't change anything
+        macro_rules! mod_decl {
+            ($i:ident) =&gt; { mod $i; }
+        }
+    }
+    ```
+    and `./lib.rs`:
+    ```rust
+    mod foo;
+    
+    mod bar {
+        mod_decl!(baz);
+        //^ Now, rustc expects `./foo/baz.rs` (or `./foo/baz/mod.rs`)
+        //| After this PR, rustc will expect `./bar/baz.rs` (or `./bar/baz/mod.rs`)
+    }
+    ```
+    r? @alexcrichton
+
 commit 7cee8b9ffb6a2dac7e2f729988c2324e2f8ac10f
 Merge: 7b0b80a e67590b
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1562,23 +1594,4 @@ CommitDate: Thu Aug 13 13:29:38 2015 +0000
     
     [paper]: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4152
     [deprecate-radix]: https://internals.rust-lang.org/t/deprecate-f-32-64-from-str-radix/2405
-
-commit 50141d7e1e5b1b539d45240dff709fa68e7472c2
-Merge: 8b37055 b51e009
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Aug 11 03:47:16 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Aug 11 03:47:16 2015 +0000
-
-    Auto merge of #26818 - sfackler:duration-stabilization, r=aturon
-    
-    This commit stabilizes the `std::time` module and the `Duration` type.
-    `Duration::span` remains unstable, and the `Display` implementation for
-    `Duration` has been removed as it is still being reworked and all trait
-    implementations for stable types are de facto stable.
-    
-    This is a [breaking-change] to those using `Duration`'s `Display`
-    implementation.
-    
-    I'm opening this PR as a platform for discussion - there may be some method renaming to do as part of the stabilization process.
 </pre></body></html>
