@@ -66,6 +66,17 @@ CommitDate: Thu Mar 3 02:21:28 2016 +0000
     
     r? @alexcrichton
 
+commit c5d58de665819f7330b3d64bdd084d25a412830a
+Author:     Alex Burka &lt;aburka@seas.upenn.edu&gt;
+AuthorDate: Wed Jan 13 16:48:58 2016 -0500
+Commit:     Alex Burka &lt;aburka@seas.upenn.edu&gt;
+CommitDate: Sat Feb 27 02:01:41 2016 -0500
+
+    core: add inclusive ranges to core::ops
+    
+    Since it removes the old iter::{range_inclusive, RangeInclusive} which
+    were unstable and deprecated, this is a [breaking-change] on nightly.
+
 commit acea6fc1cb5edf5211ade6ad4a79b119879eab82
 Merge: 263e722 6cfafad
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -1520,78 +1531,4 @@ CommitDate: Mon Aug 17 14:41:37 2015 -0700
     crates.io.
     
     [breaking-change]
-
-commit bb954cfa75ec63b2cf28229ecc4aee7024381d0b
-Merge: e9205a2 15518a9
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Thu Aug 13 13:29:38 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Thu Aug 13 13:29:38 2015 +0000
-
-    Auto merge of #27307 - rkruppe:dec2flt, r=pnkfelix
-    
-    Completely rewrite the conversion of decimal strings to `f64` and `f32`. The code is intended to be absolutely positively completely 100% accurate (when it doesn't give up). To the best of my knowledge, it achieves that goal. Any input that is not rejected is converted to the floating point number that is closest to the true value of the input. This includes overflow, subnormal numbers, and underflow to zero. In other words, the rounding error is less than or equal to 0.5 units in the last place. Half-way cases (exactly 0.5 ULP error) are handled with half-to-even rounding, also known as banker's rounding.
-    
-    This code implements the algorithms from the paper [How to Read Floating Point Numbers Accurately][paper] by William D. Clinger, with extensions to handle underflow, overflow and subnormals, as well as some algorithmic optimizations.
-    
-    # Correctness
-    
-    With such a large amount of tricky code, many bugs are to be expected. Indeed tracking down the obscure causes of various rounding errors accounts for the bulk of the development time. Extensive tests (taking in the order of hours to run through to completion) are included in `src/etc/test-float-parse`: Though exhaustively testing all possible inputs is impossible, I've had good success with generating millions of instances from various "classes" of inputs. These tests take far too long to be run by @bors so contributors who touch this code need the discipline to run them. There are `#[test]`s, but they don't even cover every stupid mistake I made in course of writing this.
-    
-    Another aspect is *integer* overflow. Extreme (or malicious) inputs could cause overflow both in the machine-sized integers used for bookkeeping throughout the algorithms (e.g., the decimal exponent) as well as the arbitrary-precision arithmetic. There is input validation to reject all such cases I know of, and I am quite sure nobody will *accidentally* cause this code to go out of range. Still, no guarantees.
-    
-    # Limitations
-    
-    Noticed the weasel words "(when it doesn't give up)" at the beginning? Some otherwise well-formed decimal strings are rejected because spelling out the value of the input requires too many digits, i.e., `digits * 10^abs(exp)` can't be stored in a bignum. This only applies if the value is not "obviously" zero or infinite, i.e., if you take a near-infinity or near-zero value and add many pointless fractional digits. At least with the algorithm used here, computing the precise value would require computing the full value as a fraction, which would overflow. The precise limit is `number_of_digits + abs(exp) &gt; 375` but could be raised almost arbitrarily. In the future, another algorithm might lift this restriction entirely.
-    
-    This should not be an issue for any realistic inputs. Still, the code does reject inputs that would result in a finite float when evaluated with unlimited precision. Some of these inputs are even regressions that the old code (mostly) handled, such as `0.333...333` with 400+ `3`s. Thus this might qualify as [breaking-change].
-    
-    # Performance
-    
-    Benchmarks results are... tolerable. Short numbers that hit the fast paths (`f64` multiplication or shortcuts to zero/inf) have performance in the same order of magnitude as the old code tens of nanoseconds. Numbers that are delegated to Algorithm Bellerophon (using floats with 64 bit significand, implemented in software) are slower, but not drastically so (couple hundred nanoseconds).
-    
-    Numbers that need the AlgorithmM fallback (for `f64`, roughly everything below 1e-305 and above 1e305) take far, far longer, hundreds of microseconds. Note that my implementation is not quite as naive as the expository version in the paper (it needs one to four division instead of ~1000), but division is fundamentally pretty expensive and my implementation of it is extremely simple and slow.
-    
-    All benchmarks run on a mediocre laptop with a i5-4200U CPU under light load.
-    
-    # Binary size
-    
-    Unfortunately the implementation needs to duplicate almost all code: Once for `f32` and once for `f64`. Before you ask, no, this cannot be avoided, at least not completely (but see the Future Work section). There's also a precomputed table of powers of ten, weighing in at about six kilobytes.
-    
-    Running a stage1 `rustc` over a stand-alone program that simply parses pi to `f32` and `f64` and outputs both results reveals that the overhead vs. the old parsing code is about 44 KiB normally and about 28 KiB with LTO. It's presumably half of that + 3 KiB when only one of the two code paths is exercised.
-    
-    | rustc options                 | old       | new       | delta         |
-    |---------------------------    |---------  |---------  |-----------    |
-    | [nothing]                     | 2588375   | 2633828   | 44.39 KiB     |
-    | -O                            | 2585211   | 2630688   | 44.41 KiB     |
-    | -O -C lto                     | 1026353   | 1054981   | 27.96 KiB     |
-    | -O -C lto -C link-args=-s     | 414208    | 442368    | 27.5 KiB      |
-    
-    # Future Work
-    
-    ## Directory layout
-    
-    The `dec2flt` code uses some types embedded deeply in the `flt2dec` module hierarchy, even though nothing about them it formatting-specific. They should be moved to a more conversion-direction-agnostic location at some point.
-    
-    ## Performance
-    
-    It could be much better, especially for large inputs. Some low-hanging fruit has been picked but much more work could be done. Some specific ideas are jotted down in `FIXME`s all over the code.
-    
-    ## Binary size
-    
-    One could try to compress the table further, though I am skeptical. Another avenue would be reducing the code duplication from basically everything being generic over `T: RawFloat`. Perhaps one can reduce the magnitude of the duplication by pushing the parts that don't need to know the target type into separate functions, but this is finicky and probably makes some code read less naturally.
-    
-    ## Other bases
-    
-    This PR leaves `f{32,64}::from_str_radix` alone. It only replaces `FromStr` (and thus `.parse()`). I am convinced that `from_str_radix` should not exist, and have proposed its [deprecation and speedy removal][deprecate-radix]. Whatever the outcome of that discussion, it is independent from, and out of scope for, this PR.
-    
-    Fixes #24557
-    Fixes #14353
-    
-    r? @pnkfelix
-    
-    cc @lifthrasiir @huonw
-    
-    [paper]: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4152
-    [deprecate-radix]: https://internals.rust-lang.org/t/deprecate-f-32-64-from-str-radix/2405
 </pre></body></html>
