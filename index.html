@@ -155,6 +155,16 @@ CommitDate: Tue Feb 16 19:34:57 2016 +0000
     This is a [breaking-change].
     r? @nikomatsakis
 
+commit 3a872782d396e9ed3827a515a54d1f0a634c0b77
+Author:     Jonas Schievink &lt;jonas@schievink.net&gt;
+AuthorDate: Sat Feb 13 18:05:16 2016 +0100
+Commit:     Jonas Schievink &lt;jonas@schievink.net&gt;
+CommitDate: Tue Feb 16 13:32:40 2016 +0100
+
+    Move more uses of `panictry!` out of libsyntax
+    
+    [breaking-change] for syntax extensions
+
 commit 9d98390765bbe61ce2a39b40c99ae1a68bb6d1cc
 Merge: 09395bb 9f414a4
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1516,19 +1526,6 @@ CommitDate: Wed Aug 19 17:00:15 2015 -0700
     Returning a primitive bool results in a somewhat confusing API - does
     `true` indicate success - i.e. no timeout, or that a timeout has
     occurred? An explicitly named enum makes it clearer.
-    
-    [breaking-change]
-
-commit c66554cab3518a9f5c36eafd622ca4c8a3fda631
-Author:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-AuthorDate: Mon Jul 13 11:57:46 2015 -0700
-Commit:     Huon Wilson &lt;dbau.pp+github@gmail.com&gt;
-CommitDate: Mon Aug 17 14:41:37 2015 -0700
-
-    switch core::simd to repr(simd) and deprecate it.
-    
-    This functionality will be available out of tree in the `simd` crate on
-    crates.io.
     
     [breaking-change]
 </pre></body></html>
