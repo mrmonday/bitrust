@@ -1,6 +1,27 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 5807fbbfde3ad04820f6fa0269711c81538057ec
+Merge: aeb85a9 1a6092e
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Mar 11 09:26:47 2016 -0800
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Mar 11 09:26:47 2016 -0800
+
+    Auto merge of #32134 - jseyfried:forbid_type_alias_as_module, r=nikomatsakis
+    
+    Forbid glob-importing from a type alias
+    
+    This PR forbids glob-importing from a type alias or trait (fixes #30560):
+    ```rust
+    type Alias = ();
+    use Alias::*; // This is currently allowed but shouldn't be
+    ```
+    
+    This is a [breaking-change]. Since the disallowed glob imports don't actually import anything, any breakage can be fixed by removing the offending glob import.
+    
+    r? @alexcrichton
+
 commit bcda58f49133921abd091d7f800732fe2c4e5a98
 Merge: 0b9995b 3855fa9
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1525,21 +1546,4 @@ CommitDate: Mon Aug 24 10:03:48 2015 +0000
         use rustc::middle::def_id::{DefId, LOCAL_CRATE}; // two most common definitions
         ast_util::is_local(def_id) =&gt; def_id.is_local()
         ast_util::local_def(node_id) =&gt; DefId::local(node_id)
-
-commit 983d2b3d1a97846c90ea8f689774be8353b340be
-Merge: a03ec1a 12216b7
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Sat Aug 22 06:30:53 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Sat Aug 22 06:30:53 2015 +0000
-
-    Auto merge of #27826 - sfackler:wait-timeout-enum, r=alexcrichton
-    
-    Returning a primitive bool results in a somewhat confusing API - does
-    `true` indicate success - i.e. no timeout, or that a timeout has
-    occurred? An explicitly named enum makes it clearer.
-    
-    [breaking-change]
-    
-    r? @alexcrichton
 </pre></body></html>
