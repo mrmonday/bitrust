@@ -1,6 +1,39 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 06074ac004701bff42c625247c4764b2ae6fca6c
+Merge: 3e05371 e926f28
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Mar 12 21:55:14 2016 -0800
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Mar 12 21:55:14 2016 -0800
+
+    Auto merge of #32141 - jseyfried:fix_resolution_in_lexical_scopes, r=nikomatsakis
+    
+    Fix name resolution in lexical scopes
+    
+    Currently, `resolve_item_in_lexical_scope` does not check the "ribs" (type parameters and local variables). This can allow items that should be shadowed by type parameters to be named.
+    
+    For example,
+    ```rust
+    struct T { i: i32 }
+    fn f&lt;T&gt;() {
+        let t = T { i: 0 }; // This use of `T` resolves to the struct, not the type parameter
+    }
+    
+    mod Foo {
+        pub fn f() {}
+    }
+    fn g&lt;Foo&gt;() {
+        Foo::f(); // This use of `Foo` resolves to the module, not the type parameter
+    }
+    ```
+    
+    This PR changes `resolve_item_in_lexical_scope` so that it fails when the item is shadowed by a rib (fixes #32120).
+    This is a [breaking-change], but it looks unlikely to cause breakage in practice.
+    
+    r? @nikomatsakis
+
 commit 5807fbbfde3ad04820f6fa0269711c81538057ec
 Merge: aeb85a9 1a6092e
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1529,21 +1562,4 @@ CommitDate: Sun Aug 30 10:24:05 2015 +0200
     http://comments.gmane.org/gmane.linux.lib.musl.general/2963
     
     This assumes that an int literal has type `c_int` for varidic functions.
-
-commit db67cbe43dfce043c664c53d709b91252d5afc9e
-Merge: 63ba780 1994875
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Mon Aug 24 10:03:48 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Mon Aug 24 10:03:48 2015 +0000
-
-    Auto merge of #27856 - nikomatsakis:move-def-id-to-rustc, r=eddyb
-    
-    It doesn't really make sense for DefId to be in libsyntax -- it is concerned with a single crate only. It is the compiler that understands the idea of many crates. (At some point, there might be a useful intermediate point here.) This is a refactoring in support of incr. compilation, which will be adjusting the notion of a DefId to make it more durable across compilations.
-    
-    This will probably be a [breaking-change] for every plugin ever. You need to adjust things as follows:
-    
-        use rustc::middle::def_id::{DefId, LOCAL_CRATE}; // two most common definitions
-        ast_util::is_local(def_id) =&gt; def_id.is_local()
-        ast_util::local_def(node_id) =&gt; DefId::local(node_id)
 </pre></body></html>
