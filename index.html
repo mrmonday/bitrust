@@ -1,6 +1,35 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 64a13a46601bb47a470264936b623b4adf706128
+Merge: f1578d3 ed8a2e2
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Mar 25 05:03:13 2016 -0700
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Mar 25 05:03:13 2016 -0700
+
+    Auto merge of #31908 - jseyfried:disallow_shadowed_traits, r=nikomatsakis
+    
+    Disallow methods from traits that are not in scope
+    
+    This PR only allows a trait method to be used if the trait is in scope (fixes #31379).
+    This is a [breaking-change]. For example, the following would break:
+    ```rust
+    mod foo {
+        pub trait T { fn f(&amp;self) {} }
+        impl T for () {}
+    }
+    
+    mod bar { pub use foo::T; }
+    
+    fn main() {
+        pub use bar::*;
+        struct T; // This shadows the trait `T`,
+        ().f() // making this an error.
+    }
+    ```
+    r? @nikomatsakis
+
 commit 06074ac004701bff42c625247c4764b2ae6fca6c
 Merge: 3e05371 e926f28
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1543,23 +1572,4 @@ CommitDate: Tue Sep 1 13:16:03 2015 +1200
     Remove the Modifier and Decorator kinds of syntax extensions.
     
     This is a [breaking-change] for syntax extension authors. The fix is to use MultiModifier or MultiDecorator, which have the same functionality but are more flexible. Users of syntax extensions are unaffected.
-
-commit 1f81ef4d0f2547cacc316b01ad03603ad772e38e
-Author:     Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
-AuthorDate: Mon Aug 24 13:57:11 2015 +0200
-Commit:     Tobias Bucher &lt;tobiasbucher5991@gmail.com&gt;
-CommitDate: Sun Aug 30 10:24:05 2015 +0200
-
-    Atomically set CLOEXEC on duplicated sockets
-    
-    For Bitrig, NetBSD and OpenBSD the constant was incorrectly in posix01, when
-    it's actually posix08, so we move it. This is a [breaking-change], but we
-    already had one in #27930.
-    
-    Fix NetBSD's F_DUPFD_CLOEXEC constant.
-    
-    For a similar feature detection, see this musl thread:
-    http://comments.gmane.org/gmane.linux.lib.musl.general/2963
-    
-    This assumes that an int literal has type `c_int` for varidic functions.
 </pre></body></html>
