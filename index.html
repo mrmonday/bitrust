@@ -1,6 +1,59 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 128b2ad8298f33984c64b98cfb354bb932b740ef
+Merge: b8b17a5 2536ae5
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sat Mar 26 09:07:21 2016 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sat Mar 26 09:07:21 2016 +0530
+
+    Rollup merge of #32199 - nikomatsakis:limiting-constants-in-patterns-2, r=pnkfelix
+    
+    Restrict constants in patterns
+    
+    This implements [RFC 1445](https://github.com/rust-lang/rfcs/blob/master/text/1445-restrict-constants-in-patterns.md). The primary change is to limit the types of constants used in patterns to those that *derive* `Eq` (note that implementing `Eq` is not sufficient). This has two main effects:
+    
+    1. Floating point constants are linted, and will eventually be disallowed. This is because floating point constants do not implement `Eq` but only `PartialEq`. This check replaces the existing special case code that aimed to detect the use of `NaN`.
+    2. Structs and enums must derive `Eq` to be usable within a match.
+    
+    This is a [breaking-change]: if you encounter a problem, you are most likely using a constant in an expression where the type of the constant is some struct that does not currently implement
+    `Eq`. Something like the following:
+    
+    ```rust
+    struct SomeType { ... }
+    const SOME_CONST: SomeType = ...;
+    
+    match foo {
+        SOME_CONST =&gt; ...
+    }
+    ```
+    
+    The easiest and most future compatible fix is to annotate the type in question with `#[derive(Eq)]` (note that merely *implementing* `Eq` is not enough, it must be *derived*):
+    
+    ```rust
+    struct SomeType { ... }
+    const SOME_CONST: SomeType = ...;
+    
+    match foo {
+        SOME_CONST =&gt; ...
+    }
+    ```
+    
+    Another good option is to rewrite the match arm to use an `if` condition (this is also particularly good for floating point types, which implement `PartialEq` but not `Eq`):
+    
+    ```rust
+    match foo {
+        c if c == SOME_CONST =&gt; ...
+    }
+    ```
+    
+    Finally, a third alternative is to tag the type with `#[structural_match]`; but this is not recommended, as the attribute is never expected to be stabilized. Please see RFC #1445 for more details.
+    
+    cc https://github.com/rust-lang/rust/issues/31434
+    
+    r? @pnkfelix
+
 commit 64a13a46601bb47a470264936b623b4adf706128
 Merge: f1578d3 ed8a2e2
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -29,6 +82,56 @@ CommitDate: Fri Mar 25 05:03:13 2016 -0700
     }
     ```
     r? @nikomatsakis
+
+commit f69eb8efbe5dbc373426bf0ff021b49f37db41cb
+Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+AuthorDate: Fri Mar 11 13:30:32 2016 -0500
+Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+CommitDate: Fri Mar 25 06:45:42 2016 -0400
+
+    issue a future-compat lint for constants of invalid type
+    
+    This is a [breaking-change]: according to RFC #1445, constants used as
+    patterns must be of a type that *derives* `Eq`. If you encounter a
+    problem, you are most likely using a constant in an expression where the
+    type of the constant is some struct that does not currently implement
+    `Eq`. Something like the following:
+    
+    ```rust
+    struct SomeType { ... }
+    const SOME_CONST: SomeType = ...;
+    
+    match foo {
+        SOME_CONST =&gt; ...
+    }
+    ```
+    
+    The easiest and most future compatible fix is to annotate the type in
+    question with `#[derive(Eq)]` (note that merely *implementing* `Eq` is
+    not enough, it must be *derived*):
+    
+    ```rust
+    struct SomeType { ... }
+    const SOME_CONST: SomeType = ...;
+    
+    match foo {
+        SOME_CONST =&gt; ...
+    }
+    ```
+    
+    Another good option is to rewrite the match arm to use an `if`
+    condition (this is also particularly good for floating point types,
+    which implement `PartialEq` but not `Eq`):
+    
+    ```rust
+    match foo {
+        c if c == SOME_CONST =&gt; ...
+    }
+    ```
+    
+    Finally, a third alternative is to tag the type with
+    `#[structural_match]`; but this is not recommended, as the attribute is
+    never expected to be stabilized. Please see RFC #1445 for more details.
 
 commit 06074ac004701bff42c625247c4764b2ae6fca6c
 Merge: 3e05371 e926f28
@@ -1551,25 +1654,4 @@ CommitDate: Sun Sep 13 23:47:41 2015 +0300
     like `i32&lt;Param=()&gt;`.
     
     Fixes #24682
-
-commit ae75ef9e62b7df8c46865cfb907c56cab1f29f81
-Merge: 4ad128b 20e1ea2
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Tue Sep 1 09:12:52 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Tue Sep 1 09:12:52 2015 +0000
-
-    Auto merge of #28137 - nrc:remove-non-multi, r=huonw
-    
-    This is a [breaking-change] for syntax extension authors. The fix is to use MultiModifier or MultiDecorator, which have the same functionality but are more flexible. Users of syntax extensions are unaffected.
-
-commit 20e1ea2dd84d5b29414059a4e07ce7327d1bef19
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Tue Sep 1 13:16:03 2015 +1200
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Tue Sep 1 13:16:03 2015 +1200
-
-    Remove the Modifier and Decorator kinds of syntax extensions.
-    
-    This is a [breaking-change] for syntax extension authors. The fix is to use MultiModifier or MultiDecorator, which have the same functionality but are more flexible. Users of syntax extensions are unaffected.
 </pre></body></html>
