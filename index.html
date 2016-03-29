@@ -1,6 +1,26 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit a11129701c873d96fe0816e4c8b55510efebe96e
+Merge: cad964a 221d0fb
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Mar 28 20:50:42 2016 -0700
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Mar 28 20:50:42 2016 -0700
+
+    Auto merge of #32479 - eddyb:eof-not-even-twice, r=nikomatsakis
+    
+    Prevent bumping the parser past the EOF.
+    
+    Makes `Parser::bump` after EOF into an ICE, forcing callers to avoid repeated EOF bumps.
+    This ICE is intended to break infinite loops where EOF wasn't stopping the loop.
+    
+    For example, the handling of EOF in `parse_trait_items`' recovery loop fixes #32446.
+    But even without this specific fix, the ICE is triggered, which helps diagnosis and UX.
+    
+    This is a `[breaking-change]` for plugins authors who eagerly eat multiple EOFs.
+    See https://github.com/docopt/docopt.rs/pull/171 for such an example and the necessary fix.
+
 commit 128b2ad8298f33984c64b98cfb354bb932b740ef
 Merge: b8b17a5 2536ae5
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -1641,17 +1661,4 @@ CommitDate: Mon Sep 14 06:51:18 2015 +0000
     Fixes #24682
     
     r? @eddyb
-
-commit 5d4455510afe3b7f74e04d3125ef8536a63d9e60
-Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
-AuthorDate: Sun Sep 13 23:05:04 2015 +0300
-Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
-CommitDate: Sun Sep 13 23:47:41 2015 +0300
-
-    ensure projections are prohibited when type parameters are
-    
-    Technically a [breaking-change], but the broken code is useless,
-    like `i32&lt;Param=()&gt;`.
-    
-    Fixes #24682
 </pre></body></html>
