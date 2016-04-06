@@ -1,6 +1,24 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 772c600d4d6f39daa6d07d1a60ee0df3d3426978
+Merge: 241a9d0 432eb8a
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Apr 5 18:58:24 2016 -0700
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Apr 5 18:58:24 2016 -0700
+
+    Auto merge of #32688 - jseyfried:ast_groundwork_for_1422, r=pnkfelix
+    
+    [breaking-batch] Add support for `pub(restricted)` syntax in the AST
+    
+    This PR allows the AST to represent the `pub(restricted)` syntax from RFC 1422 (cc #32409).
+    
+    More specifically, it makes `ast::Visibility` non-`Copy` and adds two new variants, `Visibility::Crate` for `pub(crate)` and `Visitibility::Restricted { path: P&lt;Path&gt;, id: NodeId }` for `pub(path)`.
+    
+    plugin-[breaking-change] cc #31645
+    r? @pnkfelix
+
 commit a11129701c873d96fe0816e4c8b55510efebe96e
 Merge: cad964a 221d0fb
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1645,20 +1663,4 @@ CommitDate: Wed Sep 16 10:57:06 2015 +1200
     Use ast attributes every where (remove HIR attributes).
     
     This could be a [breaking-change] if your lint or syntax extension (is that even possible?) uses HIR attributes or literals.
-
-commit 4d6dc7f9ba9fe61e38d737b29bfe490e835f6921
-Merge: 009f2cf 5d44555
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Mon Sep 14 06:51:18 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Mon Sep 14 06:51:18 2015 +0000
-
-    Auto merge of #28396 - arielb1:misplaced-binding, r=eddyb
-    
-    Technically a [breaking-change], but the broken code is useless,
-    like `i32&lt;Param=()&gt;`.
-    
-    Fixes #24682
-    
-    r? @eddyb
 </pre></body></html>
