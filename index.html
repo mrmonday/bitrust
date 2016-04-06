@@ -1,6 +1,26 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit af7b00b68fc7960e98fb914be52d9a6a16fe2224
+Merge: 772c600 8fe4290
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Wed Apr 6 17:15:31 2016 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Wed Apr 6 17:15:31 2016 +0530
+
+    Rollup merge of #32682 - petrochenkov:field3, r=Manishearth
+    
+     The AST part of https://github.com/rust-lang/rust/pull/31937
+    
+    Unlike HIR, AST still uses `Option` for field names because parser can't know field indexes reliably due to constructions like
+    ```
+    struct S(#[cfg(false)] u8, u8); // The index of the second field changes from 1 during parsing to 0 after expansion.
+    ```
+    and I wouldn't like to put the burden of renaming fields on expansion passes and syntax extensions.
+    
+    plugin-[breaking-change] cc https://github.com/rust-lang/rust/issues/31645
+    r? @Manishearth
+
 commit 772c600d4d6f39daa6d07d1a60ee0df3d3426978
 Merge: 241a9d0 432eb8a
 Author:     bors &lt;bors@rust-lang.org&gt;
@@ -1651,16 +1671,6 @@ Commit:     bors &lt;bors@rust-lang.org&gt;
 CommitDate: Wed Sep 16 00:35:24 2015 +0000
 
     Auto merge of #28399 - nrc:attrs, r=nikomatsakis
-    
-    This could be a [breaking-change] if your lint or syntax extension (is that even possible?) uses HIR attributes or literals.
-
-commit e9f1b063295c48c97e239ce479b08f192a3eece4
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Mon Sep 14 21:58:20 2015 +1200
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Wed Sep 16 10:57:06 2015 +1200
-
-    Use ast attributes every where (remove HIR attributes).
     
     This could be a [breaking-change] if your lint or syntax extension (is that even possible?) uses HIR attributes or literals.
 </pre></body></html>
