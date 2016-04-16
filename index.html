@@ -1,6 +1,35 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 6a0cfbcac294faab2b8bcd95a04cda042101a2d8
+Merge: ccc7e95 ca1d29c
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sat Apr 16 01:16:43 2016 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sat Apr 16 01:16:43 2016 +0530
+
+    Rollup merge of #32923 - jseyfried:fix_hygiene, r=nrc
+    
+    Fix macro hygiene bug
+    
+    This fixes #32922 (EDIT: and fixes #31856), macro hygiene bugs.
+    It is a [breaking-change]. For example, the following would break:
+    ```rust
+    fn main() {
+        let x = true;
+        macro_rules! foo { () =&gt; {
+            let x = 0;
+            macro_rules! bar { () =&gt; {x} }
+            let _: bool = bar!();
+            //^ `bar!()` used to resolve the first `x` (a bool),
+            //| but will now resolve to the second x (an i32).
+        }}
+        foo! {};
+    }
+    ```
+    
+    r? @nrc
+
 commit af7b00b68fc7960e98fb914be52d9a6a16fe2224
 Merge: 772c600 8fe4290
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -1662,15 +1691,4 @@ CommitDate: Thu Sep 17 12:16:46 2015 +1200
     Add an early lint pass for lints that operate on the AST
     
     There is a minor [breaking-change] for lint authors - some functions which were previously defined on `lint::Context` have moved to a trait - `LintContext`, you may need to import that trait to avoid name resolution errors.
-
-commit fc4d566b432d48933e27dd65a973c936b564d6e9
-Merge: 9bc1fae e9f1b06
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Wed Sep 16 00:35:24 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Wed Sep 16 00:35:24 2015 +0000
-
-    Auto merge of #28399 - nrc:attrs, r=nikomatsakis
-    
-    This could be a [breaking-change] if your lint or syntax extension (is that even possible?) uses HIR attributes or literals.
 </pre></body></html>
