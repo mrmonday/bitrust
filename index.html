@@ -1,6 +1,38 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 6ece1447f02b2310e5f4c7ef1efd1312476cae80
+Merge: 133f60f c7d564d
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Apr 20 07:27:59 2016 -0700
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Apr 20 07:27:59 2016 -0700
+
+    Auto merge of #32939 - eddyb:layout, r=nikomatsakis
+    
+    Compute LLVM-agnostic type layouts in rustc.
+    
+    Layout for monomorphic types, and some polymorphic ones (e.g. `&amp;T` where `T: Sized`),
+    can now be computed by rustc without involving LLVM in the actual process.
+    
+    This gives rustc the ability to evaluate `size_of` or `align_of`, as well as obtain field offsets.
+    MIR-based CTFE will eventually make use of these layouts, as will MIR trans, shortly.
+    
+    Layout computation also comes with a `[breaking-change]`, or two:
+    * `"data-layout"` is now mandatory in custom target specifications, reverting the decision from #27076.
+    This string is needed because it describes endianness, pointer size and alignments for various types.
+    We have the first two and we could allow tweaking alignments in target specifications.
+    Or we could also extract the data layout from LLVM and feed it back into rustc.
+    However, that can vary with the LLVM version, which is fragile and undermines stability.
+    For built-in targets, I've added a check that the hardcoded data-layout matches LLVM defaults.
+    * `transmute` calls are checked in a stricter fashion, which fixes #32377
+    
+    To expand on `transmute`, there are only 2 allowed patterns: between types with statically known sizes and between pointers with the same potentially-unsized "tail" (which determines the type of unsized metadata they use, if any).
+    If you're affected, my suggestions are:
+    * try to use casts (and raw pointer deref) instead of transmutes
+    * *really* try to avoid `transmute` where possible
+    * if you have a structure, try working on individual fields and unpack/repack the structure instead of transmuting it whole, e.g. `transmute::&lt;RefCell&lt;Box&lt;T&gt;&gt;, RefCell&lt;*mut T&gt;&gt;(x)` doesn't work, but `RefCell::new(Box::into_raw(x.into_inner()))` does (and `Box::into_raw` is just a `transmute`)
+
 commit 6a0cfbcac294faab2b8bcd95a04cda042101a2d8
 Merge: ccc7e95 ca1d29c
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -1681,14 +1713,4 @@ CommitDate: Thu Sep 17 12:16:46 2015 +1200
     [breaking-change] for lint authors
     
     You must now implement LateLintPass or EarlyLintPass as well as LintPass and use either register_late_lint_pass or register_early_lint_pass, rather than register_lint_pass.
-
-commit 76856e19ff3c7c699931d0acee8e61bc0dfec512
-Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-AuthorDate: Thu Sep 10 16:40:59 2015 +1200
-Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
-CommitDate: Thu Sep 17 12:16:46 2015 +1200
-
-    Add an early lint pass for lints that operate on the AST
-    
-    There is a minor [breaking-change] for lint authors - some functions which were previously defined on `lint::Context` have moved to a trait - `LintContext`, you may need to import that trait to avoid name resolution errors.
 </pre></body></html>
