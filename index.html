@@ -1,6 +1,16 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit c1c6e99bfd3296954a192d9fe3151a222dd9045c
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Tue Apr 26 14:06:24 2016 +1200
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Tue May 3 11:15:09 2016 +1200
+
+    rebasing
+    
+    Note that this whole PR is a [breaking-change] for clients of the Compiler API.
+
 commit a31658de51444d1b5193ac203a1bd7ace5621f93
 Merge: 17ba11d 4bd44be
 Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
@@ -1696,16 +1706,4 @@ CommitDate: Thu Oct 1 04:29:04 2015 +0000
     
     Closes #28595
     [breaking-change]
-
-commit 5ca60d94316bd56f412ef4c13292237e206babf1
-Merge: 6a21874 f293ea2
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Thu Sep 24 20:42:56 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Thu Sep 24 20:42:56 2015 +0000
-
-    Auto merge of #28608 - eddyb:no-place-for-an-old-box, r=pnkfelix
-    
-    While this is technically a [breaking-change], there is no excuse for touching `HEAP`.
-    r? @pnkfelix
 </pre></body></html>
