@@ -1,6 +1,36 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 2f8f256cef42350af2f0376891fd020b6b1c37de
+Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+AuthorDate: Fri Apr 22 02:31:04 2016 +0300
+Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+CommitDate: Tue May 3 18:30:10 2016 +0300
+
+    require the existential bounds of an object type to be object-safe
+    
+    This is required, as Copy and Sized are object-unsafe.
+    
+    As a soundness fix, this is a [breaking-change]
+    
+    Fixes #32963
+
+commit 0a6dfc51777eb388b6e795399bf1d3f8aac57db8
+Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+AuthorDate: Fri Apr 22 01:46:23 2016 +0300
+Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+CommitDate: Tue May 3 18:30:10 2016 +0300
+
+    require the non-last elements of a tuple to be Sized
+    
+    This requirement appears to be missing from RFC1214, but is clearly
+    necessary for translation. The last field of a tuple/enum remains in
+    a state of limbo, compiling but causing an ICE when it is used - we
+    should eventually fix that somehow.
+    
+    this is a [breaking-change] - a soundness fix - and requires a
+    crater run.
+
 commit c1c6e99bfd3296954a192d9fe3151a222dd9045c
 Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
 AuthorDate: Tue Apr 26 14:06:24 2016 +1200
@@ -1664,46 +1694,4 @@ CommitDate: Fri Oct 2 19:16:39 2015 +0000
     
     Fix #2809.
     Fix #22746.
-
-commit e82faeb65594302897223b2ca4ee6927fb54625f
-Merge: 24202c6 f0dc7bd
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Thu Oct 1 16:26:28 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Thu Oct 1 16:26:28 2015 +0000
-
-    Auto merge of #28742 - nikomatsakis:def-id-encapsulate, r=eddyb
-    
-    As described in https://github.com/rust-lang/rfcs/pull/1298, the idea here is to make DefIds independent of changes to the content of other items. They are also *mostly* independent from ordering, so e.g. reordering two functions will change the defids, but it will not change the paths that they expand into (but this is not the case for some things, such as impls).
-    
-    This is a major refactoring, so I did it in slices. The final commit is in some sense The Big One where most of the work is done. The earlier commits just pave the way by gradually refactoring accesses to the `node` field.
-    
-    This is a [breaking-change] for plugin authors. The things you need to do to migrate your code are as follows:
-    
-    1. For local def-ids, rather than do `def_id.node`, call `tcx.map.as_local_node_id(def_id)`.
-    2. To construct a local def-id, call `tcx.map.local_def_id(node_id)`.
-    3. Note that you cannot make def-ids for any node, but only for "definitions" -- which include all items, as well as a number of other things, but not e.g. arbitrary expressions.
-    4. You can get the path to a def-id by calling `tcx.def_path(def_id)`.
-    
-    One thing that is NOT part of this PR, but which I plan do in a follow-up, is converting uses of the existing `with_path` API to use `def_path`, which is basically the same.
-    
-    r? @eddyb (or @nrc)
-
-commit 587be42d0bd318d6c2f41fe4716e040366dc8951
-Merge: 031dd9c 9502df5
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Thu Oct 1 04:29:04 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Thu Oct 1 04:29:04 2015 +0000
-
-    Auto merge of #28605 - alexcrichton:link-native-first, r=brson
-    
-    This commit swaps the order of linking local native libraries and upstream
-    native libraries on the linker command line. Detail of bugs this can cause can
-    be found in #28595, and this change also invalidates the test case that was
-    added for #12446 which is now considered a bug because the downstream dependency
-    would need to declare that it depends on the native library somehow.
-    
-    Closes #28595
-    [breaking-change]
 </pre></body></html>
