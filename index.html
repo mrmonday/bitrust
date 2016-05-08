@@ -1,6 +1,41 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
 </head><body><pre>
+commit 1ec22171e6053c640293067418ea1901cb1c7df1
+Merge: d91f8ab 3b0e27c
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun May 8 00:31:40 2016 -0700
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun May 8 00:31:40 2016 -0700
+
+    Auto merge of #33130 - eddyb:mir-const, r=nikomatsakis
+    
+    Implement constant support in MIR.
+    
+    All of the intended features in `trans::consts` are now supported by `mir::constant`.
+    The implementation is considered a temporary measure until `miri` replaces it.
+    
+    A `-Z orbit` bootstrap build will only translate LLVM IR from AST for `#[rustc_no_mir]` functions.
+    
+    Furthermore, almost all checks of constant expressions have been moved to MIR.
+    In non-`const` functions, trees of temporaries are promoted, as per RFC 1414 (rvalue promotion).
+    Promotion before MIR borrowck would allow reasoning about promoted values' lifetimes.
+    
+    The improved checking comes at the cost of four `[breaking-change]`s:
+    * repeat counts must contain a constant expression, e.g.:
+    `let arr = [0; { println!("foo"); 5 }];` used to be allowed (it behaved like `let arr = [0; 5];`)
+    * dereference of a reference to a `static` cannot be used in another `static`, e.g.:
+    `static X: [u8; 1] = [1]; static Y: u8 = (&amp;X)[0];` was unintentionally allowed before
+    * the type of a `static` *must* be `Sync`, irrespective of the initializer, e.g.
+    `static FOO: *const T = &amp;BAR;` worked as `&amp;T` is `Sync`, but it shouldn't because `*const T` isn't
+    * a `static` cannot wrap `UnsafeCell` around a type that *may* need drop, e.g.
+    `static X: MakeSync&lt;UnsafeCell&lt;Option&lt;String&gt;&gt;&gt; = MakeSync(UnsafeCell::new(None));`
+    was previously allowed based on the fact `None` alone doesn't need drop, but in `UnsafeCell`
+    it can be later changed to `Some(String)` which *does* need dropping
+    
+    The drop restrictions are relaxed by RFC 1440 (#33156), which is implemented, but feature-gated.
+    However, creating `UnsafeCell` from constants is unstable, so users can just enable the feature gate.
+
 commit 2f8f256cef42350af2f0376891fd020b6b1c37de
 Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
 AuthorDate: Fri Apr 22 02:31:04 2016 +0300
@@ -1680,18 +1715,4 @@ CommitDate: Fri Oct 2 23:40:10 2015 +0300
     As this is a soundness fix, it is a [breaking-change].
     
     Fixes #28609
-
-commit ef07d7dd40e33d7af95c7b00717503730ce69c11
-Merge: e650491 61f5b2b
-Author:     bors &lt;bors@rust-lang.org&gt;
-AuthorDate: Fri Oct 2 19:16:39 2015 +0000
-Commit:     bors &lt;bors@rust-lang.org&gt;
-CommitDate: Fri Oct 2 19:16:39 2015 +0000
-
-    Auto merge of #28650 - sanxiyn:attr-usage, r=nrc
-    
-    This is technically a [breaking-change].
-    
-    Fix #2809.
-    Fix #22746.
 </pre></body></html>
