@@ -1,4 +1,1724 @@
 <!DOCTYPE html><html><head>
 <title>BitRust - Breaking Changes in rust-lang/rust</title>
-</head><body><pre>
+</head><body>
+<h1>This page is no longer updated (2016-05-10)</h1>
+<div style="font-size: x-large;">
+<a href="http://killercup.github.io/bitrust/">Try This Page Instead.</a>
+</div>
+<hr>
+<pre>
+commit 1ec22171e6053c640293067418ea1901cb1c7df1
+Merge: d91f8ab 3b0e27c
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun May 8 00:31:40 2016 -0700
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun May 8 00:31:40 2016 -0700
+
+    Auto merge of #33130 - eddyb:mir-const, r=nikomatsakis
+    
+    Implement constant support in MIR.
+    
+    All of the intended features in `trans::consts` are now supported by `mir::constant`.
+    The implementation is considered a temporary measure until `miri` replaces it.
+    
+    A `-Z orbit` bootstrap build will only translate LLVM IR from AST for `#[rustc_no_mir]` functions.
+    
+    Furthermore, almost all checks of constant expressions have been moved to MIR.
+    In non-`const` functions, trees of temporaries are promoted, as per RFC 1414 (rvalue promotion).
+    Promotion before MIR borrowck would allow reasoning about promoted values' lifetimes.
+    
+    The improved checking comes at the cost of four `[breaking-change]`s:
+    * repeat counts must contain a constant expression, e.g.:
+    `let arr = [0; { println!("foo"); 5 }];` used to be allowed (it behaved like `let arr = [0; 5];`)
+    * dereference of a reference to a `static` cannot be used in another `static`, e.g.:
+    `static X: [u8; 1] = [1]; static Y: u8 = (&amp;X)[0];` was unintentionally allowed before
+    * the type of a `static` *must* be `Sync`, irrespective of the initializer, e.g.
+    `static FOO: *const T = &amp;BAR;` worked as `&amp;T` is `Sync`, but it shouldn't because `*const T` isn't
+    * a `static` cannot wrap `UnsafeCell` around a type that *may* need drop, e.g.
+    `static X: MakeSync&lt;UnsafeCell&lt;Option&lt;String&gt;&gt;&gt; = MakeSync(UnsafeCell::new(None));`
+    was previously allowed based on the fact `None` alone doesn't need drop, but in `UnsafeCell`
+    it can be later changed to `Some(String)` which *does* need dropping
+    
+    The drop restrictions are relaxed by RFC 1440 (#33156), which is implemented, but feature-gated.
+    However, creating `UnsafeCell` from constants is unstable, so users can just enable the feature gate.
+
+commit 2f8f256cef42350af2f0376891fd020b6b1c37de
+Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+AuthorDate: Fri Apr 22 02:31:04 2016 +0300
+Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+CommitDate: Tue May 3 18:30:10 2016 +0300
+
+    require the existential bounds of an object type to be object-safe
+    
+    This is required, as Copy and Sized are object-unsafe.
+    
+    As a soundness fix, this is a [breaking-change]
+    
+    Fixes #32963
+
+commit 0a6dfc51777eb388b6e795399bf1d3f8aac57db8
+Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+AuthorDate: Fri Apr 22 01:46:23 2016 +0300
+Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+CommitDate: Tue May 3 18:30:10 2016 +0300
+
+    require the non-last elements of a tuple to be Sized
+    
+    This requirement appears to be missing from RFC1214, but is clearly
+    necessary for translation. The last field of a tuple/enum remains in
+    a state of limbo, compiling but causing an ICE when it is used - we
+    should eventually fix that somehow.
+    
+    this is a [breaking-change] - a soundness fix - and requires a
+    crater run.
+
+commit c1c6e99bfd3296954a192d9fe3151a222dd9045c
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Tue Apr 26 14:06:24 2016 +1200
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Tue May 3 11:15:09 2016 +1200
+
+    rebasing
+    
+    Note that this whole PR is a [breaking-change] for clients of the Compiler API.
+
+commit a31658de51444d1b5193ac203a1bd7ace5621f93
+Merge: 17ba11d 4bd44be
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Mon Apr 25 00:45:16 2016 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Mon Apr 25 00:47:44 2016 +0530
+
+    Rollup merge of #33041 - petrochenkov:path, r=nrc,Manishearth
+    
+     Paths are mostly parsed without taking whitespaces into account, e.g. `std :: vec :: Vec :: new ()` parses successfully, however, there are some special cases involving keywords `super`, `self` and `Self`. For example, `self::` is considered a path start only if there are no spaces between `self` and `::`. These restrictions probably made sense when `self` and friends weren't keywords, but now they are unnecessary.
+    
+    The first two commits remove this special treatment of whitespaces by removing `token::IdentStyle` entirely and therefore fix https://github.com/rust-lang/rust/issues/14109.
+    This change also affects naked `self` and `super` (which are not tightly followed by `::`, obviously) they can now be parsed as paths, however they are still not resolved correctly in imports (cc @jseyfried, see `compile-fail/use-keyword.rs`), so https://github.com/rust-lang/rust/issues/29036 is not completely fixed.
+    
+    The third commit also makes `super`, `self`, `Self` and `static` keywords nominally (before this they acted as keywords for all purposes) and removes most of remaining \"special idents\".
+    
+    The last commit (before tests) contains some small improvements - some qualified paths with type parameters are parsed correctly, `parse_path` is not used for parsing single identifiers, imports are sanity checked for absence of type parameters - such type parameters can be generated by syntax extensions or by macros when https://github.com/rust-lang/rust/issues/10415 is fixed (~~soon!~~already!).
+    
+    This patch changes some pretty basic things in `libsyntax`, like `token::Token` and the keyword list, so it's a plugin-[breaking-change].
+    
+    r? @eddyb
+
+commit 23ccaddaa7d1cb71e49ef1b1f423b3245fa3a879
+Merge: ebff638 c6480e8
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Apr 23 14:40:06 2016 -0700
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Apr 23 14:40:06 2016 -0700
+
+    Auto merge of #33124 - sfackler:kill-ipv6-only, r=alexcrichton
+    
+    Remove IPV6_V6ONLY functionality
+    
+    These settings can only be adjusted before bind time, which doesn't make
+    sense in the current set of functionality. These methods are stable, but
+    haven't hit a stable release yet.
+    
+    Closes #33052
+    
+    [breaking-change]
+    
+    r? @alexcrichton
+    
+    Will also need a backport to the beta.
+
+commit c6480e8b6b13401030c52f3c2b4fcc4e80c14481
+Author:     Steven Fackler &lt;sfackler@gmail.com&gt;
+AuthorDate: Wed Apr 20 21:42:19 2016 -0700
+Commit:     Steven Fackler &lt;sfackler@gmail.com&gt;
+CommitDate: Wed Apr 20 21:42:19 2016 -0700
+
+    Remove IPV6_V6ONLY functionality
+    
+    These settings can only be adjusted before bind time, which doesn't make
+    sense in the current set of functionality. These methods are stable, but
+    haven't hit a stable release yet.
+    
+    Closes #33052
+    
+    [breaking-change]
+
+commit 6ece1447f02b2310e5f4c7ef1efd1312476cae80
+Merge: 133f60f c7d564d
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Apr 20 07:27:59 2016 -0700
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Apr 20 07:27:59 2016 -0700
+
+    Auto merge of #32939 - eddyb:layout, r=nikomatsakis
+    
+    Compute LLVM-agnostic type layouts in rustc.
+    
+    Layout for monomorphic types, and some polymorphic ones (e.g. `&amp;T` where `T: Sized`),
+    can now be computed by rustc without involving LLVM in the actual process.
+    
+    This gives rustc the ability to evaluate `size_of` or `align_of`, as well as obtain field offsets.
+    MIR-based CTFE will eventually make use of these layouts, as will MIR trans, shortly.
+    
+    Layout computation also comes with a `[breaking-change]`, or two:
+    * `"data-layout"` is now mandatory in custom target specifications, reverting the decision from #27076.
+    This string is needed because it describes endianness, pointer size and alignments for various types.
+    We have the first two and we could allow tweaking alignments in target specifications.
+    Or we could also extract the data layout from LLVM and feed it back into rustc.
+    However, that can vary with the LLVM version, which is fragile and undermines stability.
+    For built-in targets, I've added a check that the hardcoded data-layout matches LLVM defaults.
+    * `transmute` calls are checked in a stricter fashion, which fixes #32377
+    
+    To expand on `transmute`, there are only 2 allowed patterns: between types with statically known sizes and between pointers with the same potentially-unsized "tail" (which determines the type of unsized metadata they use, if any).
+    If you're affected, my suggestions are:
+    * try to use casts (and raw pointer deref) instead of transmutes
+    * *really* try to avoid `transmute` where possible
+    * if you have a structure, try working on individual fields and unpack/repack the structure instead of transmuting it whole, e.g. `transmute::&lt;RefCell&lt;Box&lt;T&gt;&gt;, RefCell&lt;*mut T&gt;&gt;(x)` doesn't work, but `RefCell::new(Box::into_raw(x.into_inner()))` does (and `Box::into_raw` is just a `transmute`)
+
+commit 6a0cfbcac294faab2b8bcd95a04cda042101a2d8
+Merge: ccc7e95 ca1d29c
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sat Apr 16 01:16:43 2016 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sat Apr 16 01:16:43 2016 +0530
+
+    Rollup merge of #32923 - jseyfried:fix_hygiene, r=nrc
+    
+    Fix macro hygiene bug
+    
+    This fixes #32922 (EDIT: and fixes #31856), macro hygiene bugs.
+    It is a [breaking-change]. For example, the following would break:
+    ```rust
+    fn main() {
+        let x = true;
+        macro_rules! foo { () =&gt; {
+            let x = 0;
+            macro_rules! bar { () =&gt; {x} }
+            let _: bool = bar!();
+            //^ `bar!()` used to resolve the first `x` (a bool),
+            //| but will now resolve to the second x (an i32).
+        }}
+        foo! {};
+    }
+    ```
+    
+    r? @nrc
+
+commit af7b00b68fc7960e98fb914be52d9a6a16fe2224
+Merge: 772c600 8fe4290
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Wed Apr 6 17:15:31 2016 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Wed Apr 6 17:15:31 2016 +0530
+
+    Rollup merge of #32682 - petrochenkov:field3, r=Manishearth
+    
+     The AST part of https://github.com/rust-lang/rust/pull/31937
+    
+    Unlike HIR, AST still uses `Option` for field names because parser can't know field indexes reliably due to constructions like
+    ```
+    struct S(#[cfg(false)] u8, u8); // The index of the second field changes from 1 during parsing to 0 after expansion.
+    ```
+    and I wouldn't like to put the burden of renaming fields on expansion passes and syntax extensions.
+    
+    plugin-[breaking-change] cc https://github.com/rust-lang/rust/issues/31645
+    r? @Manishearth
+
+commit 772c600d4d6f39daa6d07d1a60ee0df3d3426978
+Merge: 241a9d0 432eb8a
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Apr 5 18:58:24 2016 -0700
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Apr 5 18:58:24 2016 -0700
+
+    Auto merge of #32688 - jseyfried:ast_groundwork_for_1422, r=pnkfelix
+    
+    [breaking-batch] Add support for `pub(restricted)` syntax in the AST
+    
+    This PR allows the AST to represent the `pub(restricted)` syntax from RFC 1422 (cc #32409).
+    
+    More specifically, it makes `ast::Visibility` non-`Copy` and adds two new variants, `Visibility::Crate` for `pub(crate)` and `Visitibility::Restricted { path: P&lt;Path&gt;, id: NodeId }` for `pub(path)`.
+    
+    plugin-[breaking-change] cc #31645
+    r? @pnkfelix
+
+commit a11129701c873d96fe0816e4c8b55510efebe96e
+Merge: cad964a 221d0fb
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Mar 28 20:50:42 2016 -0700
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Mar 28 20:50:42 2016 -0700
+
+    Auto merge of #32479 - eddyb:eof-not-even-twice, r=nikomatsakis
+    
+    Prevent bumping the parser past the EOF.
+    
+    Makes `Parser::bump` after EOF into an ICE, forcing callers to avoid repeated EOF bumps.
+    This ICE is intended to break infinite loops where EOF wasn't stopping the loop.
+    
+    For example, the handling of EOF in `parse_trait_items`' recovery loop fixes #32446.
+    But even without this specific fix, the ICE is triggered, which helps diagnosis and UX.
+    
+    This is a `[breaking-change]` for plugins authors who eagerly eat multiple EOFs.
+    See https://github.com/docopt/docopt.rs/pull/171 for such an example and the necessary fix.
+
+commit 128b2ad8298f33984c64b98cfb354bb932b740ef
+Merge: b8b17a5 2536ae5
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Sat Mar 26 09:07:21 2016 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Sat Mar 26 09:07:21 2016 +0530
+
+    Rollup merge of #32199 - nikomatsakis:limiting-constants-in-patterns-2, r=pnkfelix
+    
+    Restrict constants in patterns
+    
+    This implements [RFC 1445](https://github.com/rust-lang/rfcs/blob/master/text/1445-restrict-constants-in-patterns.md). The primary change is to limit the types of constants used in patterns to those that *derive* `Eq` (note that implementing `Eq` is not sufficient). This has two main effects:
+    
+    1. Floating point constants are linted, and will eventually be disallowed. This is because floating point constants do not implement `Eq` but only `PartialEq`. This check replaces the existing special case code that aimed to detect the use of `NaN`.
+    2. Structs and enums must derive `Eq` to be usable within a match.
+    
+    This is a [breaking-change]: if you encounter a problem, you are most likely using a constant in an expression where the type of the constant is some struct that does not currently implement
+    `Eq`. Something like the following:
+    
+    ```rust
+    struct SomeType { ... }
+    const SOME_CONST: SomeType = ...;
+    
+    match foo {
+        SOME_CONST =&gt; ...
+    }
+    ```
+    
+    The easiest and most future compatible fix is to annotate the type in question with `#[derive(Eq)]` (note that merely *implementing* `Eq` is not enough, it must be *derived*):
+    
+    ```rust
+    struct SomeType { ... }
+    const SOME_CONST: SomeType = ...;
+    
+    match foo {
+        SOME_CONST =&gt; ...
+    }
+    ```
+    
+    Another good option is to rewrite the match arm to use an `if` condition (this is also particularly good for floating point types, which implement `PartialEq` but not `Eq`):
+    
+    ```rust
+    match foo {
+        c if c == SOME_CONST =&gt; ...
+    }
+    ```
+    
+    Finally, a third alternative is to tag the type with `#[structural_match]`; but this is not recommended, as the attribute is never expected to be stabilized. Please see RFC #1445 for more details.
+    
+    cc https://github.com/rust-lang/rust/issues/31434
+    
+    r? @pnkfelix
+
+commit 64a13a46601bb47a470264936b623b4adf706128
+Merge: f1578d3 ed8a2e2
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Mar 25 05:03:13 2016 -0700
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Mar 25 05:03:13 2016 -0700
+
+    Auto merge of #31908 - jseyfried:disallow_shadowed_traits, r=nikomatsakis
+    
+    Disallow methods from traits that are not in scope
+    
+    This PR only allows a trait method to be used if the trait is in scope (fixes #31379).
+    This is a [breaking-change]. For example, the following would break:
+    ```rust
+    mod foo {
+        pub trait T { fn f(&amp;self) {} }
+        impl T for () {}
+    }
+    
+    mod bar { pub use foo::T; }
+    
+    fn main() {
+        pub use bar::*;
+        struct T; // This shadows the trait `T`,
+        ().f() // making this an error.
+    }
+    ```
+    r? @nikomatsakis
+
+commit f69eb8efbe5dbc373426bf0ff021b49f37db41cb
+Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+AuthorDate: Fri Mar 11 13:30:32 2016 -0500
+Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+CommitDate: Fri Mar 25 06:45:42 2016 -0400
+
+    issue a future-compat lint for constants of invalid type
+    
+    This is a [breaking-change]: according to RFC #1445, constants used as
+    patterns must be of a type that *derives* `Eq`. If you encounter a
+    problem, you are most likely using a constant in an expression where the
+    type of the constant is some struct that does not currently implement
+    `Eq`. Something like the following:
+    
+    ```rust
+    struct SomeType { ... }
+    const SOME_CONST: SomeType = ...;
+    
+    match foo {
+        SOME_CONST =&gt; ...
+    }
+    ```
+    
+    The easiest and most future compatible fix is to annotate the type in
+    question with `#[derive(Eq)]` (note that merely *implementing* `Eq` is
+    not enough, it must be *derived*):
+    
+    ```rust
+    struct SomeType { ... }
+    const SOME_CONST: SomeType = ...;
+    
+    match foo {
+        SOME_CONST =&gt; ...
+    }
+    ```
+    
+    Another good option is to rewrite the match arm to use an `if`
+    condition (this is also particularly good for floating point types,
+    which implement `PartialEq` but not `Eq`):
+    
+    ```rust
+    match foo {
+        c if c == SOME_CONST =&gt; ...
+    }
+    ```
+    
+    Finally, a third alternative is to tag the type with
+    `#[structural_match]`; but this is not recommended, as the attribute is
+    never expected to be stabilized. Please see RFC #1445 for more details.
+
+commit 06074ac004701bff42c625247c4764b2ae6fca6c
+Merge: 3e05371 e926f28
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Mar 12 21:55:14 2016 -0800
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Mar 12 21:55:14 2016 -0800
+
+    Auto merge of #32141 - jseyfried:fix_resolution_in_lexical_scopes, r=nikomatsakis
+    
+    Fix name resolution in lexical scopes
+    
+    Currently, `resolve_item_in_lexical_scope` does not check the "ribs" (type parameters and local variables). This can allow items that should be shadowed by type parameters to be named.
+    
+    For example,
+    ```rust
+    struct T { i: i32 }
+    fn f&lt;T&gt;() {
+        let t = T { i: 0 }; // This use of `T` resolves to the struct, not the type parameter
+    }
+    
+    mod Foo {
+        pub fn f() {}
+    }
+    fn g&lt;Foo&gt;() {
+        Foo::f(); // This use of `Foo` resolves to the module, not the type parameter
+    }
+    ```
+    
+    This PR changes `resolve_item_in_lexical_scope` so that it fails when the item is shadowed by a rib (fixes #32120).
+    This is a [breaking-change], but it looks unlikely to cause breakage in practice.
+    
+    r? @nikomatsakis
+
+commit 5807fbbfde3ad04820f6fa0269711c81538057ec
+Merge: aeb85a9 1a6092e
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Mar 11 09:26:47 2016 -0800
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Mar 11 09:26:47 2016 -0800
+
+    Auto merge of #32134 - jseyfried:forbid_type_alias_as_module, r=nikomatsakis
+    
+    Forbid glob-importing from a type alias
+    
+    This PR forbids glob-importing from a type alias or trait (fixes #30560):
+    ```rust
+    type Alias = ();
+    use Alias::*; // This is currently allowed but shouldn't be
+    ```
+    
+    This is a [breaking-change]. Since the disallowed glob imports don't actually import anything, any breakage can be fixed by removing the offending glob import.
+    
+    r? @alexcrichton
+
+commit bcda58f49133921abd091d7f800732fe2c4e5a98
+Merge: 0b9995b 3855fa9
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Mar 9 20:16:20 2016 -0800
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Mar 9 20:16:20 2016 -0800
+
+    Auto merge of #31710 - eddyb:reify, r=nikomatsakis
+    
+    Distinguish fn item types to allow reification from nothing to fn pointers.
+    
+    The first commit is a rebase of #26284, except for files that have moved since.
+    
+    This is a [breaking-change], due to:
+    * each FFI function has a distinct type, like all other functions currently do
+    * all generic parameters on functions are recorded in their item types, e.g.:
+    `size_of::&lt;u8&gt;` &amp; `size_of::&lt;i8&gt;`'s types differ despite their identical signature.
+    * function items are zero-sized, which will stop transmutes from working on them
+    
+    The first two cases are handled in most cases with the new coerce-unify logic,
+    which will combine incompatible function item types into function pointers,
+    at the outer-most level of if-else chains, match arms and array literals.
+    
+    The last case is specially handled during type-checking such that transmutes
+    from a function item type to a pointer or integer type will continue to work for
+    another release cycle, but are being linted against. To get rid of warnings and
+    ensure your code will continue to compile, cast to a pointer before transmuting.
+
+commit 5b5e52186917502258a9feadc8bf77a89183386b
+Merge: 8e261d1 e2aa90e
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Mar 4 06:55:11 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Mar 4 06:55:11 2016 +0000
+
+    Auto merge of #32006 - jseyfried:fix_expanded_mod_path, r=nikomatsakis
+    
+    This PR changes the search paths for macro-expanded non-inline modules so that they match ordinary non-inline modules (fixes #31624). This is a [breaking-change].
+    
+    Right now, the search paths for a macro-expanded non-inline module are computed as if the module were declared in the top level of the file in which the macro was defined.
+    For example, consider `./foo/mod.rs`:
+    ```rust
+    mod inconsequential { // moving the macro outside this module wouldn't change anything
+        macro_rules! mod_decl {
+            ($i:ident) =&gt; { mod $i; }
+        }
+    }
+    ```
+    and `./lib.rs`:
+    ```rust
+    mod foo;
+    
+    mod bar {
+        mod_decl!(baz);
+        //^ Now, rustc expects `./foo/baz.rs` (or `./foo/baz/mod.rs`)
+        //| After this PR, rustc will expect `./bar/baz.rs` (or `./bar/baz/mod.rs`)
+    }
+    ```
+    r? @alexcrichton
+
+commit 7cee8b9ffb6a2dac7e2f729988c2324e2f8ac10f
+Merge: 7b0b80a e67590b
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Mar 3 02:21:28 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Mar 3 02:21:28 2016 +0000
+
+    Auto merge of #31824 - jseyfried:privacy_in_resolve, r=nikomatsakis
+    
+    This PR privacy checks paths as they are resolved instead of in `librustc_privacy` (fixes #12334 and fixes #31779). This removes the need for the `LastPrivate` system introduced in PR #9735, the limitations of which cause #31779.
+    
+    This PR also reports privacy violations in paths to intra- and inter-crate items the same way -- it always reports the first inaccessible segment of the path.
+    
+    Since it fixes #31779, this is a [breaking-change]. For example, the following code would break:
+    ```rust
+    mod foo {
+        pub use foo::bar::S;
+        mod bar { // `bar` should be private to `foo`
+            pub struct S;
+        }
+    }
+    
+    impl foo::S {
+        fn f() {}
+    }
+    
+    fn main() {
+        foo::bar::S::f(); // This is now a privacy error
+    }
+    ```
+    
+    r? @alexcrichton
+
+commit c5d58de665819f7330b3d64bdd084d25a412830a
+Author:     Alex Burka &lt;aburka@seas.upenn.edu&gt;
+AuthorDate: Wed Jan 13 16:48:58 2016 -0500
+Commit:     Alex Burka &lt;aburka@seas.upenn.edu&gt;
+CommitDate: Sat Feb 27 02:01:41 2016 -0500
+
+    core: add inclusive ranges to core::ops
+    
+    Since it removes the old iter::{range_inclusive, RangeInclusive} which
+    were unstable and deprecated, this is a [breaking-change] on nightly.
+
+commit acea6fc1cb5edf5211ade6ad4a79b119879eab82
+Merge: 263e722 6cfafad
+Author:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+AuthorDate: Fri Feb 26 15:12:18 2016 +0530
+Commit:     Manish Goregaokar &lt;manishsmail@gmail.com&gt;
+CommitDate: Fri Feb 26 17:03:42 2016 +0530
+
+    Rollup merge of #31904 - bluss:writer-formatter-error, r=alexcrichton
+    
+    Make sure formatter errors are emitted by the default Write::write_fmt
+    
+    Previously, if an error was returned from the formatter that did not
+    originate in an underlying writer error, Write::write_fmt would return
+    successfully even if the formatting did not complete (was interrupted by
+    an `fmt::Error` return).
+    
+    Now we choose to emit an io::Error with kind Other for formatter errors.
+    
+    Since this may reveal error returns from `write!()` and similar that
+    previously passed silently, it's a kind of a [breaking-change].
+    
+    Fixes #31879
+
+commit 9c6a0088fbdae5a6554c39f8db9207c1b878eb05
+Merge: 15e9a95 2942cf7
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Feb 26 04:38:28 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Feb 26 04:38:28 2016 +0000
+
+    Auto merge of #31857 - jseyfried:fix_scoping, r=nikomatsakis
+    
+    This fixes a bug (#31845) introduced in #31105 in which lexical scopes contain items from all anonymous module ancestors, even if the path to the anonymous module includes a normal module:
+    ```rust
+    fn f() {
+        fn g() {}
+        mod foo {
+            fn h() {
+               g(); // This erroneously resolves on nightly
+            }
+        }
+    }
+    ```
+    
+    This is a [breaking-change] on nightly but not on stable or beta.
+    r? @nikomatsakis
+
+commit 6cfafad3c56736a62e1043a8d01f7f2c74384008
+Author:     Ulrik Sverdrup &lt;bluss@users.noreply.github.com&gt;
+AuthorDate: Fri Feb 26 02:53:47 2016 +0100
+Commit:     Ulrik Sverdrup &lt;bluss@users.noreply.github.com&gt;
+CommitDate: Fri Feb 26 02:59:25 2016 +0100
+
+    Make sure formatter errors are emitted by the default Write::write_fmt
+    
+    Previously, if an error was returned from the formatter that did not
+    originate in an underlying writer error, Write::write_fmt would return
+    successfully even if the formatting did not complete (was interrupted by
+    an `fmt::Error` return).
+    
+    Now we choose to emit an io::Error with kind Other for formatter errors.
+    
+    Since this may reveal error returns from `write!()` and similar that
+    previously passed silently, it's a kind of a [breaking-change].
+
+commit 9658645407c784105bb361297d5316cadc9ff2bd
+Merge: 18f8143 d21e908
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Feb 16 19:34:57 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Feb 16 19:34:57 2016 +0000
+
+    Auto merge of #31534 - jseyfried:restrict_noninline_mod, r=nikomatsakis
+    
+    This PR disallows non-inline modules without path annotations that are either in a block or in an inline module whose containing file is not a directory owner (fixes #29765).
+    This is a [breaking-change].
+    r? @nikomatsakis
+
+commit 3a872782d396e9ed3827a515a54d1f0a634c0b77
+Author:     Jonas Schievink &lt;jonas@schievink.net&gt;
+AuthorDate: Sat Feb 13 18:05:16 2016 +0100
+Commit:     Jonas Schievink &lt;jonas@schievink.net&gt;
+CommitDate: Tue Feb 16 13:32:40 2016 +0100
+
+    Move more uses of `panictry!` out of libsyntax
+    
+    [breaking-change] for syntax extensions
+
+commit 9d98390765bbe61ce2a39b40c99ae1a68bb6d1cc
+Merge: 09395bb 9f414a4
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Feb 14 06:18:10 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Feb 14 06:18:10 2016 +0000
+
+    Auto merge of #31581 - petrochenkov:patrefact, r=Manishearth
+    
+    cc https://github.com/rust-lang/rust/pull/31487#issuecomment-182945101
+    plugin-[breaking-change]
+    
+    The first commit renames `ast::Pat_` to `ast::PatKind` and uses its variants in enum qualified form. I've also taken the opportunity and renamed `PatKind::Region` into `PatKind::Ref`.
+    
+    The second commit splits `PatKind::Enum` into `PatKind::TupleStruct` and `PatKind::UnitStruct`.
+    So, pattern kinds now correspond to their struct/variant kinds - `Struct`, `TupleStruct` and `UnitStruct`.
+    @nikomatsakis @nrc @arielb1 Are you okay with this naming scheme?
+    An alternative possible naming scheme is `PatKind::StructVariant`, `PatKind::TupleVariant`, `PatKind::UnitVariant` (it's probably closer to the common use, but I like it less).
+    
+    I intend to apply these changes to HIR later, they should not necessarily go in the same nightly with https://github.com/rust-lang/rust/pull/31487
+    r? @Manishearth
+
+commit c7640aa2aaad857bbc9f9a1002f8e1aaf520752e
+Merge: 9257e89 77cc576
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Feb 12 14:56:20 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Feb 12 14:56:20 2016 +0000
+
+    Auto merge of #31583 - petrochenkov:indi_ast, r=Manishearth
+    
+    cc #31487
+    plugin-[breaking-change]
+    
+    The AST part of https://github.com/rust-lang/rust/pull/30087
+    
+    r? @Manishearth
+
+commit 2b816b0d6a9bc8210ca314a020a247f8632b4f38
+Author:     Oliver 'ker' Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Tue Feb 9 18:09:18 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::PathListItem_ variants
+
+commit 8b3856b1bc1c23969e5d8983f25cf85698a5c2b1
+Author:     Oliver 'ker' Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Tue Feb 9 18:01:08 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::StrStyle variants
+
+commit d844bfb1967b780ff6cc6e81644bf4b529dc0738
+Author:     Oliver 'ker' Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Tue Feb 9 17:57:49 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::Visibility variants
+
+commit dfe35da6b83f64bb7553b19649839512a3c301ce
+Author:     Oliver 'ker' Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Tue Feb 9 17:54:11 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::TraitItemKind variants
+
+commit 73fa9b2da2ee82c91a5c8d605b91f22f19e4d74b
+Author:     Oliver 'ker' Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Tue Feb 9 17:44:47 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::Mutablity variants
+
+commit 14e09ad4686bb20a98acfd7d930386f6330d2b4d
+Author:     Oliver 'ker' Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Tue Feb 9 12:05:20 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::MetaItem_
+
+commit e797e1961df00ec7725c47225dcf9b5a0e9fce64
+Author:     Oliver 'ker' Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Tue Feb 9 11:56:59 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::MacStmtStyle
+
+commit 798974cae58639c174010fd4a6411dcdc860e404
+Author:     Oliver 'ker' Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Tue Feb 9 11:45:01 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::KleeneOp variants
+
+commit 019614f03d106324ab50a37746b556c41e66c099
+Author:     Oliver 'ker' Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Tue Feb 9 11:36:51 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::Item_ variants
+
+commit 0d6ddd190355650a6d851c3aae12cf79339665af
+Author:     Oliver 'ker' Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Tue Feb 9 11:31:19 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::ForeignItem_ variants
+
+commit 8290c950a8b4cdc70038736abcf29f41dede6e0c
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 17:23:13 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't pub export ast::Stmt_ variants
+
+commit 498a2e416e693fa22042d3ae81c5c969fc87fe5c
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 17:16:23 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't pub export ast::IntLitType variants
+
+commit 69072c4f5d18d7a1762fbfb007b0ba3d6b59ad33
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 17:06:20 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't pub export ast::Lit_ variants
+
+commit 05d4cefd630cd9ae104555e69ceb3b1566298a6a
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 16:53:21 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't pub export ast::Ty_ variants
+
+commit ec61e632c0a00ccc2ca0494d5d3c8a0848c574f2
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 16:35:20 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] remove unused enum ast::PrimTy
+
+commit bfa66bb389ce1c7ce4aff09d1842b3428015bd4d
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Thu Feb 11 09:52:55 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] remove the sign from integer literals in the ast
+
+commit 625e78b7001c6e20f29928a5da8c9d21e9aed6c5
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 16:20:57 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::{UintTy, IntTy} variants
+
+commit ccf48bcd4054ecb4e205a18b1ac582ef3ac3a905
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 16:09:01 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::FloatTy variants
+
+commit 80bf9ae18a133571d694aa866b824dcaea875d32
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 16:05:05 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::Expr_ variants
+
+commit 1c4d43715843a5ff5af4657c798b5d5cc85ca523
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 15:43:56 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::ExplicitSelf_ variants
+
+commit 79fa657abc6b8885ceb4023099b4e0026c5ef28f
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 15:34:47 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::Decl_ variants
+
+commit 8516ba367d1f51318ce373fe9b60650c82ded1e9
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 15:27:08 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::CaptureClause variants
+
+commit 243a30c9319b56e1be2b9ff2f9ed9e0d7583e2d1
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Fri Feb 5 13:13:36 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob import/export syntax::abi enum variants
+
+commit 47b0784ba8e62a2e1b877750baeae10d16555fff
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 12:44:45 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::BlockCheckMode variants
+
+commit 3b57d40fe5a813ac957667ac04938753e3100f55
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 15:04:11 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob import ast::FunctionRetTy variants
+
+commit 05e25de4f0add7ae3cd0e8f66cd4558c5bfa42aa
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 13:16:12 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::BinOp_
+
+commit f875f4c4c24e8a14c04bbe4eedd230c4aa3c1431
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Feb 8 13:21:29 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Thu Feb 11 12:34:48 2016 +0100
+
+    [breaking-change] don't glob export ast::UnOp variants
+
+commit 1de70d33f7baf12978cfb3de861e61b2a5d6fca7
+Merge: 106070b 3df40c0
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Feb 11 04:27:13 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Feb 11 04:27:13 2016 +0000
+
+    Auto merge of #31461 - jseyfried:remove_import_resolutions, r=nrc
+    
+    This PR adds to `NameBinding` so it can more fully represent bindings from imports as well from items, refactors away `Target`, generalizes `ImportResolution` to a simpler type `NameResolution`, and uses a single `NameResolution`-valued map in place the existing maps `children` and `import_resolutions` (of `NameBinding`s and `ImportResolution`s, respectively), simplifying duplicate checking and name resolution.
+    
+    It also unifies the `resolve_name_in_module` in `lib.rs` with its namesake in `resolve_imports.rs`, clarifying and improving the core logic (fixes #31403 and fixes #31404) while maintaining clear future-comparability with shadowable globs (i.e., never reporting that a resolution is a `Success` or is `Failing` unless this would also be knowable with shadowable globs).
+    
+    Since it fixes #31403, this is technically a [breaking-change], but it is exceedingly unlikely to cause breakage in practice. The following is an example of code that would break:
+    ```rust
+    mod foo {
+        pub mod bar {} // This defines bar in the type namespace
+        pub use alpha::bar; // This defines bar in the value namespace
+    
+        // This should define baz in both namespaces, but it only defines baz in the type namespace.
+        pub use self::bar as baz;
+        pub fn baz() {} // This should collide with baz, but now it does not.
+    }
+    
+    pub fn f() {}
+    mod alpha {
+        pub use self::f as bar; // Changing this to `pub fn bar() {}` causes the collision right now.
+        pub use super::*;
+    }
+    ```
+    
+    r? @nrc
+
+commit 35635aebab321ff2a4708aeb172351356ad63cf7
+Merge: 5147c1f ee79bfa
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Feb 6 09:24:04 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Feb 6 09:24:04 2016 +0000
+
+    Auto merge of #31333 - lambda:31273-abort-on-stack-overflow, r=brson
+    
+    Abort on stack overflow instead of re-raising SIGSEGV
+    
+    We use guard pages that cause the process to abort to protect against
+    undefined behavior in the event of stack overflow.  We have a handler
+    that catches segfaults, prints out an error message if the segfault was
+    due to a stack overflow, then unregisters itself and returns to allow
+    the signal to be re-raised and kill the process.
+    
+    This caused some confusion, as it was unexpected that safe code would be
+    able to cause a segfault, while it's easy to overflow the stack in safe
+    code.  To avoid this confusion, when we detect a segfault in the guard
+    page, abort instead of the previous behavior of re-raising SIGSEGV.
+    
+    To test this, we need to adapt the tests for segfault to actually check
+    the exit status.  Doing so revealed that the existing test for segfault
+    behavior was actually invalid; LLVM optimizes the explicit null pointer
+    reference down to an illegal instruction, so the program aborts with
+    SIGILL instead of SIGSEGV and the test didn't actually trigger the
+    signal handler at all.  Use a C helper function to get a null pointer
+    that LLVM can't optimize away, so we get our segfault instead.
+    
+    This is a [breaking-change] if anyone is relying on the exact signal
+    raised to kill a process on stack overflow.
+    
+    Closes #31273
+
+commit ee79bfa18affe95959a5f9a036c17bbd77979e21
+Author:     Brian Campbell &lt;lambda@continuation.org&gt;
+AuthorDate: Sun Jan 31 18:30:32 2016 -0500
+Commit:     Brian Campbell &lt;lambda@continuation.org&gt;
+CommitDate: Fri Feb 5 20:41:18 2016 -0500
+
+    Abort on stack overflow instead of re-raising SIGSEGV
+    
+    We use guard pages that cause the process to abort to protect against
+    undefined behavior in the event of stack overflow.  We have a handler
+    that catches segfaults, prints out an error message if the segfault was
+    due to a stack overflow, then unregisters itself and returns to allow
+    the signal to be re-raised and kill the process.
+    
+    This caused some confusion, as it was unexpected that safe code would be
+    able to cause a segfault, while it's easy to overflow the stack in safe
+    code.  To avoid this confusion, when we detect a segfault in the guard
+    page, abort instead of the previous behavior of re-raising the SIGSEGV.
+    
+    To test this, we need to adapt the tests for segfault to actually check
+    the exit status.  Doing so revealed that the existing test for segfault
+    behavior was actually invalid; LLVM optimizes the explicit null pointer
+    reference down to an illegal instruction, so the program aborts with
+    SIGILL instead of SIGSEGV and the test didn't actually trigger the
+    signal handler at all.  Use a C helper function to get a null pointer
+    that LLVM can't optimize away, so we get our segfault instead.
+    
+    This is a [breaking-change] if anyone is relying on the exact signal
+    raised to kill a process on stack overflow.
+    
+    Closes #31273
+
+commit 654f68dd50b72d1d812b0760f1b71d7c366f6f55
+Merge: 094c5b0 7a69ee0
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Feb 1 04:52:12 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Feb 1 04:52:12 2016 +0000
+
+    Auto merge of #30866 - jseyfried:fix_shadowed_use_visibility, r=nrc
+    
+    This reverts PR #30324, fixing bug #30159 in which a public a glob import makes public any preceding imports that share a name with an item in the module being glob imported from.
+    
+    For example,
+    ```rust
+    pub fn f() {}
+    pub mod foo {
+        fn f() {}
+    }
+    
+    mod bar {
+        use f;
+        use f as g;
+        pub use foo::*; // This makes the first import public but does not affect the second import.
+    }
+    ```
+    
+    This is a [breaking-change].
+
+commit 43c1a173a874f5513db58b2f5321489a00087484
+Merge: 1972c50 faf0852
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Jan 26 11:24:18 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Jan 26 11:24:18 2016 +0000
+
+    Auto merge of #31105 - jseyfried:fix_lexical_scoping, r=nrc
+    
+    This fixes #23880, a scoping bug in which items in a block are shadowed by local variables and type parameters that are in scope.
+    
+    After this PR, an item in a block will shadow any local variables or type parameters above the item in the scope hierarchy. Items in a block will continue to be shadowed by local variables in the same block (even if the item is defined after the local variable).
+    
+    This is a [breaking-change]. For example, the following code breaks:
+    ```rust
+    fn foo() {
+        let mut f = 1;
+        {
+            fn f() {}
+            f += 1; // This will resolve to the function instead of the local variable
+        }
+    }
+
+commit faf0852fc1d01aef18fe8098a0f2f601dbfebd9b
+Author:     Jeffrey Seyfried &lt;jeffrey.seyfried@gmail.com&gt;
+AuthorDate: Fri Jan 22 09:55:29 2016 +0000
+Commit:     Jeffrey Seyfried &lt;jeffrey.seyfried@gmail.com&gt;
+CommitDate: Tue Jan 26 04:16:58 2016 +0000
+
+    Resolve: fix #23880, a scoping bug
+    
+    This fixes a bug in which items in a block are shadowed by local variables and type parameters that are in scope.
+    It is a [breaking-change]. For example, the following code breaks:
+    
+    ```rust
+    fn foo() {
+        let mut f = 1;
+        {
+            fn f() {}
+            f += 1; // This will now resolve to the function instead of the local variable
+        }
+    }
+    ```
+    
+    Any breakage can be fixed by renaming the item that is no longer shadowed.
+
+commit 54475e950cf3db909c4dec4a30c72f7636ab4e07
+Merge: 46dcffd ff6b0aa
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Jan 21 22:41:37 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Jan 21 22:41:37 2016 +0000
+
+    Auto merge of #30882 - petrochenkov:varnamesp, r=nrc
+    
+    Tuple and unit variants from other crates weren't put into type namespace.
+    Now variant namespacing is aligned with struct namespacing and is not affected by the variant's crate of origin (struct -&gt; type, tuple/unit -&gt; type/value).
+    Additionally, struct variants from other crates are put into value namespace (struct variants from local crate were already in it). This is not a necessity, but a future proofing measure.
+    
+    This fix can result in some new shadowing errors in cross-crate scenarios, crater reports [three regressions](https://github.com/rust-lang/rust/pull/30882#issuecomment-172369883).
+    [breaking-change]
+
+commit 88463364bfb675fdecd2bf9b70c589cc5e7cb2fb
+Merge: 077f4ee be4128d
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Jan 17 06:47:55 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Jan 17 06:47:55 2016 +0000
+
+    Auto merge of #30426 - gereeter:btree-rewrite, r=Gankro
+    
+    Despite being over 700 lines shorter, this implementation should use less memory than the previous one and is faster on at least insertions and iteration, the latter improving approximately 5x.
+    
+    Technically a [breaking-change] due to removal of deprecated functions.
+    
+    cc @apasel422 @Gankro @goyox86
+    
+    Fixes #27865.
+    
+    &lt;!-- Reviewable:start --&gt;
+    [&lt;img src="https://reviewable.io/review_button.png" height=40 alt="Review on Reviewable"/&gt;](https://reviewable.io/reviews/rust-lang/rust/30426)
+    &lt;!-- Reviewable:end --&gt;
+
+commit 06c66d6ca23c73c60aeb0ea2c12baaf0236afe40
+Author:     Peter Atashian &lt;retep998@gmail.com&gt;
+AuthorDate: Fri Dec 4 22:36:01 2015 -0500
+Commit:     Peter Atashian &lt;retep998@gmail.com&gt;
+CommitDate: Sat Jan 16 12:34:54 2016 -0500
+
+    Change name when outputting staticlibs on Windows
+    libfoo.a -&gt; foo.lib
+    In order to not cause conflicts, changes the DLL import library name
+    foo.lib -&gt; foo.dll.lib
+    
+    Fixes https://github.com/rust-lang/rust/issues/29508
+    
+    Because this changes output filenames this is a [breaking-change]
+    
+    Signed-off-by: Peter Atashian &lt;retep998@gmail.com&gt;
+
+commit 82f8e5ce84c83b02fbfa720c6841f12db1a55603
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Thu Jan 7 09:23:01 2016 +1300
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Fri Jan 15 14:49:25 2016 +1300
+
+    Address reviewer comments
+    
+    [breaking-change]
+    
+    `OptLevel` variants are no longer `pub use`ed by rust::session::config. If you are using these variants, you must change your code to prefix the variant name with `OptLevel`.
+
+commit b976d9e6660c16f4a1d5a28b11afa7ccb4f75da6
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Thu Dec 31 18:47:14 2015 +1300
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Fri Jan 15 10:24:12 2016 +1300
+
+    Implement JSON error emission
+    
+    [breaking-change]
+    
+    syntax::errors::Handler::new has been renamed to with_tty_emitter
+    
+    Many functions which used to take a syntax::errors::ColorConfig, now take a rustc::session::config::ErrorOutputType. If you previously used ColorConfig::Auto as a default, you should now use ErrorOutputType::default().
+
+commit 8796e012cbfa0bf63522e409edc10cbac5afaacd
+Merge: f1bcfdd 34fe201
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Jan 13 08:15:45 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Jan 13 08:15:45 2016 +0000
+
+    Auto merge of #29498 - wthrowe:replace-pattern, r=alexcrichton
+    
+    It appears this was left out of RFC rust-lang/rfcs#528 because it might be useful to
+    also generalize the second argument in some way.  That doesn't seem to
+    prevent generalizing the first argument now, however.
+    
+    This is a [breaking-change] because it could cause type-inference to
+    fail where it previously succeeded.
+    
+    Also update docs for a few other methods that still referred to `&amp;str` instead of patterns.
+
+commit bac3eec67c367718c05585b72974c58a66f6abd0
+Author:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+AuthorDate: Mon Jan 11 12:31:46 2016 +0100
+Commit:     Oliver Schneider &lt;git-spam-no-reply9815368754983@oli-obk.de&gt;
+CommitDate: Mon Jan 11 12:31:46 2016 +0100
+
+    [breaking-change] remove negate_unsigned feature gate
+
+commit 69e1f57dfbd32a1a342d696a3e79624da97ebe1b
+Merge: d70ab2b 834fb17
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Jan 11 06:40:58 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Jan 11 06:40:58 2016 +0000
+
+    Auto merge of #30295 - jseyfried:fix_extern_crate_duplicate, r=nrc
+    
+    Fix a bug allowing an item and an external crate to collide so long as the external crate is declared after the item. For example,
+    ```rust
+    mod core { pub fn f() {} } // This would be an error if it followed the `extern crate`
+    extern crate core; // This declaration is shadowed by the preceding module
+    
+    fn main() { core::f(); }
+    ```
+    This is a [breaking-change], but it looks unlikely to cause breakage in practice, and any breakage can be fixed by removing colliding `extern crate` declarations, which are shadowed and hence unused.
+
+commit 91b27ec9beb8455426da3efd26dfc9155058f5bd
+Merge: 4406717 6dd3f61
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Jan 7 06:32:56 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Jan 7 06:32:56 2016 +0000
+
+    Auto merge of #30724 - nikomatsakis:feature-gate-defaulted-type-parameters, r=pnkfelix
+    
+    It was recently realized that we accept defaulted type parameters everywhere, without feature gate, even though the only place that we really *intended* to accept them were on types. This PR adds a lint warning unless the "type-parameter-defaults" feature is enabled. This should eventually become a hard error.
+    
+    This is a [breaking-change] in that new feature gates are required (or simply removing the defaults, which is probably a better choice as they have little effect at this time). Results of a [crater run][crater] suggest that approximately 5-15 crates are affected. I didn't do the measurement quite right so that run cannot distinguish "true" regressions from "non-root" regressions, but even the upper bound of 15 affected crates seems relatively minimal.
+    
+    [crater]: https://gist.github.com/nikomatsakis/760c6a67698bd24253bf
+    
+    cc @rust-lang/lang
+    r? @pnkfelix
+
+commit 5daa75373d870f255923aed37d99db73a661bd51
+Merge: e8c337b 9023c65
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Jan 6 20:30:55 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Jan 6 20:30:55 2016 +0000
+
+    Auto merge of #30654 - nrc:panictry, r=brson
+    
+    The motivation (other than removing boilerplate) is that this is a baby step towards a parser with error recovery.
+    
+    [breaking-change] if you use any of the changed functions, you'll need to remove a try! or panictry!
+
+commit e8c337b5ca883285e6215f1f669d5556842d1520
+Merge: 21b025f 93996b1
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Jan 6 18:37:57 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Jan 6 18:37:57 2016 +0000
+
+    Auto merge of #30532 - nikomatsakis:cross-item-dependencies, r=mw
+    
+    This is roughly the same as my previous PR that created a dependency graph, but that:
+    
+    1. The dependency graph is only optionally constructed, though this doesn't seem to make much of a difference in terms of overhead (see measurements below).
+    2. The dependency graph is simpler (I combined a lot of nodes).
+    3. The dependency graph debugging facilities are much better: you can now use `RUST_DEP_GRAPH_FILTER` to filter the dep graph to just the nodes you are interested in, which is super help.
+    4. The tests are somewhat more elaborate, including a few known bugs I need to fix in a second pass.
+    
+    This is potentially a `[breaking-change]` for plugin authors. If you are poking about in tcx state or something like that, you probably want to add `let _ignore = tcx.dep_graph.in_ignore();`, which will cause your reads/writes to be ignored and not affect the dep-graph.
+    
+    After this, or perhaps as an add-on to this PR in some cases, what I would like to do is the following:
+    
+    - [x] Write-up a little guide to how to use this system, the debugging options available, and what the possible failure modes are.
+    - [ ] Introduce read-only and perhaps the `Meta` node
+    - [x] Replace "memoization tasks" with node from the map itself
+    - [ ] Fix the shortcomings, obviously! Notably, the HIR map needs to register reads, and there is some state that is not yet tracked. (Maybe as a separate PR.)
+    - [x] Refactor the dep-graph code so that the actual maintenance of the dep-graph occurs in a parallel thread, and the main thread simply throws things into a shared channel (probably a fixed-size channel). There is no reason for dep-graph construction to be on the main thread. (Maybe as a separate PR.)
+    
+    Regarding performance: adding this tracking does add some overhead, approximately 2% in my measurements (I was comparing the build times for rustdoc). Interestingly, enabling or disabling tracking doesn't seem to do very much. I want to poke at this some more and gather a bit more data -- in some tests I've seen that 2% go away, but on others it comes back. It's not entirely clear to me if that 2% is truly due to constructing the dep-graph at all.
+    
+    The next big step after this is write some code to dump the dep-graph to disk and reload it.
+    
+    r? @michaelwoerister
+
+commit 21b025f55fa7f68982f9faf58522da11b3d91815
+Merge: d5ac1a1 14e1e2a
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Jan 6 15:00:17 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Jan 6 15:00:17 2016 +0000
+
+    Auto merge of #30733 - ubsan:wrapping_op_assign, r=eddyb
+    
+    Fix a breaking change in #30523
+    
+    While this does fix a breaking change, it is also, technically, a
+    [breaking-change] to go back to our original way
+
+commit 14e1e2aee812978c81d4edf23359e7dca444d678
+Author:     Nicholas Mazzuca &lt;npmazzuca@gmail.com&gt;
+AuthorDate: Tue Jan 5 22:16:03 2016 -0800
+Commit:     Nicholas Mazzuca &lt;npmazzuca@gmail.com&gt;
+CommitDate: Tue Jan 5 22:16:03 2016 -0800
+
+    Fix a breaking change in #30523
+    
+    While this does fix a breaking change, it is also, technically, a
+    [breaking-change] to go back to our original way
+
+commit d5e229057c93222afd4943a49d382c4c5d6e8c26
+Merge: 41611ba 33f3c52
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Jan 4 23:57:46 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Jan 4 23:57:46 2016 +0000
+
+    Auto merge of #30681 - Toby-S:master, r=bluss
+    
+    Make `".".parse::&lt;f32&gt;()` and `".".parse::&lt;f64&gt;()` return Err
+    
+    This fixes #30344.
+    
+    This is a [breaking-change], which the libs team have classified as a
+    bug fix.
+
+commit 5e8cb3819bf62527947634ad4d5e44b4b69daecd
+Merge: b622891 402259d
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Jan 4 18:37:21 2016 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Jan 4 18:37:21 2016 +0000
+
+    Auto merge of #30523 - ubsan:wrapping_op_assign, r=eddyb
+    
+    Add OpAssign to Wrapping&lt;T&gt;, plus fix some problems in core::num::wrapping
+    
+    including, but not limited to:
+    
+    * Testing Wrapping&lt;T&gt;
+    * Pull out a lot of broken code that doesn't need to be there with the new stage0 compiler
+    * Adding Rem and RemAssign to Wrapping&lt;T&gt;
+    * Removed 3 (assumed accidental) re-exports, which is a minor [breaking-change].
+    * Change shl and shr to take all integer types, instead of a usize; this is a more major [breaking-change], because of values that were inferred before, but brings us in line with the integer shifts.
+    
+    Fixes #30524 and #30523
+
+commit 33f3c52d32e6f91494bc305fd25f9d5ae5a11702
+Author:     Toby Scrace &lt;toby.scrace@gmail.com&gt;
+AuthorDate: Sun Jan 3 20:08:53 2016 +0000
+Commit:     Toby Scrace &lt;toby.scrace@gmail.com&gt;
+CommitDate: Mon Jan 4 18:23:33 2016 +0000
+
+    Make float parsing "." return Err
+    
+    This makes both of the following return Err:
+    
+        ".".parse::&lt;f32&gt;()
+        ".".parse::&lt;f64&gt;()
+    
+    This is a [breaking-change], which the libs team have classified as a
+    bug fix.
+
+commit 9023c659af8a43dd5e284d7b311e5f19721c9bd8
+Author:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+AuthorDate: Thu Dec 31 12:11:53 2015 +1300
+Commit:     Nick Cameron &lt;ncameron@mozilla.com&gt;
+CommitDate: Thu Dec 31 14:29:02 2015 +1300
+
+    Cut out a bunch of Result and panictry! boilerplate from libsyntax.
+    
+    [breaking-change] if you use any of the changed functions, you'll need to remove a try! or panictry!
+
+commit ef91cdb140d7dffa4b04f42ab0bc02dc257940e3
+Merge: 29ea4ee 785cbe0
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Dec 18 18:54:52 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Dec 18 18:54:52 2015 +0000
+
+    Auto merge of #29973 - petrochenkov:privinpub, r=nikomatsakis
+    
+    Some notes:
+    This patch enforces the rules from [RFC 136](https://github.com/rust-lang/rfcs/blob/master/text/0136-no-privates-in-public.md) and makes "private in public" a module-level concept and not crate-level. Only `pub` annotations are used by the new algorithm, crate-level exported node set produced by `EmbargoVisitor` is not used. The error messages are tweaked accordingly and don't use the word "exported" to avoid confusing people (https://github.com/rust-lang/rust/issues/29668).
+    
+    The old algorithm tried to be extra smart with impls, but it mostly led to unpredictable behavior and bugs like https://github.com/rust-lang/rust/issues/28325.
+    The new algorithm tries to be as simple as possible - an impl is considered public iff its type is public and its trait is public (if presents).
+    A type or trait is considered public if all its components are public, [complications](https://internals.rust-lang.org/t/limits-of-type-inference-smartness/2919) with private types leaking to other crates/modules through trait impls and type inference are deliberately ignored so far.
+    
+    The new algorithm is not recursive and uses the nice new facility `Crate::visit_all_items`!
+    
+    Obsolete pre-1.0 feature `visible_private_types` is removed.
+    
+    This is a [breaking-change].
+    The two main vectors of breakage are type aliases (https://github.com/rust-lang/rust/issues/28450) and impls (https://github.com/rust-lang/rust/issues/28325).
+    I need some statistics from a crater run (cc @alexcrichton) to decide on the breakage mitigation strategy.
+    UPDATE: All the new errors are reported as warnings controlled by a lint `private_in_public` and lint group `future_incompatible`, but the intent is to make them hard errors eventually.
+    
+    Closes https://github.com/rust-lang/rust/issues/28325
+    Closes https://github.com/rust-lang/rust/issues/28450
+    Closes https://github.com/rust-lang/rust/issues/29524
+    Closes https://github.com/rust-lang/rust/issues/29627
+    Closes https://github.com/rust-lang/rust/issues/29668
+    Closes https://github.com/rust-lang/rust/issues/30055
+    
+    r? @nikomatsakis
+
+commit ce7bc51933e2facb4eca029ac17b398f372f5b41
+Merge: ac2c5ff 0883f10
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Dec 16 10:09:36 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Dec 16 10:09:36 2015 +0000
+
+    Auto merge of #30300 - sanxiyn:syntax-ext, r=nikomatsakis
+    
+    This reduces iteration time (`make rustc-stage1`) for moved syntax extensions from 11 minutes to 3 minutes on my machine.
+    
+    Because of the signature change, this is a [breaking-change] for people directly calling `expand_crate`. I think it is rare: from GitHub search, only case I found is [glassful](https://github.com/kmcallister/glassful).
+
+commit ec8ea22c7f59fd898670060bceb6810cef68ca0a
+Author:     faineance &lt;faineance@users.noreply.github.com&gt;
+AuthorDate: Sat Nov 28 19:02:07 2015 +0000
+Commit:     faineance &lt;faineance@users.noreply.github.com&gt;
+CommitDate: Mon Dec 14 21:15:01 2015 +0000
+
+    [breaking-change] move ast_util functions to methods
+
+commit 672a3d93e34ad52529f3bdedfd26d52d67824ccd
+Merge: ae5d095 ada87fa
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Dec 11 04:27:53 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Dec 11 04:27:53 2015 +0000
+
+    Auto merge of #30294 - jseyfried:fix_shadowed_use_visibility, r=nrc
+    
+    This fixes a bug in which the visibility of a use declaration defining a name in one namespace (e.g. the value namespace) is overridden by a later use declaration defining the same name in the other namespace (e.g. the type namespace). For example,
+    ```rust
+    fn f() {}
+    pub mod bar {}
+    
+    mod foo {
+        use f; // This import should not be visible outside `foo`,
+        pub use bar as f; // but it visible outside of `foo` because of this import.
+    }
+    
+    fn main() { foo::f(); }
+    ```
+    As the example demonstrates, this is a [breaking-change], but it looks unlikely to cause breakage in practice, and any breakage can be fixed by correcting visibility modifiers.
+
+commit e7f3d6eddd28a917c9a0f7cd73a489048ca7f4cd
+Author:     William Throwe &lt;wtt6@cornell.edu&gt;
+AuthorDate: Sun Nov 1 00:21:47 2015 -0400
+Commit:     William Throwe &lt;wtt6@cornell.edu&gt;
+CommitDate: Mon Dec 7 22:08:33 2015 -0500
+
+    Let str::replace take a pattern
+    
+    It appears this was left out of RFC #528 because it might be useful to
+    also generalize the second argument in some way.  That doesn't seem to
+    prevent generalizing the first argument now, however.
+    
+    This is a [breaking-change] because it could cause type-inference to
+    fail where it previously succeeded.
+
+commit e819d8aa3cd2319fa57e7336e167069ef7002d6a
+Merge: 64c21f9 0ca2a9e
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Dec 7 02:16:13 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Dec 7 02:16:13 2015 +0000
+
+    Auto merge of #30247 - bluss:revert-array-clone, r=alexcrichton
+    
+    Revert "PR #30130 Implement `Clone` for more arrays"
+    
+    This reverts commit e22a64e8d8d4da46c74f878ce1c23ad1c88982e8.
+    
+    This caused a regression such that types like `[[u8; 256]; 4]`
+    no longer implemented Clone. This previously worked due to Clone
+    for `[T; N]` (N in 0 to 32) being implemented for T: Copy.
+    
+    Due to fixed size arrays not implementing Clone for sizes above 32,
+    the new implementation requiring T: Clone would not allow
+    `[[u8; 256]; 4]` to be Clone.
+    
+    Fixes #30244
+    
+    Due to changing back, this is technically a [breaking-change],
+    albeit for a behavior that existed for a very short time.
+
+commit e22a64e8d8d4da46c74f878ce1c23ad1c88982e8
+Merge: 55a4e05 6dff9d0
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Fri Dec 4 22:52:02 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Fri Dec 4 22:52:02 2015 +0000
+
+    Auto merge of #30130 - tbu-:pr_array_clone, r=alexcrichton
+    
+    [breaking-change]
+
+commit e9ac44026d2d4ac11728263726505ea4cea3c1ff
+Merge: bac2b13 af96402
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Nov 28 00:45:34 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Nov 28 00:45:34 2015 +0000
+
+    Auto merge of #29383 - petrochenkov:empstr, r=pnkfelix
+    
+    Fixes https://github.com/rust-lang/rust/issues/28692
+    Fixes https://github.com/rust-lang/rust/issues/28992
+    Fixes some other similar issues (see the tests)
+    
+    [breaking-change], needs crater run (cc @brson or @alexcrichton )
+    
+    The pattern with parens `UnitVariant(..)` for unit variants seems to be popular in rustc (see the second commit), but mostly used by one person (@nikomatsakis), according to git blame. If it causes breakage on crates.io I'll add an exceptional case for it.
+
+commit 6ef02eff89e3d2a29eab3346bff393821df6e033
+Merge: 6f3becb 43a6deb
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Thu Nov 26 18:20:58 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Thu Nov 26 18:20:58 2015 +0000
+
+    Auto merge of #30043 - arielb1:split-metadata, r=nikomatsakis
+    
+    This improves bootstrap times because of better parallelism - though I need to measure how much - and allows metadata to be modified without triggering a full recompile. This also ensures that metadata handling and the rest of rustc remain decoupled, which is a first step for switching to a new metadata format.
+    
+    This is a [breaking-change] to all plugin authors because of the following renames:
+     * `rustc::plugin` is now `rustc_plugin`
+     * `rustc::metadata` is now `rustc_metadata`
+     * Most data types from `rustc::metadata`, along with `LOCAL_CRATE`, are now in `rustc::middle::cstore`.
+     * The CStore methods were split between the `rustc::middle::CrateStore` trait (and trait object) and the `rustc_metadata::cstore::CStore`, with an `Rc&lt;CrateStore&gt;` stored in the `Session`. The inner `CStore` can be accessed via the inner `Any` bound, but this is deprecated.
+    
+    r? @nikomatsakis
+
+commit 1430a3500076ad504a0b30be77fd2ad4468ea769
+Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+AuthorDate: Sun Nov 22 22:14:09 2015 +0200
+Commit:     Ariel Ben-Yehuda &lt;arielb1@mail.tau.ac.il&gt;
+CommitDate: Thu Nov 26 18:22:39 2015 +0200
+
+    move librustc/plugin to librustc_plugin
+    
+    this is a [breaking-change] to all plugin authors - sorry
+
+commit 3c0d55cc76c524c12160bfb45663d9aca73e6556
+Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+AuthorDate: Thu Nov 19 00:43:31 2015 +0200
+Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+CommitDate: Thu Nov 19 20:53:59 2015 +0200
+
+    constrained_type_params: make projections depend on their trait-ref
+    
+    As this is a soundness fix, it is a [breaking-change].
+    
+    Fixes #29861.
+
+commit 767ee79c4c38e7909c7fefef1b33be4612112336
+Author:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+AuthorDate: Tue Nov 17 17:32:12 2015 -0500
+Commit:     Niko Matsakis &lt;niko@alum.mit.edu&gt;
+CommitDate: Wed Nov 18 19:22:18 2015 -0500
+
+    Refactor the HIR so that items are stored in a map in the `Crate`,
+    rather being stored inline. Refactor (and rename) the visitor so that
+    (by default) it only visits the interior content of an item not nested
+    items.
+    
+    This is a [breaking-change] for anyone who uses the HIR visitor. Besides
+    changing `visit::` to `intravisit::`, you need to refactor your visitor
+    in one of two ways, depending on what it requires:
+    
+    1. If you just want to visit all items (most common), you should call
+       `krate.visit_all_items(&amp;mut visitor)`.
+    
+    2. If you need to visit nested items in the middle of the parent items,
+       you should override `visit_nested_item` with something like:
+       `self.visit_item(self.tcx.map.expect_item(item.id))`, presuming you
+       have access to a tcx (or at least a HIR map).
+
+commit ad3bd1b46d52ccb339a09558064b9bf687c47a75
+Merge: 5f64201 41ccd44
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Wed Nov 11 00:25:08 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Wed Nov 11 00:25:08 2015 +0000
+
+    Auto merge of #29726 - petrochenkov:privsan, r=alexcrichton
+    
+    - Check privacy sanity in all blocks, not only function bodies
+    - Check all fields, not only named
+    - Check all impl items, not only methods
+    - Check default impls
+    - Move the sanity check in the beginning of privacy checking, so others could rely on it
+    
+    Technically it's a [breaking-change], but I expect no breakage because, well, it's *sane* privacy visitor, if code is broken it must be insane by definition!
+
+commit 749625ad6d15d0254b90e3d16f79d1cb1e260969
+Merge: e2bb53c 8cf50bc
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Nov 3 01:23:10 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Nov 3 01:23:10 2015 +0000
+
+    Auto merge of #29500 - vadimcn:rustlib, r=alexcrichton
+    
+    According to a recent [discussion on IRC](https://botbot.me/mozilla/rust-tools/2015-10-27/?msg=52887517&amp;page=2), there's no good reason for Windows builds to store target libraries under `bin`, when on every other platform they are under `lib`.
+    
+    This might be a [breaking-change] for some users.  I am pretty sure VisualRust has that path hard-coded somewhere.
+    
+    r? @brson
+
+commit 6d43fef3aaf64b2e7df14ca676a3a39b723ed7f3
+Merge: a5fbb3a 306b0ef
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sun Nov 1 13:36:49 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sun Nov 1 13:36:49 2015 +0000
+
+    Auto merge of #29486 - petrochenkov:multiwild, r=Manishearth
+    
+    Motivation:
+    - It is not actually a pattern
+    - It is not actually needed, except for...
+    
+    Drawback:
+    - Slice patterns like `[a, _.., b]` are pretty-printed as `[a, .., b]`. Great loss :(
+    
+    plugin-[breaking-change], as always
+
+commit c44316d4a1ad0fe01ae366e163993aa3980c755f
+Merge: 72ed590 e8ddbba
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Mon Oct 26 08:27:59 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Mon Oct 26 08:27:59 2015 +0000
+
+    Auto merge of #29303 - petrochenkov:unistrimp, r=eddyb
+    
+    And use `VariantData` instead of `P&lt;VariantData&gt;` in `Item_` and `Variant_`
+    
+    Improvements suggested by @eddyb in https://github.com/rust-lang/rust/pull/28816#discussion_r42483587 and https://github.com/rust-lang/rust/pull/28816#discussion_r42483648
+    
+    plugin-[breaking-change]
+    
+    r? @eddyb
+
+commit 04e497c0056aed899cd6edbc98e7a68a9b391c5c
+Merge: 43869e9 5d6d26c
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Oct 24 12:21:12 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Oct 24 12:21:12 2015 +0000
+
+    Auto merge of #29259 - arielb1:supertrait-self-2, r=eddyb
+    
+    …being it
+    
+    This is a [breaking-change]:lang, but the broken code does not make
+    much sense.
+    
+    Fixes #26056
+    
+    r? @eddyb
+
+commit 5d6d26c241b785daef873a0c6b9a0553c3a9451d
+Author:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+AuthorDate: Sat Oct 24 00:01:11 2015 +0300
+Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+CommitDate: Sat Oct 24 00:22:29 2015 +0300
+
+    object_safety: check whether a supertrait contains Self even without being it
+    
+    This is a [breaking-change]:lang, but the broken code does not make
+    much sense.
+    
+    Fixes #26056
+
+commit 97ba52ec379e17cc0984224b756282b68bc3a53b
+Merge: 5e9f305 025cf75
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Tue Oct 20 19:02:27 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Tue Oct 20 19:02:27 2015 +0000
+
+    Auto merge of #29148 - petrochenkov:noshow, r=alexcrichton
+    
+    Closes https://github.com/rust-lang/rust/issues/29145
+    
+    [breaking-change], needs a crater run.
+
+commit d6bd8d8491e89277edbfc9a4e0f8953847abbdd6
+Author:     Andrew Paseltiner &lt;apaseltiner@gmail.com&gt;
+AuthorDate: Fri Oct 16 11:54:05 2015 -0400
+Commit:     Andrew Paseltiner &lt;apaseltiner@gmail.com&gt;
+CommitDate: Fri Oct 16 18:35:31 2015 -0400
+
+    Add `Shared` pointer and have `{Arc, Rc}` use it
+    
+    This change has two consequences:
+    
+    1. It makes `Arc&lt;T&gt;` and `Rc&lt;T&gt;` covariant in `T`.
+    
+    2. It causes the compiler to reject code that was unsound with respect
+    to dropck. See compile-fail/issue-29106.rs for an example of code that
+    no longer compiles. Because of this, this is a [breaking-change].
+    
+    Fixes #29037.
+    Fixes #29106.
+
+commit 130851e03046db41d555a401a08c87f187fd911a
+Merge: 6d11a81 2f23e17
+Author:     bors &lt;bors@rust-lang.org&gt;
+AuthorDate: Sat Oct 3 22:07:37 2015 +0000
+Commit:     bors &lt;bors@rust-lang.org&gt;
+CommitDate: Sat Oct 3 22:07:37 2015 +0000
+
+    Auto merge of #28669 - arielb1:well-formed-methods, r=nikomatsakis
+    
+    By RFC1214:
+    &gt;    Before calling a fn, we check that its argument and return types are WF.
+    
+    The previous code only checked the trait-ref, which was not enough
+    in several cases.
+    
+    As this is a soundness fix, it is a [breaking-change]. Some new annotations are needed, which I think are because of #18653 and the imperfection of `projection_must_outlive` (that can probably be worked around by moving the wf obligation later).
+    
+    Fixes #28609
+    
+    r? @nikomatsakis
+
+commit 603a75c8eaa8ee168e4333e4fba5eb782ed7192b
+Author:     Ariel Ben-Yehuda &lt;arielb1@mail.tau.ac.il&gt;
+AuthorDate: Sat Sep 26 01:27:39 2015 +0300
+Commit:     Ariel Ben-Yehuda &lt;ariel.byd@gmail.com&gt;
+CommitDate: Fri Oct 2 23:40:10 2015 +0300
+
+    ensure that the types of methods are well-formed
+    
+    By RFC1214:
+    Before calling a fn, we check that its argument and return types are WF. This check takes place after all higher-ranked lifetimes have been instantiated. Checking the argument types ensures that the implied bounds due to argument types are correct. Checking the return type ensures that the resulting type of the call is WF.
+    
+    The previous code only checked the trait-ref, which was not enough
+    in several cases.
+    
+    As this is a soundness fix, it is a [breaking-change].
+    
+    Fixes #28609
 </pre></body></html>
